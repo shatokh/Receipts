@@ -78,7 +78,7 @@ class _ReceiptsViewState extends ConsumerState<ReceiptsView> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<DateTime?>(
-                  value: _selectedMonth,
+                  initialValue: _selectedMonth,
                   decoration: const InputDecoration(
                     labelText: 'Month',
                     border: OutlineInputBorder(),

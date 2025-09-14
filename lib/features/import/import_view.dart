@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:biedronka_expenses/theme.dart';
-import 'package:biedronka_expenses/app/providers.dart';
 
 class ImportView extends ConsumerStatefulWidget {
   const ImportView({super.key});

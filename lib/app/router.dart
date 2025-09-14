@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:biedronka_expenses/features/onboarding/onboarding_view.dart';
 import 'package:biedronka_expenses/features/dashboard/dashboard_view.dart';
