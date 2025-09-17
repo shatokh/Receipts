@@ -1,23 +1,37 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:biedronka_expenses/data/repositories/receipt_repository.dart';
+import 'package:intl/intl.dart';
+
+import 'package:biedronka_expenses/data/repositories/analytics_repository.dart';
 import 'package:biedronka_expenses/data/repositories/category_repository.dart';
+import 'package:biedronka_expenses/data/repositories/receipt_repository.dart';
+import 'package:biedronka_expenses/data/repositories/settings_repository.dart';
+import 'package:biedronka_expenses/domain/models/dashboard_kpis.dart';
+import 'package:biedronka_expenses/domain/models/month_overview.dart';
+import 'package:biedronka_expenses/domain/models/monthly_total.dart';
+import 'package:biedronka_expenses/domain/models/receipt_details.dart';
+import 'package:biedronka_expenses/domain/models/receipt_row.dart';
 import 'package:biedronka_expenses/domain/services/receipt_parser.dart';
 import 'package:biedronka_expenses/platform/pdf_text_extractor/android_pdf_text_extractor.dart';
-import 'package:biedronka_expenses/domain/models/receipt.dart';
-import 'package:biedronka_expenses/domain/models/line_item.dart';
-import 'package:biedronka_expenses/domain/models/monthly_total.dart';
-import 'package:biedronka_expenses/domain/models/category.dart';
 
-// Repository providers
 final receiptRepositoryProvider = Provider<ReceiptRepository>((ref) {
-  return ReceiptRepository();
+  final repository = ReceiptRepository(ref.read);
+  return repository;
+});
+
+final analyticsRepositoryProvider = Provider<AnalyticsRepository>((ref) {
+  final repository = AnalyticsRepository(ref.read);
+  return repository;
 });
 
 final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
   return CategoryRepository();
 });
 
-// Service providers
+final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
+  throw UnimplementedError('SettingsRepository must be provided at runtime');
+});
+
 final pdfTextExtractorProvider = Provider((ref) {
   return AndroidPdfTextExtractor();
 });
@@ -26,73 +40,90 @@ final receiptParserProvider = Provider<ReceiptParser>((ref) {
   return ReceiptParser(ref.watch(categoryRepositoryProvider));
 });
 
-// Data providers
-final receiptsProvider = FutureProvider<List<Receipt>>((ref) async {
-  final repository = ref.watch(receiptRepositoryProvider);
-  return repository.getAllReceipts();
+final selectedMonthProvider = StateProvider<DateTime>((ref) {
+  return DateTime(2025, 8, 1);
 });
 
-final monthlyTotalsProvider = FutureProvider<List<MonthlyTotal>>((ref) async {
-  final repository = ref.watch(receiptRepositoryProvider);
-  return repository.getMonthlyTotals(12);
+final monthlyTotalsProvider = StreamProvider.autoDispose<List<MonthlyTotal>>((ref) {
+  final repo = ref.watch(analyticsRepositoryProvider);
+  return repo.watchLast12MonthsTotals();
 });
 
-final categoriesProvider = FutureProvider<List<Category>>((ref) async {
-  final repository = ref.watch(categoryRepositoryProvider);
-  return repository.getAllCategories();
+final dashboardKpisProvider = FutureProvider.autoDispose<DashboardKpis>((ref) async {
+  final repo = ref.watch(analyticsRepositoryProvider);
+  final sub = repo.updates.listen((_) => ref.invalidateSelf());
+  ref.onDispose(sub.cancel);
+  return repo.getLast30DaysKpi();
 });
 
-// Current month provider
-final currentMonthProvider = StateProvider<DateTime>((ref) {
-  return DateTime(2025, 8); // Default to August 2025 per requirements
+final monthOverviewProvider = FutureProvider.autoDispose.family<MonthOverview, DateTime>((ref, month) async {
+  final repo = ref.watch(analyticsRepositoryProvider);
+  final sub = repo.updates.listen((_) => ref.invalidateSelf());
+  ref.onDispose(sub.cancel);
+  return repo.getMonthOverview(month);
 });
 
-// Receipts for current month
-final receiptsForMonthProvider = FutureProvider<List<Receipt>>((ref) async {
-  final currentMonth = ref.watch(currentMonthProvider);
-  final repository = ref.watch(receiptRepositoryProvider);
-  return repository.getReceiptsByMonth(currentMonth.year, currentMonth.month);
+final receiptsByMonthProvider = StreamProvider.autoDispose.family<List<ReceiptRow>, DateTime>((ref, month) {
+  final repo = ref.watch(receiptRepositoryProvider);
+  return repo.watchReceiptsByMonth(month);
 });
 
-// Top categories for current month
-final topCategoriesForMonthProvider = FutureProvider<List<CategoryMonthTotal>>((ref) async {
-  final currentMonth = ref.watch(currentMonthProvider);
-  final repository = ref.watch(categoryRepositoryProvider);
-  return repository.getTopCategoriesForMonth(currentMonth.year, currentMonth.month, limit: 5);
+final receiptDetailsProvider = FutureProvider.autoDispose.family<ReceiptDetails, String>((ref, receiptId) async {
+  final repo = ref.watch(receiptRepositoryProvider);
+  final sub = repo.updates.listen((_) => ref.invalidateSelf());
+  ref.onDispose(sub.cancel);
+  return repo.getReceiptDetails(receiptId);
 });
 
-// Total for current month
-final totalForMonthProvider = FutureProvider<double>((ref) async {
-  final currentMonth = ref.watch(currentMonthProvider);
-  final repository = ref.watch(categoryRepositoryProvider);
-  return repository.getTotalForMonth(currentMonth.year, currentMonth.month);
+final receiptsSearchQueryProvider = StateProvider<String>((ref) => '');
+final receiptsFilterMonthProvider = StateProvider<DateTime?>((ref) => null);
+final receiptsAmountRangeProvider = StateProvider<RangeValues>((ref) => const RangeValues(0, 1000));
+
+final filteredReceiptsProvider = StreamProvider.autoDispose<List<ReceiptRow>>((ref) {
+  final repo = ref.watch(receiptRepositoryProvider);
+  final query = ref.watch(receiptsSearchQueryProvider);
+  final monthFilter = ref.watch(receiptsFilterMonthProvider);
+  final amountRange = ref.watch(receiptsAmountRangeProvider);
+  final normalizedQuery = query.trim().toLowerCase();
+
+  return repo.watchAllReceipts().map((receipts) {
+    return receipts.where((receipt) {
+      final matchesQuery = normalizedQuery.isEmpty ||
+          receipt.merchantName.toLowerCase().contains(normalizedQuery) ||
+          DateFormat('yyyy-MM-dd').format(receipt.purchaseTimestamp).contains(normalizedQuery);
+
+      final matchesMonth = monthFilter == null
+          ? true
+          : (receipt.purchaseTimestamp.year == monthFilter.year &&
+              receipt.purchaseTimestamp.month == monthFilter.month);
+
+      final total = receipt.totalGross;
+      final matchesAmount = total >= amountRange.start && total <= amountRange.end;
+
+      return matchesQuery && matchesMonth && matchesAmount;
+    }).toList();
+  });
 });
 
-// Receipt count for current month
-final receiptCountForMonthProvider = FutureProvider<int>((ref) async {
-  final currentMonth = ref.watch(currentMonthProvider);
-  final repository = ref.watch(categoryRepositoryProvider);
-  return repository.getReceiptCountForMonth(currentMonth.year, currentMonth.month);
+class SentryEnabledNotifier extends StateNotifier<bool> {
+  SentryEnabledNotifier(this._repository, bool initialState)
+      : super(initialState);
+
+  final SettingsRepository _repository;
+
+  Future<void> setEnabled(bool value) async {
+    if (state == value) {
+      return;
+    }
+    state = value;
+    await _repository.setSentryEnabled(value);
+  }
+}
+
+final sentryEnabledProvider =
+    StateNotifierProvider<SentryEnabledNotifier, bool>((ref) {
+  final repository = ref.watch(settingsRepositoryProvider);
+  return SentryEnabledNotifier(repository, false);
 });
 
-// Max receipt for current month
-final maxReceiptForMonthProvider = FutureProvider<Receipt?>((ref) async {
-  final currentMonth = ref.watch(currentMonthProvider);
-  final repository = ref.watch(receiptRepositoryProvider);
-  return repository.getMaxReceiptForMonth(currentMonth.year, currentMonth.month);
-});
-
-// Individual receipt with line items
-final receiptWithItemsProvider = FutureProvider.family<({Receipt? receipt, List<LineItem> items}), String>((ref, receiptId) async {
-  final repository = ref.watch(receiptRepositoryProvider);
-  final receipt = await repository.getReceipt(receiptId);
-  final items = receipt != null ? await repository.getLineItemsForReceipt(receiptId) : <LineItem>[];
-  
-  return (receipt: receipt, items: items);
-});
-
-// Settings providers
-final sentryEnabledProvider = StateProvider<bool>((ref) => false);
-
-// Import state provider
 final importStatusProvider = StateProvider<String?>((ref) => null);

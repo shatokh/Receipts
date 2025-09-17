@@ -34,16 +34,18 @@ class SettingsView extends ConsumerWidget {
                   ),
                 ),
                 value: sentryEnabled,
-                onChanged: (value) {
-                  ref.read(sentryEnabledProvider.notifier).state = value;
-                  
-                  final message = value 
-                      ? 'Crash reporting enabled' 
+                onChanged: (value) async {
+                  await ref.read(sentryEnabledProvider.notifier).setEnabled(value);
+
+                  final message = value
+                      ? 'Crash reporting enabled'
                       : 'Crash reporting disabled';
-                  
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(message)),
-                  );
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(message)),
+                    );
+                  }
                 },
                 contentPadding: EdgeInsets.zero,
               ),
@@ -182,7 +184,7 @@ class SettingsView extends ConsumerWidget {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Data clearing not implemented in demo'),
+                  content: Text('Data clearing not implemented yet'),
                 ),
               );
             },
