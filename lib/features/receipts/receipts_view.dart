@@ -2,83 +2,153 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:biedronka_expenses/theme.dart';
-import 'package:biedronka_expenses/data/demo_data.dart';
 
-class ReceiptsView extends ConsumerStatefulWidget {
+import 'package:biedronka_expenses/app/providers.dart';
+import 'package:biedronka_expenses/domain/models/monthly_total.dart';
+import 'package:biedronka_expenses/domain/models/receipt_row.dart';
+import 'package:biedronka_expenses/theme.dart';
+
+class ReceiptsView extends ConsumerWidget {
   const ReceiptsView({super.key});
 
   @override
-  ConsumerState<ReceiptsView> createState() => _ReceiptsViewState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filteredReceiptsAsync = ref.watch(filteredReceiptsProvider);
+    final searchQuery = ref.watch(receiptsSearchQueryProvider);
+    final selectedMonth = ref.watch(receiptsFilterMonthProvider);
+    final amountRange = ref.watch(receiptsAmountRangeProvider);
+    final monthlyTotalsAsync = ref.watch(monthlyTotalsProvider);
 
-class _ReceiptsViewState extends ConsumerState<ReceiptsView> {
-  String _searchQuery = '';
-  DateTime? _selectedMonth;
-  RangeValues _totalRange = const RangeValues(0, 500);
+    final monthOptions = monthlyTotalsAsync.maybeWhen(
+      data: (totals) => _buildFilterMonths(totals),
+      orElse: () => <DateTime>[],
+    );
 
-  @override
-  Widget build(BuildContext context) {
-    final receipts = DemoData.getAugust2025Receipts();
-    final filteredReceipts = _filterReceipts(receipts);
-    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Receipts'),
       ),
       body: Column(
         children: [
-          _SearchAndFilters(),
+          _SearchAndFilters(
+            searchQuery: searchQuery,
+            selectedMonth: selectedMonth,
+            amountRange: amountRange,
+            monthOptions: monthOptions,
+            onSearchChanged: (value) =>
+                ref.read(receiptsSearchQueryProvider.notifier).state = value,
+            onMonthChanged: (value) =>
+                ref.read(receiptsFilterMonthProvider.notifier).state = value,
+            onAmountChanged: (value) =>
+                ref.read(receiptsAmountRangeProvider.notifier).state = value,
+          ),
           Expanded(
-            child: filteredReceipts.isEmpty
-                ? _EmptyState()
-                : _ReceiptsList(receipts: filteredReceipts),
+            child: filteredReceiptsAsync.when(
+              data: (receipts) => receipts.isEmpty
+                  ? const _EmptyState()
+                  : _ReceiptsList(receipts: receipts),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Center(
+                child: Text(
+                  'Unable to load receipts: $error',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  List<dynamic> _filterReceipts(List<dynamic> receipts) {
-    return receipts.where((receipt) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          'biedronka'.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          DateFormat('yyyy-MM-dd').format(receipt.purchaseTimestamp).contains(_searchQuery);
-      
-      final matchesMonth = _selectedMonth == null ||
-          (receipt.purchaseTimestamp.year == _selectedMonth!.year &&
-           receipt.purchaseTimestamp.month == _selectedMonth!.month);
-      
-      final matchesTotal = receipt.totalGross >= _totalRange.start &&
-          receipt.totalGross <= _totalRange.end;
-      
-      return matchesSearch && matchesMonth && matchesTotal;
-    }).toList();
+  List<DateTime> _buildFilterMonths(List<MonthlyTotal> totals) {
+    final months = <DateTime>{};
+    for (final total in totals) {
+      if (total.total > 0) {
+        months.add(DateTime(total.year, total.month));
+      }
+    }
+    if (months.isEmpty) {
+      months.addAll(totals.map((total) => DateTime(total.year, total.month)));
+    }
+    final list = months.toList()
+      ..sort((a, b) => b.compareTo(a));
+    return list;
+  }
+}
+
+class _SearchAndFilters extends ConsumerStatefulWidget {
+  const _SearchAndFilters({
+    required this.searchQuery,
+    required this.selectedMonth,
+    required this.amountRange,
+    required this.monthOptions,
+    required this.onSearchChanged,
+    required this.onMonthChanged,
+    required this.onAmountChanged,
+  });
+
+  final String searchQuery;
+  final DateTime? selectedMonth;
+  final RangeValues amountRange;
+  final List<DateTime> monthOptions;
+  final ValueChanged<String> onSearchChanged;
+  final ValueChanged<DateTime?> onMonthChanged;
+  final ValueChanged<RangeValues> onAmountChanged;
+
+  @override
+  ConsumerState<_SearchAndFilters> createState() => _SearchAndFiltersState();
+}
+
+class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.searchQuery);
   }
 
-  Widget _SearchAndFilters() {
+  @override
+  void didUpdateWidget(covariant _SearchAndFilters oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.searchQuery != _controller.text) {
+      _controller.value = TextEditingValue(
+        text: widget.searchQuery,
+        selection: TextSelection.collapsed(offset: widget.searchQuery.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         children: [
           TextField(
+            controller: _controller,
             decoration: const InputDecoration(
               hintText: 'Search by merchant or date',
               prefixIcon: Icon(Icons.search),
               border: OutlineInputBorder(),
             ),
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-              });
-            },
+            onChanged: widget.onSearchChanged,
           ),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
                 child: DropdownButtonFormField<DateTime?>(
-                  initialValue: _selectedMonth,
+                  value: widget.selectedMonth,
                   decoration: const InputDecoration(
                     labelText: 'Month',
                     border: OutlineInputBorder(),
@@ -88,20 +158,14 @@ class _ReceiptsViewState extends ConsumerState<ReceiptsView> {
                       value: null,
                       child: Text('All months'),
                     ),
-                    DropdownMenuItem(
-                      value: DateTime(2025, 8),
-                      child: Text(DateFormat('MMMM yyyy').format(DateTime(2025, 8))),
-                    ),
-                    DropdownMenuItem(
-                      value: DateTime(2025, 7),
-                      child: Text(DateFormat('MMMM yyyy').format(DateTime(2025, 7))),
+                    ...widget.monthOptions.map(
+                      (month) => DropdownMenuItem(
+                        value: month,
+                        child: Text(DateFormat('MMMM yyyy').format(month)),
+                      ),
                     ),
                   ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedMonth = value;
-                    });
-                  },
+                  onChanged: widget.onMonthChanged,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -110,19 +174,15 @@ class _ReceiptsViewState extends ConsumerState<ReceiptsView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Total range: PLN ${_totalRange.start.round()} - ${_totalRange.end.round()}',
+                      'Total range: PLN ${widget.amountRange.start.round()} - ${widget.amountRange.end.round()}',
                       style: AppTextStyles.labelSmall,
                     ),
                     RangeSlider(
-                      values: _totalRange,
+                      values: widget.amountRange,
                       min: 0,
-                      max: 500,
-                      divisions: 10,
-                      onChanged: (values) {
-                        setState(() {
-                          _totalRange = values;
-                        });
-                      },
+                      max: 1000,
+                      divisions: 20,
+                      onChanged: widget.onAmountChanged,
                     ),
                   ],
                 ),
@@ -133,8 +193,13 @@ class _ReceiptsViewState extends ConsumerState<ReceiptsView> {
       ),
     );
   }
+}
 
-  Widget _EmptyState() {
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -165,23 +230,27 @@ class _ReceiptsViewState extends ConsumerState<ReceiptsView> {
 }
 
 class _ReceiptsList extends StatelessWidget {
-  final List<dynamic> receipts;
-
   const _ReceiptsList({required this.receipts});
+
+  final List<ReceiptRow> receipts;
 
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
-    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: 'PLN ', decimalDigits: 2);
-    
-    return ListView.builder(
+    final currencyFormat = NumberFormat.currency(
+      locale: 'en_US',
+      symbol: 'PLN ',
+      decimalDigits: 2,
+    );
+
+    return ListView.separated(
       itemCount: receipts.length,
+      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, index) {
         final receipt = receipts[index];
         return Card(
           margin: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
           ),
           child: ListTile(
             leading: const CircleAvatar(
@@ -193,7 +262,7 @@ class _ReceiptsList extends StatelessWidget {
               ),
             ),
             title: Text(
-              'Biedronka',
+              receipt.merchantName,
               style: AppTextStyles.bodyLarge.copyWith(
                 color: AppColors.textPrimary,
               ),

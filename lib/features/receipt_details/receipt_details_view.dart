@@ -2,54 +2,50 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
+import 'package:biedronka_expenses/app/providers.dart';
+import 'package:biedronka_expenses/domain/models/line_item.dart';
+import 'package:biedronka_expenses/domain/models/receipt_details.dart';
 import 'package:biedronka_expenses/theme.dart';
-import 'package:biedronka_expenses/data/demo_data.dart';
 
 class ReceiptDetailsView extends ConsumerWidget {
-  final String receiptId;
-
   const ReceiptDetailsView({super.key, required this.receiptId});
+
+  final String receiptId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // For demo, use hardcoded data for the max receipt
-    final isMaxReceipt = receiptId == 'receipt_max_august';
-    final lineItems = isMaxReceipt ? DemoData.getMaxReceiptItems() : <dynamic>[];
-    final receipt = isMaxReceipt 
-        ? DemoData.getAugust2025Receipts().firstWhere((r) => r.id == receiptId)
-        : null;
-    
-    if (receipt == null) {
-      return _ErrorState(context);
-    }
-    
+    final detailsAsync = ref.watch(receiptDetailsProvider(receiptId));
+
+    return detailsAsync.when(
+      data: (details) => _ReceiptDetailsContent(details: details),
+      loading: () => const _LoadingState(),
+      error: (error, _) => _ErrorState(error: error),
+    );
+  }
+}
+
+class _LoadingState extends StatelessWidget {
+  const _LoadingState();
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Receipt'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _ReceiptHeader(receipt: receipt),
-            const SizedBox(height: AppSpacing.lg),
-            _ItemsTable(items: lineItems),
-            const SizedBox(height: AppSpacing.lg),
-            _VATSummary(),
-            const SizedBox(height: AppSpacing.lg),
-            _ActionButtons(),
-          ],
-        ),
-      ),
+      body: const Center(child: CircularProgressIndicator()),
     );
   }
+}
 
-  Widget _ErrorState(BuildContext context) {
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.error});
+
+  final Object error;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Receipt')),
       body: Center(
@@ -70,7 +66,8 @@ class ReceiptDetailsView extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'This receipt may have been deleted or moved',
+              '$error',
+              textAlign: TextAlign.center,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -87,16 +84,54 @@ class ReceiptDetailsView extends ConsumerWidget {
   }
 }
 
-class _ReceiptHeader extends StatelessWidget {
-  final dynamic receipt;
+class _ReceiptDetailsContent extends StatelessWidget {
+  const _ReceiptDetailsContent({required this.details});
 
-  const _ReceiptHeader({required this.receipt});
+  final ReceiptDetails details;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Receipt'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _ReceiptHeader(details: details),
+            const SizedBox(height: AppSpacing.lg),
+            _ItemsTable(items: details.items),
+            const SizedBox(height: AppSpacing.lg),
+            _VATSummary(totalVat: details.totalVat),
+            const SizedBox(height: AppSpacing.lg),
+            const _ActionButtons(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReceiptHeader extends StatelessWidget {
+  const _ReceiptHeader({required this.details});
+
+  final ReceiptDetails details;
 
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
-    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: 'PLN ', decimalDigits: 2);
-    
+    final currencyFormat = NumberFormat.currency(
+      locale: 'en_US',
+      symbol: 'PLN ',
+      decimalDigits: 2,
+    );
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -104,21 +139,21 @@ class _ReceiptHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Biedronka',
+              details.merchantName,
               style: AppTextStyles.titleLarge.copyWith(
                 color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              dateFormat.format(receipt.purchaseTimestamp),
+              dateFormat.format(details.receipt.purchaseTimestamp),
               style: AppTextStyles.bodyLarge.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              currencyFormat.format(receipt.totalGross),
+              currencyFormat.format(details.totalGross),
               style: AppTextStyles.titleLarge.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
@@ -132,14 +167,32 @@ class _ReceiptHeader extends StatelessWidget {
 }
 
 class _ItemsTable extends StatelessWidget {
-  final List<dynamic> items;
-
   const _ItemsTable({required this.items});
+
+  final List<LineItem> items;
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: 'PLN ', decimalDigits: 2);
-    
+    final currencyFormat = NumberFormat.currency(
+      locale: 'en_US',
+      symbol: 'PLN ',
+      decimalDigits: 2,
+    );
+
+    if (items.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Text(
+            'No line items were recorded for this receipt',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -147,21 +200,22 @@ class _ItemsTable extends StatelessWidget {
           children: [
             _TableHeader(),
             const Divider(),
-            ...items.map((item) => _ItemRow(
-              name: item.name,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              vatRate: item.vatRate,
-              total: item.total,
-              currencyFormat: currencyFormat,
-            )),
+            ...items.map(
+              (item) => _ItemRow(
+                item: item,
+                currencyFormat: currencyFormat,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _TableHeader() {
+class _TableHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return Row(
       children: [
         Expanded(
@@ -211,26 +265,25 @@ class _ItemsTable extends StatelessWidget {
 }
 
 class _ItemRow extends StatelessWidget {
-  final String name;
-  final double quantity;
-  final double unitPrice;
-  final double vatRate;
-  final double total;
-  final NumberFormat currencyFormat;
-
   const _ItemRow({
-    required this.name,
-    required this.quantity,
-    required this.unitPrice,
-    required this.vatRate,
-    required this.total,
+    required this.item,
     required this.currencyFormat,
   });
 
+  final LineItem item;
+  final NumberFormat currencyFormat;
+
   @override
   Widget build(BuildContext context) {
-    final isDiscount = name.toLowerCase().contains('rabat');
-    
+    final isDiscount = item.discount > 0 || item.total < 0;
+    final quantityText = isDiscount
+        ? '—'
+        : '${_formatQuantity(item.quantity)} × ${currencyFormat.format(item.unitPrice)}';
+    final vatText = isDiscount
+        ? '—'
+        : '${(item.vatRate * 100).toStringAsFixed(0)}%';
+    final totalText = currencyFormat.format(item.total);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
@@ -238,7 +291,7 @@ class _ItemRow extends StatelessWidget {
           Expanded(
             flex: 3,
             child: Text(
-              name,
+              item.name,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: isDiscount ? AppColors.success : AppColors.textPrimary,
               ),
@@ -247,7 +300,7 @@ class _ItemRow extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              isDiscount ? '—' : '${quantity.toString()} × ${currencyFormat.format(unitPrice)}',
+              quantityText,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -256,7 +309,7 @@ class _ItemRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              isDiscount ? '—' : '${(vatRate * 100).round()}%',
+              vatText,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -265,7 +318,7 @@ class _ItemRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              currencyFormat.format(total),
+              totalText,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: isDiscount ? AppColors.success : AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
@@ -277,11 +330,28 @@ class _ItemRow extends StatelessWidget {
       ),
     );
   }
+
+  String _formatQuantity(double quantity) {
+    if (quantity == quantity.roundToDouble()) {
+      return quantity.toStringAsFixed(0);
+    }
+    return quantity.toStringAsFixed(2);
+  }
 }
 
 class _VATSummary extends StatelessWidget {
+  const _VATSummary({required this.totalVat});
+
+  final double totalVat;
+
   @override
   Widget build(BuildContext context) {
+    final currencyFormat = NumberFormat.currency(
+      locale: 'en_US',
+      symbol: 'PLN ',
+      decimalDigits: 2,
+    );
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -295,7 +365,7 @@ class _VATSummary extends StatelessWidget {
               ),
             ),
             Text(
-              'PLN 3.20',
+              currencyFormat.format(totalVat),
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
@@ -309,6 +379,8 @@ class _VATSummary extends StatelessWidget {
 }
 
 class _ActionButtons extends StatelessWidget {
+  const _ActionButtons();
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -317,7 +389,7 @@ class _ActionButtons extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('PDF opening not implemented in demo')),
+                const SnackBar(content: Text('PDF opening not implemented yet')),
               );
             },
             icon: const Icon(Icons.picture_as_pdf),
@@ -329,7 +401,7 @@ class _ActionButtons extends StatelessWidget {
           child: TextButton.icon(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Re-categorization not implemented in demo')),
+                const SnackBar(content: Text('Re-categorization not implemented yet')),
               );
             },
             icon: const Icon(Icons.category),

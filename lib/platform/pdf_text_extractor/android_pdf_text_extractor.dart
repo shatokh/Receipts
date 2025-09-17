@@ -8,7 +8,7 @@ class AndroidPdfTextExtractor implements PdfTextExtractor {
   @override
   Future<List<String>> extractTextPages(String safUri) async {
     try {
-      // For demo purposes, return sample data from assets if no real PDF
+      // During development, return sample data from assets if no real PDF
       if (kDebugMode && safUri.contains('sample')) {
         return await _getSampleReceiptText();
       }

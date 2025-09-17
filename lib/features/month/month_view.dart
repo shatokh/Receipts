@@ -2,19 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:biedronka_expenses/theme.dart';
+
 import 'package:biedronka_expenses/app/providers.dart';
-import 'package:biedronka_expenses/data/demo_data.dart';
+import 'package:biedronka_expenses/domain/models/month_overview.dart';
+import 'package:biedronka_expenses/domain/models/monthly_total.dart';
+import 'package:biedronka_expenses/domain/models/receipt_row.dart';
+import 'package:biedronka_expenses/theme.dart';
 
 class MonthView extends ConsumerWidget {
   const MonthView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedMonth = ref.watch(currentMonthProvider);
+    final selectedMonth = ref.watch(selectedMonthProvider);
+    final monthlyTotalsAsync = ref.watch(monthlyTotalsProvider);
+    final monthOverviewAsync = ref.watch(monthOverviewProvider(selectedMonth));
+    final receiptsAsync = ref.watch(receiptsByMonthProvider(selectedMonth));
     final monthFormat = DateFormat('MMMM yyyy');
-    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: 'PLN ', decimalDigits: 2);
-    
+    final currencyFormat = NumberFormat.currency(
+      locale: 'en_US',
+      symbol: 'PLN ',
+      decimalDigits: 2,
+    );
+
+    monthlyTotalsAsync.whenData(
+      (totals) => _ensureSelectedMonthIsAvailable(ref, totals),
+    );
+
+    final dropdownMonths = monthlyTotalsAsync.maybeWhen(
+      data: (totals) => _buildDropdownMonths(totals, selectedMonth),
+      orElse: () => [DateTime(selectedMonth.year, selectedMonth.month)],
+    );
+
+    final overviewData = monthOverviewAsync.asData?.value;
+    final totalValue = overviewData != null
+        ? currencyFormat.format(overviewData.total)
+        : '—';
+    final receiptsCount = overviewData?.receiptsCount ?? 0;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Month overview'),
@@ -24,23 +49,26 @@ class MonthView extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _MonthPicker(),
+            _MonthPicker(
+              months: dropdownMonths,
+              selectedMonth: DateTime(selectedMonth.year, selectedMonth.month),
+            ),
             const SizedBox(height: AppSpacing.lg),
-            _CategoryBreakdown(),
+            _CategoryBreakdown(overview: monthOverviewAsync),
             const SizedBox(height: AppSpacing.lg),
             Row(
               children: [
                 Expanded(
                   child: _MetricCard(
                     title: 'Total — ${monthFormat.format(selectedMonth)}',
-                    value: 'PLN 1,250.00',
+                    value: totalValue,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: _MetricCard(
                     title: 'Receipts',
-                    value: '15',
+                    value: '$receiptsCount',
                   ),
                 ),
               ],
@@ -53,12 +81,51 @@ class MonthView extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            _ReceiptsList(),
+            receiptsAsync.when(
+              data: (receipts) {
+                if (receipts.isEmpty) {
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Text(
+                        'No receipts recorded for this month yet',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: receipts
+                      .take(5)
+                      .map((receipt) => _ReceiptTile(
+                            receipt: receipt,
+                            currencyFormat: currencyFormat,
+                          ))
+                      .toList(),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Text(
+                    'Unable to load receipts: $error',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.error,
+                    ),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: AppSpacing.md),
-            Center(
+            Align(
+              alignment: Alignment.center,
               child: TextButton(
                 onPressed: () => context.go('/receipts'),
-                child: const Text('Show all receipts (15)'),
+                child: Text('Show all receipts ($receiptsCount)'),
               ),
             ),
           ],
@@ -66,14 +133,76 @@ class MonthView extends ConsumerWidget {
       ),
     );
   }
+
+  void _ensureSelectedMonthIsAvailable(
+    WidgetRef ref,
+    List<MonthlyTotal> totals,
+  ) {
+    if (totals.isEmpty) {
+      return;
+    }
+
+    final current = ref.read(selectedMonthProvider);
+    final normalizedCurrent = DateTime(current.year, current.month);
+    final monthsWithData = totals
+        .where((total) => total.total > 0)
+        .map((total) => DateTime(total.year, total.month))
+        .toList();
+
+    if (monthsWithData.isEmpty) {
+      return;
+    }
+
+    final hasCurrent =
+        monthsWithData.any((month) => _isSameMonth(month, normalizedCurrent));
+    if (!hasCurrent) {
+      ref.read(selectedMonthProvider.notifier).state = monthsWithData.last;
+    }
+  }
+
+  List<DateTime> _buildDropdownMonths(
+    List<MonthlyTotal> totals,
+    DateTime selectedMonth,
+  ) {
+    final normalizedSelected = DateTime(selectedMonth.year, selectedMonth.month);
+    final uniqueMonths = <DateTime>{};
+
+    for (final total in totals) {
+      if (total.total > 0) {
+        uniqueMonths.add(DateTime(total.year, total.month));
+      }
+    }
+
+    if (uniqueMonths.isEmpty) {
+      uniqueMonths.addAll(totals.map((total) => DateTime(total.year, total.month)));
+    }
+
+    uniqueMonths.add(normalizedSelected);
+    final months = uniqueMonths.toList()
+      ..sort((a, b) => a.compareTo(b));
+    return months;
+  }
+
+  bool _isSameMonth(DateTime a, DateTime b) => a.year == b.year && a.month == b.month;
 }
 
 class _MonthPicker extends ConsumerWidget {
+  const _MonthPicker({
+    required this.months,
+    required this.selectedMonth,
+  });
+
+  final List<DateTime> months;
+  final DateTime selectedMonth;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedMonth = ref.watch(currentMonthProvider);
     final monthFormat = DateFormat('MMMM yyyy');
-    
+    final value = months.firstWhere(
+      (month) => month.year == selectedMonth.year && month.month == selectedMonth.month,
+      orElse: () => selectedMonth,
+    );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -82,26 +211,20 @@ class _MonthPicker extends ConsumerWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: DropdownButton<DateTime>(
-        value: selectedMonth,
+        value: value,
         isExpanded: true,
         underline: const SizedBox.shrink(),
-        items: [
-          DropdownMenuItem(
-            value: DateTime(2025, 8),
-            child: Text(monthFormat.format(DateTime(2025, 8))),
-          ),
-          DropdownMenuItem(
-            value: DateTime(2025, 7),
-            child: Text(monthFormat.format(DateTime(2025, 7))),
-          ),
-          DropdownMenuItem(
-            value: DateTime(2025, 6),
-            child: Text(monthFormat.format(DateTime(2025, 6))),
-          ),
-        ],
+        items: months
+            .map(
+              (month) => DropdownMenuItem(
+                value: month,
+                child: Text(monthFormat.format(month)),
+              ),
+            )
+            .toList(),
         onChanged: (month) {
           if (month != null) {
-            ref.read(currentMonthProvider.notifier).state = month;
+            ref.read(selectedMonthProvider.notifier).state = month;
           }
         },
       ),
@@ -110,34 +233,73 @@ class _MonthPicker extends ConsumerWidget {
 }
 
 class _CategoryBreakdown extends StatelessWidget {
+  const _CategoryBreakdown({required this.overview});
+
+  final AsyncValue<MonthOverview> overview;
+
   @override
   Widget build(BuildContext context) {
-    final categories = DemoData.getTopCategoriesAugust2025();
-    final maxAmount = categories.values.reduce((a, b) => a > b ? a : b);
-    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: 'PLN ', decimalDigits: 2);
-    
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          children: [
-            ...categories.entries.map((entry) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _CategoryBar(
-                name: entry.key,
-                amount: entry.value,
-                maxAmount: maxAmount,
-                formattedAmount: currencyFormat.format(entry.value),
-              ),
-            )),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Top 5 of PLN 1,250.00',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
+    return overview.when(
+      data: (data) {
+        if (data.topCategories.isEmpty) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Text(
+                'No categories tracked for this month yet',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
-          ],
+          );
+        }
+
+        final maxAmount = data.maxCategoryAmount;
+        final currencyFormat = NumberFormat.currency(
+          locale: 'en_US',
+          symbol: 'PLN ',
+          decimalDigits: 2,
+        );
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              children: [
+                ...data.topCategories.map(
+                  (category) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _CategoryBar(
+                      name: category.categoryName,
+                      amount: category.amount,
+                      maxAmount: maxAmount,
+                      formattedAmount: currencyFormat.format(category.amount),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Top 5 of ${currencyFormat.format(data.total)}',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Text(
+            'Unable to load categories: $error',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.error,
+            ),
+          ),
         ),
       ),
     );
@@ -145,11 +307,6 @@ class _CategoryBreakdown extends StatelessWidget {
 }
 
 class _CategoryBar extends StatelessWidget {
-  final String name;
-  final double amount;
-  final double maxAmount;
-  final String formattedAmount;
-
   const _CategoryBar({
     required this.name,
     required this.amount,
@@ -157,10 +314,15 @@ class _CategoryBar extends StatelessWidget {
     required this.formattedAmount,
   });
 
+  final String name;
+  final double amount;
+  final double maxAmount;
+  final String formattedAmount;
+
   @override
   Widget build(BuildContext context) {
-    final percentage = amount / maxAmount;
-    
+    final percentage = maxAmount <= 0 ? 0.0 : amount / maxAmount;
+
     return Row(
       children: [
         Expanded(
@@ -196,10 +358,10 @@ class _CategoryBar extends StatelessWidget {
 }
 
 class _MetricCard extends StatelessWidget {
+  const _MetricCard({required this.title, required this.value});
+
   final String title;
   final String value;
-
-  const _MetricCard({required this.title, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -229,38 +391,42 @@ class _MetricCard extends StatelessWidget {
   }
 }
 
-class _ReceiptsList extends StatelessWidget {
+class _ReceiptTile extends StatelessWidget {
+  const _ReceiptTile({
+    required this.receipt,
+    required this.currencyFormat,
+  });
+
+  final ReceiptRow receipt;
+  final NumberFormat currencyFormat;
+
   @override
   Widget build(BuildContext context) {
-    final receipts = DemoData.getAugust2025Receipts();
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
-    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: 'PLN ', decimalDigits: 2);
-    
-    return Column(
-      children: receipts.take(5).map((receipt) => Card(
-        child: ListTile(
-          title: Text(
-            'Biedronka',
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: AppColors.textPrimary,
-            ),
+
+    return Card(
+      child: ListTile(
+        title: Text(
+          receipt.merchantName,
+          style: AppTextStyles.bodyLarge.copyWith(
+            color: AppColors.textPrimary,
           ),
-          subtitle: Text(
-            dateFormat.format(receipt.purchaseTimestamp),
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-          trailing: Text(
-            currencyFormat.format(receipt.totalGross),
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          onTap: () => context.go('/receipt/${receipt.id}'),
         ),
-      )).toList(),
+        subtitle: Text(
+          dateFormat.format(receipt.purchaseTimestamp),
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        trailing: Text(
+          currencyFormat.format(receipt.totalGross),
+          style: AppTextStyles.bodyLarge.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        onTap: () => context.go('/receipt/${receipt.id}'),
+      ),
     );
   }
 }
