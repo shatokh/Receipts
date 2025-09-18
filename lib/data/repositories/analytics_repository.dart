@@ -40,21 +40,89 @@ class AnalyticsRepository {
     });
   }
 
+  Future<void> updateAggregatesForMonth(DateTime monthStart) async {
+    final db = await DatabaseHelper.database;
+    final normalized = DateTime(monthStart.year, monthStart.month);
+    final month = DateTime(normalized.year, normalized.month);
+    final start = month.millisecondsSinceEpoch;
+    final end = DateTime(month.year, month.month + 1).millisecondsSinceEpoch;
+
+    await db.transaction((txn) async {
+      final totalResult = await txn.rawQuery(
+        'SELECT SUM(total_gross) as total FROM receipts WHERE purchase_ts >= ? AND purchase_ts < ?',
+        [start, end],
+      );
+      final totalAmount =
+          (totalResult.isNotEmpty ? totalResult.first['total'] : null) as num?;
+
+      final totalValue = (totalAmount ?? 0).toDouble();
+
+      await txn.rawInsert(
+        'INSERT INTO monthly_totals (year, month, total) VALUES (?, ?, ?) '
+        'ON CONFLICT(year, month) DO UPDATE SET total = excluded.total',
+        [month.year, month.month, totalValue],
+      );
+
+      await txn.delete(
+        'category_month_totals',
+        where: 'year = ? AND month = ?',
+        whereArgs: [month.year, month.month],
+      );
+
+      final categoryRows = await txn.rawQuery(
+        'SELECT li.category_id as category_id, SUM(li.total) as total '
+        'FROM line_items li '
+        'JOIN receipts r ON r.id = li.receipt_id '
+        'WHERE r.purchase_ts >= ? AND r.purchase_ts < ? '
+        'GROUP BY li.category_id',
+        [start, end],
+      );
+
+      for (final row in categoryRows) {
+        final categoryId = (row['category_id'] as String?) ?? 'other';
+        final amount = (row['total'] as num?)?.toDouble() ?? 0.0;
+        await txn.rawInsert(
+          'INSERT INTO category_month_totals (category_id, year, month, total) '
+          'VALUES (?, ?, ?, ?) '
+          'ON CONFLICT(category_id, year, month) DO UPDATE SET total = excluded.total',
+          [categoryId, month.year, month.month, amount],
+        );
+      }
+
+      if (categoryRows.isEmpty) {
+        // ensure table does not hold stale zero rows for this month
+        await txn.delete(
+          'category_month_totals',
+          where: 'year = ? AND month = ? AND total = 0',
+          whereArgs: [month.year, month.month],
+        );
+      }
+    });
+
+    _updateBus.notifyListeners();
+  }
+
   Future<MonthOverview> getMonthOverview(DateTime month) async {
     final db = await DatabaseHelper.database;
     final normalized = DateTime(month.year, month.month);
-    final startOfMonth = DateTime(normalized.year, normalized.month).millisecondsSinceEpoch;
-    final startOfNextMonth = DateTime(normalized.year, normalized.month + 1).millisecondsSinceEpoch;
+    final startOfMonth =
+        DateTime(normalized.year, normalized.month).millisecondsSinceEpoch;
+    final startOfNextMonth =
+        DateTime(normalized.year, normalized.month + 1).millisecondsSinceEpoch;
 
     final totalsResult = await db.rawQuery(
       'SELECT COUNT(*) as count, SUM(total_gross) as total FROM receipts WHERE purchase_ts >= ? AND purchase_ts < ?',
       [startOfMonth, startOfNextMonth],
     );
 
-    final totalsRow = totalsResult.isNotEmpty ? totalsResult.first : <String, Object?>{};
-    final receiptsCount = (totalsRow['count'] as int?) ?? (totalsRow['count'] as num?)?.toInt() ?? 0;
+    final totalsRow =
+        totalsResult.isNotEmpty ? totalsResult.first : <String, Object?>{};
+    final receiptsCount = (totalsRow['count'] as int?) ??
+        (totalsRow['count'] as num?)?.toInt() ??
+        0;
     final totalAmount = (totalsRow['total'] as num?)?.toDouble() ?? 0.0;
-    final averageReceipt = receiptsCount > 0 ? totalAmount / receiptsCount : 0.0;
+    final averageReceipt =
+        receiptsCount > 0 ? totalAmount / receiptsCount : 0.0;
 
     final maxReceiptResult = await db.rawQuery(
       'SELECT r.*, m.name as merchant_name FROM receipts r '
@@ -64,8 +132,9 @@ class AnalyticsRepository {
       [startOfMonth, startOfNextMonth],
     );
 
-    final ReceiptRow? maxReceipt =
-        maxReceiptResult.isNotEmpty ? ReceiptRow.fromMap(maxReceiptResult.first) : null;
+    final ReceiptRow? maxReceipt = maxReceiptResult.isNotEmpty
+        ? ReceiptRow.fromMap(maxReceiptResult.first)
+        : null;
 
     final categoriesResult = await db.rawQuery(
       'SELECT li.category_id as category_id, c.name as category_name, SUM(li.total) as total '
@@ -83,7 +152,8 @@ class AnalyticsRepository {
         .map(
           (row) => CategoryBreakdown(
             categoryId: row['category_id'] as String,
-            categoryName: (row['category_name'] as String?) ?? row['category_id'] as String,
+            categoryName: (row['category_name'] as String?) ??
+                row['category_id'] as String,
             amount: (row['total'] as num?)?.toDouble() ?? 0.0,
           ),
         )
@@ -110,7 +180,8 @@ class AnalyticsRepository {
     );
 
     final row = result.isNotEmpty ? result.first : <String, Object?>{};
-    final count = (row['count'] as int?) ?? (row['count'] as num?)?.toInt() ?? 0;
+    final count =
+        (row['count'] as int?) ?? (row['count'] as num?)?.toInt() ?? 0;
     final total = (row['total'] as num?)?.toDouble() ?? 0.0;
     final average = count > 0 ? total / count : 0.0;
 
@@ -138,12 +209,17 @@ class AnalyticsRepository {
     final latestDate = DateTime(latest.year, latest.month);
     final earliest = totalsDesc.last;
     final earliestDate = DateTime(earliest.year, earliest.month);
-    final span = (latestDate.year - earliestDate.year) * 12 + latestDate.month - earliestDate.month + 1;
+    final span = (latestDate.year - earliestDate.year) * 12 +
+        latestDate.month -
+        earliestDate.month +
+        1;
     final monthsToInclude = max(1, min(12, span));
-    final startDate = DateTime(latestDate.year, latestDate.month - (monthsToInclude - 1));
+    final startDate =
+        DateTime(latestDate.year, latestDate.month - (monthsToInclude - 1));
 
     final totalsMap = <String, double>{
-      for (final total in totalsDesc) _monthKey(total.year, total.month): total.total,
+      for (final total in totalsDesc)
+        _monthKey(total.year, total.month): total.total,
     };
 
     final result = <MonthlyTotal>[];
@@ -151,7 +227,8 @@ class AnalyticsRepository {
       final date = DateTime(startDate.year, startDate.month + i);
       final key = _monthKey(date.year, date.month);
       final amount = totalsMap[key] ?? 0.0;
-      result.add(MonthlyTotal(year: date.year, month: date.month, total: amount));
+      result
+          .add(MonthlyTotal(year: date.year, month: date.month, total: amount));
     }
 
     return result;

@@ -104,6 +104,50 @@ class ReceiptRepository {
     return _watchList(() => _fetchReceiptRowsByMonth(normalized));
   }
 
+  Future<bool> existsByHash(String fileHash) async {
+    final db = await DatabaseHelper.database;
+    if (fileHash.isEmpty) {
+      return false;
+    }
+
+    final result = await db.query(
+      'receipts',
+      columns: ['id'],
+      where: 'file_hash = ?',
+      whereArgs: [fileHash],
+      limit: 1,
+    );
+
+    return result.isNotEmpty;
+  }
+
+  Future<String> insertReceiptWithItems({
+    required Receipt receipt,
+    required List<LineItem> items,
+  }) async {
+    final db = await DatabaseHelper.database;
+
+    await db.transaction((txn) async {
+      await txn.insert('receipts', receipt.toMap());
+
+      if (items.isEmpty) {
+        return;
+      }
+
+      final batch = txn.batch();
+      for (final item in items) {
+        final mapped = item.receiptId == receipt.id
+            ? item
+            : item.copyWith(receiptId: receipt.id);
+        batch.insert('line_items', mapped.toMap());
+      }
+      await batch.commit(noResult: true);
+    });
+
+    _updateBus.notifyListeners();
+    return receipt.id;
+  }
+
   Future<ReceiptDetails> getReceiptDetails(String receiptId) async {
     final db = await DatabaseHelper.database;
     final receiptResult = await db.rawQuery(
@@ -139,17 +183,6 @@ class ReceiptRepository {
       merchant: merchant,
       items: items,
     );
-  }
-
-  Future<bool> receiptExists(String fileHash) async {
-    final db = await DatabaseHelper.database;
-    final result = await db.query(
-      'receipts',
-      where: 'file_hash = ?',
-      whereArgs: [fileHash],
-      limit: 1,
-    );
-    return result.isNotEmpty;
   }
 
   Future<void> updateAggregates() async {
