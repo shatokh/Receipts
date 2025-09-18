@@ -11,8 +11,10 @@ import 'package:biedronka_expenses/domain/models/month_overview.dart';
 import 'package:biedronka_expenses/domain/models/monthly_total.dart';
 import 'package:biedronka_expenses/domain/models/receipt_details.dart';
 import 'package:biedronka_expenses/domain/models/receipt_row.dart';
-import 'package:biedronka_expenses/domain/services/receipt_parser.dart';
+import 'package:biedronka_expenses/domain/parsing/receipt_parser.dart';
+import 'package:biedronka_expenses/features/import/import_service.dart';
 import 'package:biedronka_expenses/platform/pdf_text_extractor/android_pdf_text_extractor.dart';
+import 'package:biedronka_expenses/platform/pdf_text_extractor/pdf_text_extractor.dart';
 
 final receiptRepositoryProvider = Provider<ReceiptRepository>((ref) {
   final repository = ReceiptRepository(ref.read);
@@ -32,43 +34,57 @@ final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
   throw UnimplementedError('SettingsRepository must be provided at runtime');
 });
 
-final pdfTextExtractorProvider = Provider((ref) {
+final pdfTextExtractorProvider = Provider<PdfTextExtractor>((ref) {
   return AndroidPdfTextExtractor();
 });
 
 final receiptParserProvider = Provider<ReceiptParser>((ref) {
-  return ReceiptParser(ref.watch(categoryRepositoryProvider));
+  return ReceiptParser();
+});
+
+final importServiceProvider = Provider<ImportService>((ref) {
+  return ImportService(
+    pdf: ref.read(pdfTextExtractorProvider),
+    parser: ref.read(receiptParserProvider),
+    receipts: ref.read(receiptRepositoryProvider),
+    analytics: ref.read(analyticsRepositoryProvider),
+  );
 });
 
 final selectedMonthProvider = StateProvider<DateTime>((ref) {
   return DateTime(2025, 8, 1);
 });
 
-final monthlyTotalsProvider = StreamProvider.autoDispose<List<MonthlyTotal>>((ref) {
+final monthlyTotalsProvider =
+    StreamProvider.autoDispose<List<MonthlyTotal>>((ref) {
   final repo = ref.watch(analyticsRepositoryProvider);
   return repo.watchLast12MonthsTotals();
 });
 
-final dashboardKpisProvider = FutureProvider.autoDispose<DashboardKpis>((ref) async {
+final dashboardKpisProvider =
+    FutureProvider.autoDispose<DashboardKpis>((ref) async {
   final repo = ref.watch(analyticsRepositoryProvider);
   final sub = repo.updates.listen((_) => ref.invalidateSelf());
   ref.onDispose(sub.cancel);
   return repo.getLast30DaysKpi();
 });
 
-final monthOverviewProvider = FutureProvider.autoDispose.family<MonthOverview, DateTime>((ref, month) async {
+final monthOverviewProvider = FutureProvider.autoDispose
+    .family<MonthOverview, DateTime>((ref, month) async {
   final repo = ref.watch(analyticsRepositoryProvider);
   final sub = repo.updates.listen((_) => ref.invalidateSelf());
   ref.onDispose(sub.cancel);
   return repo.getMonthOverview(month);
 });
 
-final receiptsByMonthProvider = StreamProvider.autoDispose.family<List<ReceiptRow>, DateTime>((ref, month) {
+final receiptsByMonthProvider =
+    StreamProvider.autoDispose.family<List<ReceiptRow>, DateTime>((ref, month) {
   final repo = ref.watch(receiptRepositoryProvider);
   return repo.watchReceiptsByMonth(month);
 });
 
-final receiptDetailsProvider = FutureProvider.autoDispose.family<ReceiptDetails, String>((ref, receiptId) async {
+final receiptDetailsProvider = FutureProvider.autoDispose
+    .family<ReceiptDetails, String>((ref, receiptId) async {
   final repo = ref.watch(receiptRepositoryProvider);
   final sub = repo.updates.listen((_) => ref.invalidateSelf());
   ref.onDispose(sub.cancel);
@@ -77,9 +93,11 @@ final receiptDetailsProvider = FutureProvider.autoDispose.family<ReceiptDetails,
 
 final receiptsSearchQueryProvider = StateProvider<String>((ref) => '');
 final receiptsFilterMonthProvider = StateProvider<DateTime?>((ref) => null);
-final receiptsAmountRangeProvider = StateProvider<RangeValues>((ref) => const RangeValues(0, 1000));
+final receiptsAmountRangeProvider =
+    StateProvider<RangeValues>((ref) => const RangeValues(0, 1000));
 
-final filteredReceiptsProvider = StreamProvider.autoDispose<List<ReceiptRow>>((ref) {
+final filteredReceiptsProvider =
+    StreamProvider.autoDispose<List<ReceiptRow>>((ref) {
   final repo = ref.watch(receiptRepositoryProvider);
   final query = ref.watch(receiptsSearchQueryProvider);
   final monthFilter = ref.watch(receiptsFilterMonthProvider);
@@ -90,7 +108,9 @@ final filteredReceiptsProvider = StreamProvider.autoDispose<List<ReceiptRow>>((r
     return receipts.where((receipt) {
       final matchesQuery = normalizedQuery.isEmpty ||
           receipt.merchantName.toLowerCase().contains(normalizedQuery) ||
-          DateFormat('yyyy-MM-dd').format(receipt.purchaseTimestamp).contains(normalizedQuery);
+          DateFormat('yyyy-MM-dd')
+              .format(receipt.purchaseTimestamp)
+              .contains(normalizedQuery);
 
       final matchesMonth = monthFilter == null
           ? true
@@ -98,7 +118,8 @@ final filteredReceiptsProvider = StreamProvider.autoDispose<List<ReceiptRow>>((r
               receipt.purchaseTimestamp.month == monthFilter.month);
 
       final total = receipt.totalGross;
-      final matchesAmount = total >= amountRange.start && total <= amountRange.end;
+      final matchesAmount =
+          total >= amountRange.start && total <= amountRange.end;
 
       return matchesQuery && matchesMonth && matchesAmount;
     }).toList();
