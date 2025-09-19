@@ -15,7 +15,6 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "app.biedronka.biedronka_expenses"
     compileSdk = 34
-    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

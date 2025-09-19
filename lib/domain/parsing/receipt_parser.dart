@@ -77,9 +77,8 @@ class ReceiptParser {
               caseSensitive: false)
           .allMatches(text);
       if (vatLines.isNotEmpty) {
-        vatTotal = 0;
         for (final match in vatLines) {
-          vatTotal += _parseAmount(match.group(1)!);
+          vatTotal = (vatTotal ?? 0) + _parseAmount(match.group(1)!);
         }
       }
     }
@@ -257,3 +256,4 @@ class ReceiptTotals {
   final double? totalVat;
   final String? currency;
 }
+
