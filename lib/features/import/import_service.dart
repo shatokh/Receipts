@@ -30,10 +30,19 @@ class ImportService {
 
       final pages = await pdf.extractTextPages(safUri);
       final text = pages.join('\n');
-      final receipt = parser.parse(text);
+      final parsedReceipt = parser.parse(text);
+      final receipt = parsedReceipt.copyWith(sourceUri: safUri, fileHash: hash);
+
+      if (await receipts.isDuplicateByHeuristic(receipt)) {
+        return ImportResult(
+          sourceUri: safUri,
+          status: ImportStatus.duplicate,
+          message: 'heuristic',
+        );
+      }
 
       final savedId = await receipts.insertReceiptWithItems(
-        receipt: receipt.copyWith(sourceUri: safUri, fileHash: hash),
+        receipt: receipt,
         items: receipt.items,
       );
 

@@ -11,6 +11,8 @@ import 'package:biedronka_expenses/domain/models/receipt.dart';
 import 'package:biedronka_expenses/domain/models/receipt_details.dart';
 import 'package:biedronka_expenses/domain/models/receipt_row.dart';
 
+typedef Reader = T Function<T>(ProviderListenable<T> provider);
+
 class ReceiptRepository {
   ReceiptRepository(Reader read) : _updateBus = read(databaseUpdateBusProvider);
 
@@ -116,6 +118,30 @@ class ReceiptRepository {
       where: 'file_hash = ?',
       whereArgs: [fileHash],
       limit: 1,
+    );
+
+    return result.isNotEmpty;
+  }
+
+  Future<bool> isDuplicateByHeuristic(Receipt candidate) async {
+    final db = await DatabaseHelper.database;
+    final merchantId = candidate.merchantId.trim();
+    if (merchantId.isEmpty) {
+      return false;
+    }
+
+    final purchaseTs = candidate.purchaseTimestamp;
+    final start =
+        purchaseTs.subtract(const Duration(days: 1)).millisecondsSinceEpoch;
+    final end = purchaseTs.add(const Duration(days: 1)).millisecondsSinceEpoch;
+
+    final result = await db.rawQuery(
+      'SELECT id FROM receipts '
+      'WHERE purchase_ts BETWEEN ? AND ? '
+      'AND ABS(total_gross - ?) <= 0.05 '
+      'AND LOWER(merchant_id) = LOWER(?) '
+      'LIMIT 1',
+      [start, end, candidate.totalGross, merchantId],
     );
 
     return result.isNotEmpty;

@@ -1,20 +1,31 @@
+import 'dart:collection';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
+
+import 'package:biedronka_expenses/domain/models/import_result.dart';
+import 'package:biedronka_expenses/features/import/import_controller.dart';
 import 'package:biedronka_expenses/theme.dart';
 
-class ImportView extends ConsumerStatefulWidget {
+class ImportView extends ConsumerWidget {
   const ImportView({super.key});
 
   @override
-  ConsumerState<ImportView> createState() => _ImportViewState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final importState = ref.watch(importControllerProvider);
+    final controller = ref.watch(importControllerProvider.notifier);
+    final entries = controller.historyEntries;
 
-class _ImportViewState extends ConsumerState<ImportView> {
-  final List<ImportResult> _importHistory = [];
+    final historyContent = importState.maybeWhen(
+      data: (results) => results.isEmpty
+          ? const _EmptyState()
+          : _ImportHistoryList(entries: entries),
+      orElse: () => entries.isEmpty
+          ? const _EmptyState()
+          : _ImportHistoryList(entries: entries),
+    );
 
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Import receipts'),
@@ -25,7 +36,7 @@ class _ImportViewState extends ConsumerState<ImportView> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ElevatedButton.icon(
-              onPressed: _importPDF,
+              onPressed: () => _importPdf(context, ref),
               icon: const Icon(Icons.upload_file),
               label: const Text('Import PDF'),
               style: ElevatedButton.styleFrom(
@@ -33,17 +44,17 @@ class _ImportViewState extends ConsumerState<ImportView> {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            if (_importHistory.isNotEmpty) ...[
-              Text(
-                'Recent imports',
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: AppColors.textPrimary,
-                ),
+            Expanded(
+              child: Stack(
+                children: [
+                  historyContent,
+                  if (importState.isLoading)
+                    const Positioned.fill(
+                      child: _LoadingOverlay(),
+                    ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.md),
-              Expanded(child: _ImportHistoryList()),
-            ] else
-              _EmptyState(),
+            ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'Files are copied to app storage for reliable access.',
@@ -58,184 +69,188 @@ class _ImportViewState extends ConsumerState<ImportView> {
     );
   }
 
-  Future<void> _importPDF() async {
+  Future<void> _importPdf(BuildContext context, WidgetRef ref) async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf'],
+        allowedExtensions: const ['pdf'],
+        allowMultiple: true,
+        withData: false,
       );
 
-      if (result != null && result.files.isNotEmpty) {
-        final file = result.files.first;
-        
-        // Simulate processing
-        setState(() {
-          _importHistory.insert(0, ImportResult(
-            fileName: file.name,
-            status: ImportStatus.processing,
-            timestamp: DateTime.now(),
-          ));
-        });
-
-        // Simulate async processing
-        await Future.delayed(const Duration(seconds: 2));
-        
-        setState(() {
-          _importHistory[0] = _importHistory[0].copyWith(
-            status: file.name.contains('sample') ? ImportStatus.success : ImportStatus.duplicate,
-          );
-        });
-
-        if (mounted) {
-          final message = file.name.contains('sample') 
-              ? 'Receipt imported successfully!'
-              : 'Receipt already exists (duplicate)';
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
-        }
+      if (result == null || result.files.isEmpty) {
+        return;
       }
-    } catch (e) {
-      setState(() {
-        if (_importHistory.isNotEmpty && _importHistory[0].status == ImportStatus.processing) {
-          _importHistory[0] = _importHistory[0].copyWith(status: ImportStatus.error);
-        }
-      });
-      
-      if (mounted) {
+
+      final uris = result.files
+          .map((file) => file.identifier ?? file.path)
+          .whereType<String>()
+          .toList();
+
+      if (uris.isEmpty) {
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Import failed: $e')),
+          const SnackBar(content: Text('Unable to access selected files.')),
         );
+        return;
       }
+
+      final uniqueUris = LinkedHashSet<String>.from(uris).toList();
+
+      await ref.read(importControllerProvider.notifier).importUris(uniqueUris);
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Import failed: $error')),
+      );
     }
   }
+}
 
-  Widget _EmptyState() {
-    return Expanded(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.file_upload,
-              size: 64,
-              color: AppColors.textSecondary,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'No imports yet',
-              style: AppTextStyles.titleMedium.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Import your first Biedronka PDF receipt',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
+class _LoadingOverlay extends StatelessWidget {
+  const _LoadingOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: Colors.black.withValues(alpha: 0.05),
+      child: const Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }
+}
 
-  Widget _ImportHistoryList() {
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.file_upload,
+            size: 64,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'No imports yet',
+            style: AppTextStyles.titleMedium.copyWith(
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Import your first Biedronka PDF receipt',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImportHistoryList extends StatelessWidget {
+  const _ImportHistoryList({required this.entries});
+
+  final List<ImportHistoryEntry> entries;
+
+  @override
+  Widget build(BuildContext context) {
     return ListView.builder(
-      itemCount: _importHistory.length,
+      itemCount: entries.length,
       itemBuilder: (context, index) {
-        final result = _importHistory[index];
-        return _ImportHistoryItem(result: result);
+        return _ImportHistoryItem(entry: entries[index]);
       },
     );
   }
 }
 
 class _ImportHistoryItem extends StatelessWidget {
-  final ImportResult result;
+  const _ImportHistoryItem({required this.entry});
 
-  const _ImportHistoryItem({required this.result});
+  final ImportHistoryEntry entry;
+
+  ImportResult get result => entry.result;
 
   @override
   Widget build(BuildContext context) {
+    final fileName = _resolveFileName(result.sourceUri);
+    final subtitle = _buildSubtitle(entry.timestamp, result.message);
+    final badgeStyle = _badgeStyle(result.status);
+
     return Card(
       child: ListTile(
-        leading: _getStatusIcon(),
         title: Text(
-          result.fileName,
+          fileName,
           style: AppTextStyles.bodyLarge.copyWith(
             color: AppColors.textPrimary,
           ),
         ),
         subtitle: Text(
-          '${result.status.displayName} • ${_formatTime(result.timestamp)}',
+          subtitle,
           style: AppTextStyles.bodyMedium.copyWith(
             color: AppColors.textSecondary,
           ),
         ),
-        trailing: _getStatusBadge(),
-      ),
-    );
-  }
-
-  Widget _getStatusIcon() {
-    switch (result.status) {
-      case ImportStatus.success:
-        return const CircleAvatar(
-          backgroundColor: AppColors.success,
-          child: Icon(Icons.check, color: Colors.white, size: 16),
-        );
-      case ImportStatus.duplicate:
-        return const CircleAvatar(
-          backgroundColor: AppColors.warning,
-          child: Icon(Icons.content_copy, color: Colors.white, size: 16),
-        );
-      case ImportStatus.error:
-        return const CircleAvatar(
-          backgroundColor: AppColors.error,
-          child: Icon(Icons.error, color: Colors.white, size: 16),
-        );
-      case ImportStatus.processing:
-        return const CircleAvatar(
-          backgroundColor: AppColors.primary,
-          child: SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          ),
-        );
-    }
-  }
-
-  Widget _getStatusBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: result.status.color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        result.status.displayName,
-        style: AppTextStyles.labelSmall.copyWith(
-          color: result.status.color,
-          fontWeight: FontWeight.w600,
+        trailing: _StatusBadge(
+          label: badgeStyle.label,
+          color: badgeStyle.color,
+          outlined: badgeStyle.outlined,
         ),
       ),
     );
   }
 
-  String _formatTime(DateTime time) {
+  String _buildSubtitle(DateTime timestamp, String? message) {
+    final parts = <String>[_formatTimestamp(timestamp)];
+    if (message != null && message.isNotEmpty) {
+      parts.add(message);
+    }
+    return parts.join(' • ');
+  }
+
+  _BadgeStyle _badgeStyle(ImportStatus status) {
+    switch (status) {
+      case ImportStatus.success:
+        return const _BadgeStyle(label: 'Success', color: AppColors.success);
+      case ImportStatus.duplicate:
+        return const _BadgeStyle(
+          label: 'Duplicate',
+          color: AppColors.warning,
+          outlined: true,
+        );
+      case ImportStatus.error:
+        return const _BadgeStyle(label: 'Error', color: AppColors.error);
+    }
+  }
+
+  String _resolveFileName(String? sourceUri) {
+    if (sourceUri == null || sourceUri.isEmpty) {
+      return 'Unknown file';
+    }
+
+    try {
+      final uri = Uri.parse(sourceUri);
+      if (uri.pathSegments.isNotEmpty) {
+        return Uri.decodeComponent(uri.pathSegments.last);
+      }
+      return uri.toString();
+    } catch (_) {
+      final segments = sourceUri.split('/');
+      return segments.isNotEmpty ? segments.last : sourceUri;
+    }
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
     final now = DateTime.now();
-    final difference = now.difference(time);
-    
+    final difference = now.difference(timestamp);
+
     if (difference.inMinutes < 1) {
       return 'Just now';
     } else if (difference.inHours < 1) {
@@ -248,59 +263,48 @@ class _ImportHistoryItem extends StatelessWidget {
   }
 }
 
-class ImportResult {
-  final String fileName;
-  final ImportStatus status;
-  final DateTime timestamp;
-
-  ImportResult({
-    required this.fileName,
-    required this.status,
-    required this.timestamp,
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({
+    required this.label,
+    required this.color,
+    this.outlined = false,
   });
 
-  ImportResult copyWith({
-    String? fileName,
-    ImportStatus? status,
-    DateTime? timestamp,
-  }) {
-    return ImportResult(
-      fileName: fileName ?? this.fileName,
-      status: status ?? this.status,
-      timestamp: timestamp ?? this.timestamp,
+  final String label;
+  final Color color;
+  final bool outlined;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: outlined ? Colors.transparent : color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: outlined ? Border.all(color: color) : null,
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.labelSmall.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
 
-enum ImportStatus {
-  success,
-  duplicate,
-  error,
-  processing;
+class _BadgeStyle {
+  const _BadgeStyle({
+    required this.label,
+    required this.color,
+    this.outlined = false,
+  });
 
-  String get displayName {
-    switch (this) {
-      case ImportStatus.success:
-        return 'Success';
-      case ImportStatus.duplicate:
-        return 'Duplicate';
-      case ImportStatus.error:
-        return 'Error';
-      case ImportStatus.processing:
-        return 'Processing';
-    }
-  }
-
-  Color get color {
-    switch (this) {
-      case ImportStatus.success:
-        return AppColors.success;
-      case ImportStatus.duplicate:
-        return AppColors.warning;
-      case ImportStatus.error:
-        return AppColors.error;
-      case ImportStatus.processing:
-        return AppColors.primary;
-    }
-  }
+  final String label;
+  final Color color;
+  final bool outlined;
 }
