@@ -146,5 +146,3 @@ final sentryEnabledProvider =
   final repository = ref.watch(settingsRepositoryProvider);
   return SentryEnabledNotifier(repository, false);
 });
-
-final importStatusProvider = StateProvider<String?>((ref) => null);

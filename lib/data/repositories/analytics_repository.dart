@@ -11,6 +11,8 @@ import 'package:biedronka_expenses/domain/models/month_overview.dart';
 import 'package:biedronka_expenses/domain/models/monthly_total.dart';
 import 'package:biedronka_expenses/domain/models/receipt_row.dart';
 
+typedef Reader = T Function<T>(ProviderListenable<T> provider);
+
 class AnalyticsRepository {
   AnalyticsRepository(Reader read)
       : _updateBus = read(databaseUpdateBusProvider);
