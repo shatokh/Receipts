@@ -129,15 +129,25 @@ The app includes Android-specific PDF text extraction using PdfBox-Android:
 
 ## Testing
 
-Run tests with:
+### Unit and Widget Tests
 
-```bash
-# Unit tests
-flutter test
+- Use the helpers in `test/helpers/test_environment.dart` to get an isolated Riverpod `ProviderContainer` and sqflite database per test (`TestAppHarness` or `createTestContainer`).
+- Existing tests were migrated to the harness so new specs can follow the same pattern.
+- Run the default suite with `flutter test`.
 
-# Integration tests (if available)
-flutter test integration_test/
-```
+### Coverage Gate
+
+- Run `dart run tool/test_with_coverage.dart` to execute the suite with coverage and enforce the default 70% project-wide threshold.
+- Override the minimum requirement with `--min-coverage=<double>` (e.g. `dart run tool/test_with_coverage.dart --min-coverage=75`).
+- The script forwards any extra options to `flutter test`, so you can scope files (`--plain-name`) or increase concurrency (`-j`).
+
+### Handy Commands
+
+- `flutter test` — run the whole test suite.
+- `flutter test test/import_pipeline_test.dart` — focus on a single file when iterating locally.
+- `flutter test --plain-name "receipt"` — filter to tests whose descriptions contain the provided string.
+- `dart run tool/test_with_coverage.dart --min-coverage=80` — enforce a custom coverage threshold (80% here).
+- `dart run tool/test_with_coverage.dart -- --run-skipped` — forward extra flags (`--run-skipped` in this case) straight to `flutter test`.
 
 ## Build Configuration
 
