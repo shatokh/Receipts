@@ -1,46 +1,39 @@
 import 'dart:io';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:biedronka_expenses/data/database.dart';
-import 'package:biedronka_expenses/data/database_update_bus.dart';
-import 'package:biedronka_expenses/data/database_update_bus_provider.dart';
 import 'package:biedronka_expenses/data/repositories/analytics_repository.dart';
 import 'package:biedronka_expenses/data/repositories/receipt_repository.dart';
 import 'package:biedronka_expenses/domain/models/import_result.dart';
 import 'package:biedronka_expenses/domain/parsing/receipt_parser.dart';
 import 'package:biedronka_expenses/features/import/import_service.dart';
 import 'package:biedronka_expenses/platform/pdf_text_extractor/pdf_text_extractor.dart';
+import 'helpers/test_environment.dart';
 
 class _MockPdfTextExtractor extends Mock implements PdfTextExtractor {}
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
-  late ProviderContainer container;
+  late TestAppHarness harness;
   late ReceiptRepository receiptRepository;
   late AnalyticsRepository analyticsRepository;
   late ImportService importService;
   late _MockPdfTextExtractor pdf;
 
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+  setUpAll(() async {
+    await bootstrapTestEnvironment();
   });
 
   setUp(() async {
     pdf = _MockPdfTextExtractor();
+    harness = TestAppHarness();
+    await harness.setUp();
 
-    container = ProviderContainer(overrides: [
-      databaseUpdateBusProvider.overrideWithValue(DatabaseUpdateBus()),
-    ]);
-
-    receiptRepository = ReceiptRepository(container.read);
-    analyticsRepository = AnalyticsRepository(container.read);
+    receiptRepository = ReceiptRepository(harness.container.read);
+    analyticsRepository = AnalyticsRepository(harness.container.read);
     importService = ImportService(
       pdf: pdf,
       parser: ReceiptParser(),
@@ -48,7 +41,6 @@ void main() {
       analytics: analyticsRepository,
     );
 
-    await DatabaseHelper.close();
     final dbPath = await getDatabasesPath();
     final path = p.join(dbPath, DatabaseHelper.dbName);
     if (await File(path).exists()) {
@@ -58,8 +50,7 @@ void main() {
   });
 
   tearDown(() async {
-    await DatabaseHelper.close();
-    container.dispose();
+    await harness.tearDown();
   });
 
   test(
