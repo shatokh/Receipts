@@ -9,6 +9,10 @@ class ReceiptParser {
       RegExp(r'(\d{1,2})\.(\d{1,2})\.(\d{4})\s+(\d{1,2}):(\d{2})');
   static final RegExp _itemLineRegex =
       RegExp(r'^(.+?)\s{2,}(-?\d+(?:[,.]\d+)?)\s*(\S+)$');
+  static final RegExp _singleLineItemRegex = RegExp(
+    r'^(.+?)\s+([A-Z])\s+(\d+(?:[,.]\d+)?)'
+    r'(?:\s+(?!x\s)(\S+))?\s*x\s*(-?\d+(?:[,.]\d+)?)\s+(-?\d+(?:[,.]\d+)?)$',
+  );
   static final RegExp _priceLineRegex = RegExp(
       r'(-?\d+(?:[,.]\d+)?)\s*PLN(?:/\S+)?\s+(-?\d+(?:[,.]\d+)?)\s*PLN\s*([A-Z])?',
       caseSensitive: false);
@@ -111,11 +115,44 @@ class ReceiptParser {
       }
 
       final lower = line.toLowerCase();
+      if (lower.contains('niefiskalny')) {
+        continue;
+      }
+      if (lower.startsWith('nazwa') && lower.contains('ptu')) {
+        continue;
+      }
       if (lower.startsWith('suma')) {
         break;
       }
       if (lower.startsWith('gotówka') || lower.startsWith('gotowka')) {
         break;
+      }
+
+      final singleLineMatch = _singleLineItemRegex.firstMatch(line);
+      if (singleLineMatch != null) {
+        final name = singleLineMatch.group(1)!.trim();
+        final vatCode = singleLineMatch.group(2);
+        final quantity = _parseAmount(singleLineMatch.group(3)!);
+        final unit = _normalizeUnit(singleLineMatch.group(4));
+        final unitPrice = _parseAmount(singleLineMatch.group(5)!);
+        final total = _parseAmount(singleLineMatch.group(6)!);
+        final vatRate = _vatRateFromCode(vatCode);
+
+        items.add(
+          LineItem(
+            id: _generateId(),
+            receiptId: receiptId,
+            name: name,
+            quantity: quantity,
+            unit: unit,
+            unitPrice: unitPrice,
+            discount: 0,
+            vatRate: vatRate,
+            total: total,
+            categoryId: _categorize(name),
+          ),
+        );
+        continue;
       }
 
       if (lower.contains('rabat') || lower.contains('zwrot')) {
@@ -211,6 +248,7 @@ class ReceiptParser {
   bool _isBiedronkaReceipt(String text) {
     final lower = text.toLowerCase();
     return lower.contains('biedronka') ||
+        lower.contains('jeronimo martins polska') ||
         lower.contains('5261040567') ||
         lower.contains('paragon fiskalny');
   }
@@ -236,6 +274,18 @@ class ReceiptParser {
       default:
         return 0;
     }
+  }
+
+  String _normalizeUnit(String? value) {
+    if (value == null) {
+      return 'szt';
+    }
+    final cleaned = value.trim();
+    if (cleaned.isEmpty) {
+      return 'szt';
+    }
+    final normalized = cleaned.replaceAll('.', '');
+    return normalized.isEmpty ? 'szt' : normalized;
   }
 
   String _generateId() {
