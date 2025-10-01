@@ -1,0 +1,23 @@
+Sklep 4553 H.GORDONOWNY 12
+Jeronimo Martins Polska S.A.
+ul. Żniwna 5, 62-005 Kostrzyn
+NIP 779-10-11-327
+
+06.09.2025 14:33
+
+NIEFISKALNY
+
+Nazwa                PTU Ilość Cena Wartość
+Mleko SPOŻ 2%        A   1,000 x 5,28 5,28
+Ser żółty plastry     B   0,300 kg x 32,99 9,90
+Makaron pełnoziarn.  C   2,000 x 4,79 9,58
+Rabat kupon lojaln.      -1,50 PLN
+
+Suma PLN 23,26
+Gotówka 30,00 PLN
+Reszta 6,74 PLN
+
+VAT A 5%    podstawa    5,03  VAT  0,25
+VAT B 8%    podstawa    9,17  VAT  0,73
+VAT C 23%   podstawa   7,89  VAT  1,81
+Suma VAT 2,79
