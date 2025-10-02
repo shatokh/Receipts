@@ -6,6 +6,40 @@ plugins {
 }
 
 
+def jp2Ver = "1.0.3"
+def jp2Aar = "jp2-android-${jp2Ver}.aar"
+
+// URL and checksum can come from CI secrets; fall back to placeholders for local dev.
+def jp2Url = System.getenv("JP2_AAR_URL") ?: "<PUT_DIRECT_DOWNLOAD_URL_HERE>"
+def jp2Sha256 = System.getenv("JP2_AAR_SHA256") ?: "<PUT_SHA256_HERE>"
+
+tasks.register("fetchJp2Aar") {
+    outputs.file("$projectDir/libs/$jp2Aar")
+    doLast {
+        def destDir = file("$projectDir/libs")
+        def dest = file("$projectDir/libs/$jp2Aar")
+        if (!dest.exists()) {
+            destDir.mkdirs()
+            new URL(jp2Url).withInputStream { i -> dest.withOutputStream { it << i } }
+
+            // Verify SHA-256
+            def md = java.security.MessageDigest.getInstance("SHA-256")
+            dest.withInputStream { is ->
+                byte[] buf = new byte[8192]; int r
+                while ((r = is.read(buf)) > 0) md.update(buf, 0, r)
+            }
+            def actual = md.digest().encodeHex().toString()
+            if (actual != jp2Sha256) {
+                dest.delete()
+                throw new GradleException("Checksum mismatch for $jp2Aar: $actual")
+            }
+        }
+    }
+}
+
+preBuild.dependsOn("fetchJp2Aar")
+
+
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('key.properties')
 if (keystorePropertiesFile.exists()) {
@@ -53,7 +87,7 @@ android {
 
 dependencies {
     implementation 'com.tom-roush:pdfbox-android:2.0.27.0'
-    implementation 'com.gemalto.jp2:jp2-android:1.0.3'
+    implementation files("libs/$jp2Aar")
 }
 
 flutter {
