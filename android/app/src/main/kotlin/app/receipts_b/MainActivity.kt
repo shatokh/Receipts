@@ -1,4 +1,4 @@
-package app.biedronka.biedronka_expenses
+package app.receipts_b
 
 import android.content.Context
 import android.net.Uri

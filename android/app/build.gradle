@@ -13,7 +13,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "app.biedronka.biedronka_expenses"
+    namespace = "app.receipts_b"
     compileSdk = 34
 
     compileOptions {
@@ -35,7 +35,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "app.biedronka.biedronka_expenses"
+        applicationId = "app.receipts_b"
         minSdk = 24
         targetSdk = 34
         versionCode = flutter.versionCode
