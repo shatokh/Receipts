@@ -152,7 +152,7 @@ The app includes Android-specific PDF text extraction using PdfBox-Android:
 ## Build Configuration
 
 The app is configured for:
-- **Package Name**: `app.biedronka.biedronka_expenses`
+- **Package Name**: `app.receipts_b`
 - **Kotlin**: 1.9+ with JDK 17
 - **Material 3**: Full Material You theming
 - **Offline-First**: No network dependencies in core functionality
