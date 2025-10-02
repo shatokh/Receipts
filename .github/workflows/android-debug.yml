@@ -13,6 +13,8 @@ jobs:
 
     env:
       PROJECT_DIR: .
+      JP2_AAR_URL: ${{ secrets.JP2_AAR_URL }}
+      JP2_AAR_SHA256: ${{ secrets.JP2_AAR_SHA256 }}
 
     steps:
       - name: Checkout

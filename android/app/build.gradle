@@ -6,6 +6,51 @@ plugins {
 }
 
 
+def jp2Ver = "1.0.3"
+def jp2Aar = "jp2-android-${jp2Ver}.aar"
+
+// URL and checksum can come from CI secrets; fall back to placeholders for local dev.
+def jp2PlaceholderUrl = "<PUT_DIRECT_DOWNLOAD_URL_HERE>"
+def jp2PlaceholderSha = "<PUT_SHA256_HERE>"
+def jp2Url = System.getenv("JP2_AAR_URL") ?: jp2PlaceholderUrl
+def jp2Sha256 = System.getenv("JP2_AAR_SHA256") ?: jp2PlaceholderSha
+
+def jp2LibsDir = file("$projectDir/libs")
+def jp2Lib = file("$projectDir/libs/$jp2Aar")
+def jp2SecretsProvided = jp2Url && jp2Url != jp2PlaceholderUrl && jp2Sha256 && jp2Sha256 != jp2PlaceholderSha
+def jp2AvailableLocally = jp2Lib.exists()
+def includeJp2 = jp2SecretsProvided || jp2AvailableLocally
+
+tasks.register("fetchJp2Aar") {
+    outputs.file(jp2Lib)
+    onlyIf { jp2SecretsProvided && !jp2AvailableLocally }
+    doLast {
+        if (!jp2Lib.exists()) {
+            jp2LibsDir.mkdirs()
+            new URL(jp2Url).withInputStream { i -> jp2Lib.withOutputStream { it << i } }
+
+            // Verify SHA-256
+            def md = java.security.MessageDigest.getInstance("SHA-256")
+            jp2Lib.withInputStream { is ->
+                byte[] buf = new byte[8192]; int r
+                while ((r = is.read(buf)) > 0) md.update(buf, 0, r)
+            }
+            def actual = md.digest().encodeHex().toString()
+            if (actual != jp2Sha256) {
+                jp2Lib.delete()
+                throw new GradleException("Checksum mismatch for $jp2Aar: $actual")
+            }
+        }
+    }
+}
+
+if (includeJp2) {
+    preBuild.dependsOn("fetchJp2Aar")
+} else {
+    logger.lifecycle("JP2 AAR not configured and libs/$jp2Aar missing; continuing without optional JPEG2000 support.")
+}
+
+
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('key.properties')
 if (keystorePropertiesFile.exists()) {
@@ -53,7 +98,11 @@ android {
 
 dependencies {
     implementation 'com.tom-roush:pdfbox-android:2.0.27.0'
-    implementation 'com.gemalto.jp2:jp2-android:1.0.3'
+    if (includeJp2) {
+        implementation files("libs/$jp2Aar")
+    } else {
+        logger.lifecycle("JP2 AAR dependency disabled; build will proceed without JPEG2000 decoding support.")
+    }
 }
 
 flutter {
