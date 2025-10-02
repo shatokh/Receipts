@@ -20,7 +20,7 @@ dependencies:
   workmanager: ^0.6.0
   sentry_flutter: ^8.12.0
   intl: ^0.20.1
-  collection: 1.19.0
+  collection: 1.19.1
   crypto: ^3.0.6
   shared_preferences: ^2.3.2
   cupertino_icons: ^1.0.8
@@ -40,5 +40,5 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/icons/dreamflow_icon.jpg
+  image_path: assets/icons/RB_icon.png
   remove_alpha_ios: true

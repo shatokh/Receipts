@@ -53,6 +53,7 @@ android {
 
 dependencies {
     implementation 'com.tom-roush:pdfbox-android:2.0.27.0'
+    implementation 'com.gemalto.jp2:jp2-android:1.0.3'
 }
 
 flutter {
