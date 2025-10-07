@@ -247,10 +247,20 @@ class ReceiptParser {
 
   bool _isBiedronkaReceipt(String text) {
     final lower = text.toLowerCase();
+    final collapsed = lower.replaceAll(RegExp(r'[\s-]'), '');
+
+    bool containsJeronimoChain() {
+      return RegExp(r'jeronimo\s+martins\s+polska', caseSensitive: false)
+              .hasMatch(text) ||
+          collapsed.contains('jeronimomartinspolska');
+    }
+
     return lower.contains('biedronka') ||
-        lower.contains('jeronimo martins polska') ||
-        lower.contains('5261040567') ||
-        lower.contains('paragon fiskalny');
+        containsJeronimoChain() ||
+        collapsed.contains('5261040567') ||
+        collapsed.contains('7791011327') ||
+        lower.contains('paragon fiskalny') ||
+        lower.contains('niefiskalny');
   }
 
   String _categorize(String name) {

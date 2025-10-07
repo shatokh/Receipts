@@ -31,4 +31,18 @@ void main() {
         .firstWhere((item) => item.name.toLowerCase().contains('rabat'));
     expect(discount.total, closeTo(-1.50, 0.01));
   });
+
+  test('detects Jeronimo header even when broken across lines', () async {
+    final parser = ReceiptParser();
+    final original = await File('assets/sample_receipt_modern.txt').readAsString();
+    final modified = original.replaceFirst(
+      'Jeronimo Martins Polska S.A.',
+      'Jeronimo\nMartins\nPolska S.A.',
+    );
+
+    final receipt = parser.parse(modified);
+
+    expect(receipt.merchantId, 'biedronka');
+    expect(receipt.items, isNotEmpty);
+  });
 }
