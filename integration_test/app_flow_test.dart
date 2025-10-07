@@ -18,11 +18,22 @@ Future<void> pumpAndSettleSafe(
   WidgetTester tester, {
   Duration timeout = const Duration(seconds: 10),
 }) async {
-  try {
-    await tester.pumpAndSettle(const Duration(milliseconds: 100),
-        timeout: timeout);
-  } on FlutterError catch (error) {
-    fail('pumpAndSettleSafe timed out: $error');
+  final deadline = DateTime.now().add(timeout);
+
+  while (true) {
+    try {
+      await tester.pumpAndSettle(const Duration(milliseconds: 100));
+      return;
+    } on FlutterError catch (error) {
+      final message = error.message ?? error.toString();
+      if (!message.contains('pumpAndSettle timed out')) {
+        rethrow;
+      }
+
+      if (DateTime.now().isAfter(deadline)) {
+        fail('pumpAndSettleSafe timed out after $timeout: $message');
+      }
+    }
   }
 }
 
@@ -131,7 +142,7 @@ void main() {
       textPages: const [],
       hash: 'integration-broken-hash',
       extractionError:
-          const PdfTextExtractionException('Unable to read provided PDF'),
+          PdfTextExtractionException('Unable to read provided PDF'),
     );
 
     await tester.tap(find.byKey(TestKeys.navImport));

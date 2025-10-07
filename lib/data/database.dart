@@ -10,6 +10,10 @@ class DatabaseHelper {
 
   static void configureForTesting({String? databaseName}) {
     _databaseNameOverride = databaseName;
+    if (!kIsWeb && databaseFactoryOrNull == null) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
   }
 
   static Future<Database> get database async {
