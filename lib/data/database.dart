@@ -6,6 +6,11 @@ class DatabaseHelper {
   static Database? _database;
   static const String dbName = 'biedronka_expenses.db';
   static const int dbVersion = 1;
+  static String? _databaseNameOverride;
+
+  static void configureForTesting({String? databaseName}) {
+    _databaseNameOverride = databaseName;
+  }
 
   static Future<Database> get database async {
     if (_database != null) return _database!;
@@ -24,8 +29,9 @@ class DatabaseHelper {
 
   static Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, dbName);
-    
+    final name = _databaseNameOverride ?? dbName;
+    final path = join(dbPath, name);
+
     return await openDatabase(
       path,
       version: dbVersion,
@@ -105,10 +111,13 @@ class DatabaseHelper {
     ''');
 
     // Indexes for performance
-    await db.execute('CREATE INDEX idx_receipts_purchase_ts ON receipts(purchase_ts)');
-    await db.execute('CREATE INDEX idx_receipts_total_gross ON receipts(total_gross)');
-    await db.execute('CREATE INDEX idx_line_items_receipt_id ON line_items(receipt_id)');
-    
+    await db.execute(
+        'CREATE INDEX idx_receipts_purchase_ts ON receipts(purchase_ts)');
+    await db.execute(
+        'CREATE INDEX idx_receipts_total_gross ON receipts(total_gross)');
+    await db.execute(
+        'CREATE INDEX idx_line_items_receipt_id ON line_items(receipt_id)');
+
     // Insert default categories
     await _insertDefaultCategories(db);
   }

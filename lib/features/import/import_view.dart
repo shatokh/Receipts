@@ -1,10 +1,9 @@
-import 'dart:collection';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:biedronka_expenses/app/providers.dart';
 import 'package:biedronka_expenses/domain/models/import_result.dart';
+import 'package:biedronka_expenses/features/import/file_import_service.dart';
 import 'package:biedronka_expenses/features/import/import_controller.dart';
 import 'package:biedronka_expenses/theme.dart';
 
@@ -36,6 +35,7 @@ class ImportView extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ElevatedButton.icon(
+              key: const ValueKey('import_button'),
               onPressed: () => _importPdf(context, ref),
               icon: const Icon(Icons.upload_file),
               label: const Text('Import PDF'),
@@ -71,33 +71,14 @@ class ImportView extends ConsumerWidget {
 
   Future<void> _importPdf(BuildContext context, WidgetRef ref) async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: const ['pdf'],
-        allowMultiple: true,
-        withData: false,
-      );
-
-      if (result == null || result.files.isEmpty) {
-        return;
-      }
-
-      final uris = result.files
-          .map((file) => file.identifier ?? file.path)
-          .whereType<String>()
-          .toList();
+      final fileImportService = ref.read(fileImportServiceProvider);
+      final uris = await fileImportService.pickReceiptUris();
 
       if (uris.isEmpty) {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to access selected files.')),
-        );
         return;
       }
 
-      final uniqueUris = LinkedHashSet<String>.from(uris).toList();
-
-      await ref.read(importControllerProvider.notifier).importUris(uniqueUris);
+      await ref.read(importControllerProvider.notifier).importUris(uris);
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
