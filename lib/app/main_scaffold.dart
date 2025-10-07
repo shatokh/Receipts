@@ -16,19 +16,23 @@ class MainScaffold extends StatelessWidget {
         onTap: (index) => _onTap(context, index),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home, key: ValueKey('nav_home')),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: 'Month',
+            icon: Icon(Icons.upload_file, key: ValueKey('nav_import')),
+            label: 'Import',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long),
+            icon: Icon(Icons.bar_chart, key: ValueKey('nav_stats')),
+            label: 'Stats',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long, key: ValueKey('nav_receipts')),
             label: 'Receipts',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
+            icon: Icon(Icons.settings, key: ValueKey('nav_settings')),
             label: 'Settings',
           ),
         ],
@@ -37,16 +41,19 @@ class MainScaffold extends StatelessWidget {
   }
 
   int _getCurrentIndex(BuildContext context) {
-    final location = GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+    final location =
+        GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
     switch (location) {
       case '/dashboard':
         return 0;
-      case '/month':
+      case '/import':
         return 1;
-      case '/receipts':
+      case '/month':
         return 2;
-      case '/settings':
+      case '/receipts':
         return 3;
+      case '/settings':
+        return 4;
       default:
         return 0;
     }
@@ -58,12 +65,15 @@ class MainScaffold extends StatelessWidget {
         context.go('/dashboard');
         break;
       case 1:
-        context.go('/month');
+        context.go('/import');
         break;
       case 2:
-        context.go('/receipts');
+        context.go('/month');
         break;
       case 3:
+        context.go('/receipts');
+        break;
+      case 4:
         context.go('/settings');
         break;
     }

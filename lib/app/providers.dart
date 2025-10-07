@@ -12,6 +12,7 @@ import 'package:biedronka_expenses/domain/models/monthly_total.dart';
 import 'package:biedronka_expenses/domain/models/receipt_details.dart';
 import 'package:biedronka_expenses/domain/models/receipt_row.dart';
 import 'package:biedronka_expenses/domain/parsing/receipt_parser.dart';
+import 'package:biedronka_expenses/features/import/file_import_service.dart';
 import 'package:biedronka_expenses/features/import/import_service.dart';
 import 'package:biedronka_expenses/platform/pdf_text_extractor/android_pdf_text_extractor.dart';
 import 'package:biedronka_expenses/platform/pdf_text_extractor/pdf_text_extractor.dart';
@@ -40,6 +41,10 @@ final pdfTextExtractorProvider = Provider<PdfTextExtractor>((ref) {
 
 final receiptParserProvider = Provider<ReceiptParser>((ref) {
   return ReceiptParser();
+});
+
+final fileImportServiceProvider = Provider<FileImportService>((ref) {
+  return const FilePickerFileImportService();
 });
 
 final importServiceProvider = Provider<ImportService>((ref) {

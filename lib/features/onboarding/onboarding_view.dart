@@ -34,9 +34,11 @@ class OnboardingView extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               _BulletPoint(text: 'All data stays on this device'),
               const SizedBox(height: AppSpacing.md),
-              _BulletPoint(text: 'Optional crash reports (you can disable any time)'),
+              _BulletPoint(
+                  text: 'Optional crash reports (you can disable any time)'),
               const Spacer(),
               ElevatedButton(
+                key: const ValueKey('onboarding_get_started'),
                 onPressed: () => context.go('/dashboard'),
                 child: const Text('Get started'),
               ),

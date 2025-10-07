@@ -19,31 +19,35 @@ void callbackDispatcher() {
   });
 }
 
+Widget buildApp({List<Override> overrides = const []}) {
+  return ProviderScope(
+    overrides: overrides,
+    child: const BiedronkaExpensesApp(),
+  );
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize database
   await DatabaseHelper.database;
-  
+
   // Initialize Workmanager for background tasks
   await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
-  
+
   final sharedPreferences = await SharedPreferences.getInstance();
   final settingsRepository = SettingsRepository(sharedPreferences);
   final sentryEnabled = settingsRepository.isSentryEnabled();
 
+  final baseOverrides = <Override>[
+    settingsRepositoryProvider.overrideWithValue(settingsRepository),
+    sentryEnabledProvider.overrideWith((ref) {
+      return SentryEnabledNotifier(settingsRepository, sentryEnabled);
+    }),
+  ];
+
   void runAppWithProviders() {
-    runApp(
-      ProviderScope(
-        overrides: [
-          settingsRepositoryProvider.overrideWithValue(settingsRepository),
-          sentryEnabledProvider.overrideWith((ref) {
-            return SentryEnabledNotifier(settingsRepository, sentryEnabled);
-          }),
-        ],
-        child: const BiedronkaExpensesApp(),
-      ),
-    );
+    runApp(buildApp(overrides: baseOverrides));
   }
 
   const sentryDsn = String.fromEnvironment('SENTRY_DSN');
