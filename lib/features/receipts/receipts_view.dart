@@ -73,8 +73,7 @@ class ReceiptsView extends ConsumerWidget {
     if (months.isEmpty) {
       months.addAll(totals.map((total) => DateTime(total.year, total.month)));
     }
-    final list = months.toList()
-      ..sort((a, b) => b.compareTo(a));
+    final list = months.toList()..sort((a, b) => b.compareTo(a));
     return list;
   }
 }
@@ -244,6 +243,7 @@ class _ReceiptsList extends StatelessWidget {
     );
 
     return ListView.separated(
+      key: const ValueKey('receipt_list'),
       itemCount: receipts.length,
       separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, index) {

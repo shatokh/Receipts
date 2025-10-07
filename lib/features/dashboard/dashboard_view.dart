@@ -36,6 +36,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
         title: const Text('Spending dashboard'),
         actions: [
           IconButton(
+            key: const ValueKey('nav_import_action'),
             icon: const Icon(Icons.add),
             onPressed: () => context.go('/import'),
             tooltip: 'Import PDF',
@@ -73,7 +74,8 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                     ),
                     _MonthDropdown(
                       months: dropdownMonths,
-                      selectedMonth: DateTime(selectedMonth.year, selectedMonth.month),
+                      selectedMonth:
+                          DateTime(selectedMonth.year, selectedMonth.month),
                     ),
                   ],
                 ),
@@ -136,14 +138,17 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
       return;
     }
 
-    final hasCurrent = monthsWithData.any((month) => _isSameMonth(month, normalizedCurrent));
+    final hasCurrent =
+        monthsWithData.any((month) => _isSameMonth(month, normalizedCurrent));
     if (!hasCurrent) {
       ref.read(selectedMonthProvider.notifier).state = monthsWithData.last;
     }
   }
 
-  List<DateTime> _buildDropdownMonths(List<MonthlyTotal> totals, DateTime selectedMonth) {
-    final normalizedSelected = DateTime(selectedMonth.year, selectedMonth.month);
+  List<DateTime> _buildDropdownMonths(
+      List<MonthlyTotal> totals, DateTime selectedMonth) {
+    final normalizedSelected =
+        DateTime(selectedMonth.year, selectedMonth.month);
     final uniqueMonths = <DateTime>{};
 
     for (final total in totals) {
@@ -153,17 +158,18 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     }
 
     if (uniqueMonths.isEmpty) {
-      uniqueMonths.addAll(totals.map((total) => DateTime(total.year, total.month)));
+      uniqueMonths
+          .addAll(totals.map((total) => DateTime(total.year, total.month)));
     }
 
     uniqueMonths.add(normalizedSelected);
 
-    final months = uniqueMonths.toList()
-      ..sort((a, b) => a.compareTo(b));
+    final months = uniqueMonths.toList()..sort((a, b) => a.compareTo(b));
     return months;
   }
 
-  bool _isSameMonth(DateTime a, DateTime b) => a.year == b.year && a.month == b.month;
+  bool _isSameMonth(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month;
 }
 
 class _KPICards extends StatelessWidget {
@@ -299,6 +305,7 @@ class _MonthlyChart extends StatelessWidget {
             SizedBox(
               height: chartHeight,
               child: BarChart(
+                key: const ValueKey('chart_view'),
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
                   maxY: maxY,
@@ -306,8 +313,8 @@ class _MonthlyChart extends StatelessWidget {
                     touchTooltipData: BarTouchTooltipData(
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         final month = totals[groupIndex];
-                        final monthName =
-                            DateFormat('MMM yyyy').format(DateTime(month.year, month.month));
+                        final monthName = DateFormat('MMM yyyy')
+                            .format(DateTime(month.year, month.month));
                         return BarTooltipItem(
                           '$monthName\n${currencyFormat.format(month.total)}',
                           const TextStyle(color: Colors.white),
@@ -325,7 +332,8 @@ class _MonthlyChart extends StatelessWidget {
                           if (index >= 0 && index < totals.length) {
                             final month = totals[index];
                             return Text(
-                              DateFormat('MMM').format(DateTime(month.year, month.month)),
+                              DateFormat('MMM')
+                                  .format(DateTime(month.year, month.month)),
                               style: const TextStyle(fontSize: 10),
                             );
                           }
@@ -402,10 +410,13 @@ class _MonthDropdown extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final monthFormat = DateFormat('MMMM yyyy');
-    final normalizedSelected = DateTime(selectedMonth.year, selectedMonth.month);
+    final normalizedSelected =
+        DateTime(selectedMonth.year, selectedMonth.month);
 
     final value = months.firstWhere(
-      (month) => month.year == normalizedSelected.year && month.month == normalizedSelected.month,
+      (month) =>
+          month.year == normalizedSelected.year &&
+          month.month == normalizedSelected.month,
       orElse: () => normalizedSelected,
     );
 
@@ -577,7 +588,9 @@ class _QuickInsights extends StatelessWidget {
             ? 'No receipts this month'
             : '${maxReceipt.merchantName}, ${DateFormat('yyyy-MM-dd HH:mm').format(maxReceipt.purchaseTimestamp)}';
 
-        final receiptsLabel = data.receiptsCount == 1 ? '1 receipt' : '${data.receiptsCount} receipts';
+        final receiptsLabel = data.receiptsCount == 1
+            ? '1 receipt'
+            : '${data.receiptsCount} receipts';
 
         return Row(
           children: [
