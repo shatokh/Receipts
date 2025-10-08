@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,17 +22,24 @@ Future<void> pumpAndSettleSafe(
   final deadline = DateTime.now().add(timeout);
 
   while (true) {
+    final now = DateTime.now();
+    final remaining = deadline.difference(now);
+
+    if (remaining <= Duration.zero) {
+      fail('pumpAndSettleSafe timed out after $timeout');
+    }
+
     try {
-      await tester.pumpAndSettle(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle(
+        const Duration(milliseconds: 100),
+        EnginePhase.sendSemanticsUpdate,
+        remaining,
+      );
       return;
     } on FlutterError catch (error) {
       final message = error.message ?? error.toString();
       if (!message.contains('pumpAndSettle timed out')) {
         rethrow;
-      }
-
-      if (DateTime.now().isAfter(deadline)) {
-        fail('pumpAndSettleSafe timed out after $timeout: $message');
       }
     }
   }
