@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,11 +19,29 @@ Future<void> pumpAndSettleSafe(
   WidgetTester tester, {
   Duration timeout = const Duration(seconds: 10),
 }) async {
-  try {
-    await tester.pumpAndSettle(const Duration(milliseconds: 100),
-        timeout: timeout);
-  } on FlutterError catch (error) {
-    fail('pumpAndSettleSafe timed out: $error');
+  final deadline = DateTime.now().add(timeout);
+
+  while (true) {
+    final now = DateTime.now();
+    final remaining = deadline.difference(now);
+
+    if (remaining <= Duration.zero) {
+      fail('pumpAndSettleSafe timed out after $timeout');
+    }
+
+    try {
+      await tester.pumpAndSettle(
+        const Duration(milliseconds: 100),
+        EnginePhase.sendSemanticsUpdate,
+        remaining,
+      );
+      return;
+    } on FlutterError catch (error) {
+      final message = error.message ?? error.toString();
+      if (!message.contains('pumpAndSettle timed out')) {
+        rethrow;
+      }
+    }
   }
 }
 
@@ -131,7 +150,7 @@ void main() {
       textPages: const [],
       hash: 'integration-broken-hash',
       extractionError:
-          const PdfTextExtractionException('Unable to read provided PDF'),
+          PdfTextExtractionException('Unable to read provided PDF'),
     );
 
     await tester.tap(find.byKey(TestKeys.navImport));
