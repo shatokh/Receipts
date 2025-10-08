@@ -43,7 +43,7 @@ jobs:
         with:
           api-level: 34
           target: google_apis
-          arch: x86
+          arch: x86_64
           profile: pixel_5
           force-avd-creation: true
           ram-size: 3072M
