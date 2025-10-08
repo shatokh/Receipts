@@ -147,7 +147,7 @@ class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<DateTime?>(
-                  initialValue: widget.selectedMonth,
+                  value: widget.selectedMonth,
                   decoration: const InputDecoration(
                     labelText: 'Month',
                     border: OutlineInputBorder(),
