@@ -35,6 +35,15 @@ class ReceiptParser {
   };
 
   Receipt parse(String rawText) {
+    final maybeJson = rawText.trimLeft();
+    if (maybeJson.startsWith('{')) {
+      final decoded = jsonDecode(maybeJson);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Unsupported receipt JSON payload');
+      }
+      return _parseJsonReceipt(decoded);
+    }
+
     final text = _normalizeText(rawText);
 
     if (!_isBiedronkaReceipt(text)) {
@@ -61,6 +70,45 @@ class ReceiptParser {
       currency: totals.currency ?? 'PLN',
       totalGross: totals.totalGross!,
       totalVat: totals.totalVat ?? 0,
+      items: items,
+    );
+  }
+
+  Receipt _parseJsonReceipt(Map<String, dynamic> payload) {
+    final header = payload['header'];
+    final headerData = _firstNestedMap(header, 'headerData');
+    final body = payload['body'];
+    final sumInCurrency = _firstNestedMap(body, 'sumInCurrency');
+    final vatSummary = _firstNestedMap(body, 'vatSummary');
+    final fiscalFooter = _firstNestedMap(body, 'fiscalFooter');
+
+    final dateString =
+        (headerData?['date'] as String?) ?? (fiscalFooter?['date'] as String?);
+    if (dateString == null) {
+      throw const FormatException('Missing purchase date');
+    }
+
+    final purchaseDate = DateTime.parse(dateString).toLocal();
+
+    final totalMinor = _asInt(sumInCurrency?['fiscalTotal']) ??
+        _asInt(sumInCurrency?['totalWithPacks']);
+    if (totalMinor == null) {
+      throw const FormatException('Missing total amount');
+    }
+
+    final receiptId = _generateId();
+    final items = _parseJsonItems(body, receiptId);
+
+    final totalVat = _parseJsonVat(vatSummary);
+    final currency = (sumInCurrency?['currency'] as String?) ?? 'PLN';
+
+    return Receipt(
+      id: receiptId,
+      merchantId: 'biedronka',
+      purchaseTimestamp: purchaseDate,
+      currency: currency,
+      totalGross: _fromMinorUnits(totalMinor),
+      totalVat: totalVat,
       items: items,
     );
   }
@@ -93,6 +141,124 @@ class ReceiptParser {
       totalVat: vatTotal,
       currency: 'PLN',
     );
+  }
+
+  List<LineItem> _parseJsonItems(dynamic body, String receiptId) {
+    if (body is! List) {
+      return const [];
+    }
+
+    final items = <LineItem>[];
+
+    for (final entry in body) {
+      if (entry is! Map<String, dynamic>) {
+        continue;
+      }
+
+      final sellLine = entry['sellLine'];
+      if (sellLine is Map<String, dynamic>) {
+        if (sellLine['isStorno'] == true) {
+          continue;
+        }
+
+        final name = (sellLine['name'] as String?)?.trim();
+        if (name == null || name.isEmpty) {
+          continue;
+        }
+
+        final quantityRaw = sellLine['quantity']?.toString();
+        final quantity = quantityRaw != null ? _parseAmount(quantityRaw) : 1.0;
+        final unit = _inferUnit(quantityRaw);
+        final unitPrice = _fromMinorUnits(_asInt(sellLine['price']));
+        final total = _fromMinorUnits(_asInt(sellLine['total']));
+        final vatRate = _vatRateFromCode(sellLine['vatId'] as String?);
+
+        items.add(
+          LineItem(
+            id: _generateId(),
+            receiptId: receiptId,
+            name: name,
+            quantity: quantity,
+            unit: unit,
+            unitPrice: unitPrice,
+            discount: 0,
+            vatRate: vatRate,
+            total: total,
+            categoryId: _categorize(name),
+          ),
+        );
+        continue;
+      }
+
+      final discountLine = entry['discountLine'];
+      if (discountLine is Map<String, dynamic>) {
+        if (discountLine['isStorno'] == true) {
+          continue;
+        }
+
+        final amountMinor = _asInt(discountLine['value']);
+        double? amount;
+        if (discountLine['isPercent'] == true) {
+          final baseMinor = _asInt(discountLine['base']);
+          if (baseMinor != null && amountMinor != null) {
+            amount = -_fromMinorUnits(
+              ((baseMinor * amountMinor) / 100).round(),
+            );
+          }
+        } else if (amountMinor != null) {
+          amount = -_fromMinorUnits(amountMinor);
+        }
+
+        if (amount == null) {
+          continue;
+        }
+
+        final label = (discountLine['name'] as String?)?.trim();
+        final name = (label == null || label.isEmpty) ? 'Rabat' : label;
+        final vatRate = _vatRateFromCode(discountLine['vatId'] as String?);
+
+        items.add(
+          LineItem(
+            id: _generateId(),
+            receiptId: receiptId,
+            name: name,
+            quantity: 1,
+            unit: 'szt',
+            unitPrice: amount,
+            discount: 0,
+            vatRate: vatRate,
+            total: amount,
+            categoryId: _categorize(name),
+          ),
+        );
+      }
+    }
+
+    return items;
+  }
+
+  double _parseJsonVat(Map<String, dynamic>? vatSummary) {
+    if (vatSummary == null) {
+      return 0;
+    }
+
+    final vatRates = vatSummary['vatRatesSummary'];
+    if (vatRates is! List) {
+      return 0;
+    }
+
+    var total = 0.0;
+    for (final entry in vatRates) {
+      if (entry is! Map<String, dynamic>) {
+        continue;
+      }
+      final amount = _asInt(entry['vatAmount']);
+      if (amount == null) {
+        continue;
+      }
+      total += _fromMinorUnits(amount);
+    }
+    return total;
   }
 
   List<LineItem> _parseItems(String text, String receiptId) {
@@ -216,6 +382,51 @@ class ReceiptParser {
     return items;
   }
 
+  Map<String, dynamic>? _firstNestedMap(dynamic source, String key) {
+    if (source is! List) {
+      return null;
+    }
+    for (final entry in source) {
+      if (entry is! Map<String, dynamic>) {
+        continue;
+      }
+      final value = entry[key];
+      if (value is Map<String, dynamic>) {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  double _fromMinorUnits(int? value) {
+    if (value == null) {
+      return 0;
+    }
+    return value / 100;
+  }
+
+  int? _asInt(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.round();
+    }
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
+  }
+
+  String _inferUnit(String? quantityRaw) {
+    if (quantityRaw == null || quantityRaw.isEmpty) {
+      return 'szt';
+    }
+    return quantityRaw.contains(',') || quantityRaw.contains('.')
+        ? 'kg'
+        : 'szt';
+  }
+
   double _parseAmount(String value) {
     final cleaned = value.replaceAll(' ', '').replaceAll(',', '.');
     return double.tryParse(cleaned) ?? 0;
@@ -316,4 +527,3 @@ class ReceiptTotals {
   final double? totalVat;
   final String? currency;
 }
-
