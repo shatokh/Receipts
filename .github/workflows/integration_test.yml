@@ -48,7 +48,7 @@ jobs:
           force-avd-creation: true
           ram-size: 3072M
           cores: 2
-          emulator-wait-timeout: 900
+          emulator-boot-timeout: 900
           emulator-options: >-
             -no-snapshot -no-window -gpu swiftshader_indirect -noaudio
             -no-boot-anim -camera-back none -camera-front none
