@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
@@ -121,5 +122,11 @@ class FakePdfTextExtractor implements PdfTextExtractor {
   Future<String> fileHash(String safUri) async {
     final fixture = _resolveFixture(safUri);
     return fixture.hash;
+  }
+
+  @override
+  Future<String> readTextFile(String safUri) async {
+    final fixture = _resolveFixture(safUri);
+    return utf8.decode(fixture.bytes, allowMalformed: true);
   }
 }
