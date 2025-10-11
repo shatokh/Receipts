@@ -13,7 +13,7 @@ class FilePickerFileImportService implements FileImportService {
   Future<List<String>> pickReceiptUris() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: const ['pdf'],
+      allowedExtensions: const ['pdf', 'json'],
       allowMultiple: true,
       withData: false,
     );
