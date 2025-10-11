@@ -36,9 +36,9 @@ class ImportView extends ConsumerWidget {
           children: [
             ElevatedButton.icon(
               key: const ValueKey('import_button'),
-              onPressed: () => _importPdf(context, ref),
+              onPressed: () => _importReceipts(context, ref),
               icon: const Icon(Icons.upload_file),
-              label: const Text('Import PDF'),
+              label: const Text('Import receipts (PDF or JSON)'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.all(AppSpacing.md),
               ),
@@ -69,7 +69,7 @@ class ImportView extends ConsumerWidget {
     );
   }
 
-  Future<void> _importPdf(BuildContext context, WidgetRef ref) async {
+  Future<void> _importReceipts(BuildContext context, WidgetRef ref) async {
     try {
       final fileImportService = ref.read(fileImportServiceProvider);
       final uris = await fileImportService.pickReceiptUris();
@@ -125,7 +125,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Import your first Biedronka PDF receipt',
+            'Import your first Biedronka receipt (PDF or JSON)',
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),

@@ -52,6 +52,15 @@ class MainActivity : FlutterActivity() {
                         result.error("HASH_ERROR", e.message, e.toString())
                     }
                 }
+                "readTextFile" -> {
+                    val safUri = call.arguments as String
+                    try {
+                        val text = readTextFile(safUri)
+                        result.success(text)
+                    } catch (e: Exception) {
+                        result.error("READ_TEXT_ERROR", e.message, e.toString())
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
@@ -98,17 +107,25 @@ class MainActivity : FlutterActivity() {
         val uri = Uri.parse(safUri)
         val inputStream: InputStream = contentResolver.openInputStream(uri)
             ?: throw Exception("Cannot open file")
-        
+
         return inputStream.use { stream ->
             val digest = MessageDigest.getInstance("SHA-256")
             val buffer = ByteArray(8192)
             var bytesRead: Int
-            
+
             while (stream.read(buffer).also { bytesRead = it } != -1) {
                 digest.update(buffer, 0, bytesRead)
             }
-            
+
             digest.digest().joinToString("") { "%02x".format(it) }
         }
+    }
+
+    private fun readTextFile(safUri: String): String {
+        val uri = Uri.parse(safUri)
+        val inputStream: InputStream = contentResolver.openInputStream(uri)
+            ?: throw Exception("Cannot open file")
+
+        return inputStream.bufferedReader(UTF_8).use { it.readText() }
     }
 }

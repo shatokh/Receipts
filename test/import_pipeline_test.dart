@@ -101,4 +101,20 @@ void main() {
     final itemsAfter = await db.query('line_items');
     expect(itemsAfter.length, items.length);
   });
+
+  test('imports JSON receipt when PDF extraction fails', () async {
+    final jsonText = await File('assets/sample_receipt.json').readAsString();
+
+    when(() => pdf.fileHash('uri://json'))
+        .thenAnswer((_) async => 'json-receipt-hash');
+    when(() => pdf.extractTextPages('uri://json'))
+        .thenThrow(PdfTextExtractionException('unsupported'));
+    when(() => pdf.readTextFile('uri://json'))
+        .thenAnswer((_) async => jsonText);
+
+    final result = await importService.importOne('uri://json');
+
+    expect(result.status, ImportStatus.success);
+    expect(result.receiptId, isNotEmpty);
+  });
 }

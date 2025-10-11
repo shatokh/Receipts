@@ -12,12 +12,12 @@ class AndroidPdfTextExtractor implements PdfTextExtractor {
       if (kDebugMode && safUri.contains('sample')) {
         return await _getSampleReceiptText();
       }
-      
+
       final result = await _channel.invokeMethod('extractTextPages', safUri);
       return List<String>.from(result);
     } on PlatformException catch (e) {
       throw PdfTextExtractionException(
-        'Failed to extract text: ${e.message}', 
+        'Failed to extract text: ${e.message}',
         e.details?.toString(),
       );
     }
@@ -29,11 +29,11 @@ class AndroidPdfTextExtractor implements PdfTextExtractor {
       if (kDebugMode && safUri.contains('sample')) {
         return 1;
       }
-      
+
       return await _channel.invokeMethod('pageCount', safUri);
     } on PlatformException catch (e) {
       throw PdfTextExtractionException(
-        'Failed to get page count: ${e.message}', 
+        'Failed to get page count: ${e.message}',
         e.details?.toString(),
       );
     }
@@ -45,11 +45,27 @@ class AndroidPdfTextExtractor implements PdfTextExtractor {
       if (kDebugMode && safUri.contains('sample')) {
         return 'sample_receipt_hash_123';
       }
-      
+
       return await _channel.invokeMethod('fileHash', safUri);
     } on PlatformException catch (e) {
       throw PdfTextExtractionException(
-        'Failed to compute file hash: ${e.message}', 
+        'Failed to compute file hash: ${e.message}',
+        e.details?.toString(),
+      );
+    }
+  }
+
+  @override
+  Future<String> readTextFile(String safUri) async {
+    try {
+      if (kDebugMode && safUri.contains('sample_json')) {
+        return await rootBundle.loadString('assets/sample_receipt.json');
+      }
+
+      return await _channel.invokeMethod('readTextFile', safUri);
+    } on PlatformException catch (e) {
+      throw PdfTextExtractionException(
+        'Failed to read text file: ${e.message}',
         e.details?.toString(),
       );
     }
@@ -57,7 +73,8 @@ class AndroidPdfTextExtractor implements PdfTextExtractor {
 
   Future<List<String>> _getSampleReceiptText() async {
     try {
-      final assetText = await rootBundle.loadString('assets/sample_receipt.txt');
+      final assetText =
+          await rootBundle.loadString('assets/sample_receipt.txt');
       return [assetText];
     } catch (e) {
       // Fallback sample receipt text

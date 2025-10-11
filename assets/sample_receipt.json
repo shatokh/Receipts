@@ -1,0 +1,96 @@
+{
+  "protoVersion": "000",
+  "header": [
+    {
+      "headerData": {
+        "tin": "7791011327",
+        "docNumber": 101882,
+        "date": "2025-10-07T07:44:25.000Z"
+      }
+    }
+  ],
+  "body": [
+    {
+      "sellLine": {
+        "name": "PasztPodDDros100 g       C",
+        "vatId": "C",
+        "price": 179,
+        "total": 537,
+        "quantity": "3",
+        "isStorno": false
+      }
+    },
+    {
+      "discountLine": {
+        "base": 537,
+        "value": 120,
+        "isDiscount": true,
+        "isPercent": false,
+        "isStorno": false,
+        "vatId": "C"
+      }
+    },
+    {
+      "sellLine": {
+        "name": "Marchew Luz              C",
+        "vatId": "C",
+        "price": 399,
+        "total": 473,
+        "quantity": "1,185",
+        "isStorno": false
+      }
+    },
+    {
+      "sellLine": {
+        "name": "Mleko świeże 2  1l       C",
+        "vatId": "C",
+        "price": 339,
+        "total": 339,
+        "quantity": "1",
+        "isStorno": false
+      }
+    },
+    {
+      "sellLine": {
+        "name": "Banan Luz                C",
+        "vatId": "C",
+        "price": 699,
+        "total": 552,
+        "quantity": "0,790",
+        "isStorno": false
+      }
+    },
+    {
+      "discountLine": {
+        "base": 552,
+        "value": 302,
+        "isDiscount": true,
+        "isPercent": false,
+        "isStorno": false,
+        "vatId": "C"
+      }
+    },
+    {
+      "vatSummary": {
+        "currency": "PLN",
+        "vatRatesSummary": [
+          {
+            "vatId": "C",
+            "vatAmount": 349
+          }
+        ]
+      }
+    },
+    {
+      "sumInCurrency": {
+        "fiscalTotal": 7327,
+        "currency": "PLN"
+      }
+    },
+    {
+      "fiscalFooter": {
+        "date": "2025-10-07T07:44:25.000Z"
+      }
+    }
+  ]
+}

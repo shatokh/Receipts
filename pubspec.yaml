@@ -38,6 +38,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/sample_receipt.txt
+    - assets/sample_receipt.json
     - assets/test/receipts/sample.pdf
     - assets/test/receipts/broken.pdf
 
