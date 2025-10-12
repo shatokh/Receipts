@@ -117,4 +117,19 @@ void main() {
     expect(result.status, ImportStatus.success);
     expect(result.receiptId, isNotEmpty);
   });
+
+  test('imports JSON payload returned from PDF extraction', () async {
+    final jsonText = await File('assets/sample_receipt.json').readAsString();
+
+    when(() => pdf.fileHash('uri://embedded-json'))
+        .thenAnswer((_) async => 'embedded-json-hash');
+    when(() => pdf.extractTextPages('uri://embedded-json'))
+        .thenAnswer((_) async => [jsonText]);
+    when(() => pdf.pageCount('uri://embedded-json')).thenAnswer((_) async => 1);
+
+    final result = await importService.importOne('uri://embedded-json');
+
+    expect(result.status, ImportStatus.success);
+    expect(result.receiptId, isNotEmpty);
+  });
 }
