@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/domain/models/import_result.dart';
-import 'package:receipts/features/import/file_import_service.dart';
 import 'package:receipts/features/import/import_controller.dart';
 import 'package:receipts/theme.dart';
 
