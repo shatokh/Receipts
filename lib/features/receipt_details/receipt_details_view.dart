@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import 'package:biedronka_expenses/app/providers.dart';
-import 'package:biedronka_expenses/domain/models/line_item.dart';
-import 'package:biedronka_expenses/domain/models/receipt_details.dart';
-import 'package:biedronka_expenses/theme.dart';
+import 'package:receipts/app/providers.dart';
+import 'package:receipts/domain/models/line_item.dart';
+import 'package:receipts/domain/models/receipt_details.dart';
+import 'package:receipts/theme.dart';
 
 class ReceiptDetailsView extends ConsumerWidget {
   const ReceiptDetailsView({super.key, required this.receiptId});

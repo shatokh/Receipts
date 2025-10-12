@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart';
 
 class DatabaseHelper {
   static Database? _database;
-  static const String dbName = 'biedronka_expenses.db';
+  static const String dbName = 'receipts.db';
+  static const String legacyDbName = 'biedronka_expenses.db';
   static const int dbVersion = 1;
   static String? _databaseNameOverride;
 
@@ -34,7 +35,20 @@ class DatabaseHelper {
   static Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
     final name = _databaseNameOverride ?? dbName;
-    final path = join(dbPath, name);
+    var path = join(dbPath, name);
+
+    if (!kIsWeb && _databaseNameOverride == null) {
+      final factory = databaseFactoryOrNull;
+      if (factory != null) {
+        final legacyPath = join(dbPath, legacyDbName);
+        final hasLegacy = await factory.databaseExists(legacyPath);
+        final hasNew = await factory.databaseExists(path);
+
+        if (hasLegacy && !hasNew) {
+          path = legacyPath;
+        }
+      }
+    }
 
     return await openDatabase(
       path,
@@ -140,13 +154,21 @@ class DatabaseHelper {
       await db.insert('categories', category);
     }
 
-    // Insert default Biedronka merchant
+    // Insert default merchants
+    await db.insert('merchants', {
+      'id': 'receipts',
+      'name': 'Receipts',
+      'nip': '0000000000',
+      'address': 'ul. Przykładowa 1',
+      'city': 'Warszawa',
+    });
+
     await db.insert('merchants', {
       'id': 'biedronka',
       'name': 'Biedronka',
       'nip': '5261040567',
-      'address': 'ul. Przykładowa 1',
-      'city': 'Warszawa',
+      'address': 'ul. Żółkiewskiego 17/19',
+      'city': 'Kraków',
     });
   }
 

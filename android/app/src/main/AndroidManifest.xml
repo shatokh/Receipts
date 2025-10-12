@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     
     <application
-        android:label="Biedronka Expenses"
+        android:label="Receipts"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -3,13 +3,13 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:biedronka_expenses/data/database.dart';
-import 'package:biedronka_expenses/data/database_update_bus.dart';
-import 'package:biedronka_expenses/data/database_update_bus_provider.dart';
-import 'package:biedronka_expenses/domain/models/dashboard_kpis.dart';
-import 'package:biedronka_expenses/domain/models/month_overview.dart';
-import 'package:biedronka_expenses/domain/models/monthly_total.dart';
-import 'package:biedronka_expenses/domain/models/receipt_row.dart';
+import 'package:receipts/data/database.dart';
+import 'package:receipts/data/database_update_bus.dart';
+import 'package:receipts/data/database_update_bus_provider.dart';
+import 'package:receipts/domain/models/dashboard_kpis.dart';
+import 'package:receipts/domain/models/month_overview.dart';
+import 'package:receipts/domain/models/monthly_total.dart';
+import 'package:receipts/domain/models/receipt_row.dart';
 
 typedef Reader = T Function<T>(ProviderListenable<T> provider);
 

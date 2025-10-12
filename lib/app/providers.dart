@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import 'package:biedronka_expenses/data/repositories/analytics_repository.dart';
-import 'package:biedronka_expenses/data/repositories/category_repository.dart';
-import 'package:biedronka_expenses/data/repositories/receipt_repository.dart';
-import 'package:biedronka_expenses/data/repositories/settings_repository.dart';
-import 'package:biedronka_expenses/domain/models/dashboard_kpis.dart';
-import 'package:biedronka_expenses/domain/models/month_overview.dart';
-import 'package:biedronka_expenses/domain/models/monthly_total.dart';
-import 'package:biedronka_expenses/domain/models/receipt_details.dart';
-import 'package:biedronka_expenses/domain/models/receipt_row.dart';
-import 'package:biedronka_expenses/domain/parsing/receipt_parser.dart';
-import 'package:biedronka_expenses/features/import/file_import_service.dart';
-import 'package:biedronka_expenses/features/import/import_service.dart';
-import 'package:biedronka_expenses/platform/pdf_text_extractor/android_pdf_text_extractor.dart';
-import 'package:biedronka_expenses/platform/pdf_text_extractor/pdf_text_extractor.dart';
+import 'package:receipts/data/repositories/analytics_repository.dart';
+import 'package:receipts/data/repositories/category_repository.dart';
+import 'package:receipts/data/repositories/receipt_repository.dart';
+import 'package:receipts/data/repositories/settings_repository.dart';
+import 'package:receipts/domain/models/dashboard_kpis.dart';
+import 'package:receipts/domain/models/month_overview.dart';
+import 'package:receipts/domain/models/monthly_total.dart';
+import 'package:receipts/domain/models/receipt_details.dart';
+import 'package:receipts/domain/models/receipt_row.dart';
+import 'package:receipts/domain/parsing/receipt_parser.dart';
+import 'package:receipts/features/import/file_import_service.dart';
+import 'package:receipts/features/import/import_service.dart';
+import 'package:receipts/platform/pdf_text_extractor/android_pdf_text_extractor.dart';
+import 'package:receipts/platform/pdf_text_extractor/pdf_text_extractor.dart';
 
 final receiptRepositoryProvider = Provider<ReceiptRepository>((ref) {
   final repository = ReceiptRepository(ref.read);

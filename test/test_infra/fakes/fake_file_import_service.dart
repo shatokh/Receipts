@@ -1,10 +1,11 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 
-import 'package:biedronka_expenses/features/import/file_import_service.dart';
-import 'package:biedronka_expenses/platform/pdf_text_extractor/pdf_text_extractor.dart';
+import 'package:receipts/features/import/file_import_service.dart';
+import 'package:receipts/platform/pdf_text_extractor/pdf_text_extractor.dart';
 
 class FakeFileImportService implements FileImportService {
   FakeFileImportService({AssetBundle? bundle}) : _bundle = bundle ?? rootBundle;
@@ -121,5 +122,11 @@ class FakePdfTextExtractor implements PdfTextExtractor {
   Future<String> fileHash(String safUri) async {
     final fixture = _resolveFixture(safUri);
     return fixture.hash;
+  }
+
+  @override
+  Future<String> readTextFile(String safUri) async {
+    final fixture = _resolveFixture(safUri);
+    return utf8.decode(fixture.bytes, allowMalformed: true);
   }
 }

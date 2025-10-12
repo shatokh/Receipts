@@ -6,12 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import 'package:biedronka_expenses/app/providers.dart';
-import 'package:biedronka_expenses/domain/models/dashboard_kpis.dart';
-import 'package:biedronka_expenses/domain/models/month_overview.dart';
-import 'package:biedronka_expenses/domain/models/monthly_total.dart';
-import 'package:biedronka_expenses/domain/models/receipt_row.dart';
-import 'package:biedronka_expenses/theme.dart';
+import 'package:receipts/app/providers.dart';
+import 'package:receipts/domain/models/dashboard_kpis.dart';
+import 'package:receipts/domain/models/month_overview.dart';
+import 'package:receipts/domain/models/monthly_total.dart';
+import 'package:receipts/domain/models/receipt_row.dart';
+import 'package:receipts/theme.dart';
 
 class DashboardView extends ConsumerStatefulWidget {
   const DashboardView({super.key});
@@ -711,7 +711,7 @@ class _DashboardEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Import your first Biedronka receipt to see analytics',
+              'Import your first receipt to see analytics',
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,

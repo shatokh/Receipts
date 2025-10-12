@@ -1,4 +1,4 @@
-import 'package:biedronka_expenses/domain/models/receipt_row.dart';
+import 'package:receipts/domain/models/receipt_row.dart';
 
 class MonthOverview {
   final DateTime month;

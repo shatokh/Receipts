@@ -1,11 +1,11 @@
-# Biedronka Expenses — MVP
+# Receipts — MVP
 
-A Flutter app for tracking Biedronka PDF receipts with on-device processing.
+A Flutter app for tracking PDF receipts with on-device processing.
 
 ## Features
 
 - **Local Processing**: All PDF parsing and data storage happens on your device
-- **Biedronka Focus**: Specifically designed for Biedronka receipt format (MVP)
+- **Smart Parsing**: Designed for common Polish receipt formats (MVP)
 - **Dashboard**: Monthly spending overview with charts and insights
 - **Receipt Management**: Browse, search, and view detailed receipt breakdowns
 - **Privacy First**: No data sent to external servers (except optional crash reports)
@@ -62,8 +62,8 @@ In debug mode, the app can:
 - Demonstrate the parsing flow without real PDF processing
 
 To test real PDF processing, you need:
-- A Biedronka PDF receipt with text layer (not scanned)
-- The receipt should contain Polish text with standard Biedronka format
+- A PDF receipt with a searchable text layer (not scanned)
+- The receipt should contain Polish text in a standard fiscal layout
 
 ## Enable Sentry Crash Reporting
 
@@ -113,7 +113,7 @@ lib/
 
 - **receipts**: Main receipt data with totals and metadata
 - **line_items**: Individual items per receipt with categories
-- **merchants**: Store information (Biedronka data)
+- **merchants**: Store information (demo data included)
 - **categories**: Product categorization (Produce, Meat, etc.)
 - **monthly_totals**: Precomputed aggregates for performance
 - **category_month_totals**: Category breakdowns by month
@@ -152,14 +152,14 @@ The app includes Android-specific PDF text extraction using PdfBox-Android:
 ## Build Configuration
 
 The app is configured for:
-- **Package Name**: `app.receipts_b`
+- **Package Name**: `app.receipts`
 - **Kotlin**: 1.9+ with JDK 17
 - **Material 3**: Full Material You theming
 - **Offline-First**: No network dependencies in core functionality
 
 ## Known Limitations (MVP)
 
-- Only supports Biedronka receipts
+- Optimized for Polish fiscal receipts
 - PDF must have text layer (no OCR)
 - Polish language parsing rules
 - Android-focused (iOS prepared but not fully tested)
@@ -171,7 +171,7 @@ The app is configured for:
 
 This is an MVP (Minimum Viable Product) focused on core functionality. For issues:
 1. Check that PDF has text layer (not a scanned image)
-2. Verify receipt is from Biedronka with standard format
+2. Verify receipt text follows the standard fiscal layout
 3. Ensure Android requirements are met (API 24+, JDK 17)
 
 ## Privacy

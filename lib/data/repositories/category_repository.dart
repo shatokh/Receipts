@@ -1,6 +1,6 @@
-import 'package:biedronka_expenses/data/database.dart';
-import 'package:biedronka_expenses/domain/models/category.dart';
-import 'package:biedronka_expenses/domain/models/monthly_total.dart';
+import 'package:receipts/data/database.dart';
+import 'package:receipts/domain/models/category.dart';
+import 'package:receipts/domain/models/monthly_total.dart';
 
 class CategoryRepository {
   Future<List<Category>> getAllCategories() async {

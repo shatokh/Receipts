@@ -1,8 +1,9 @@
-import 'package:biedronka_expenses/data/repositories/analytics_repository.dart';
-import 'package:biedronka_expenses/data/repositories/receipt_repository.dart';
-import 'package:biedronka_expenses/domain/models/import_result.dart';
-import 'package:biedronka_expenses/domain/parsing/receipt_parser.dart';
-import 'package:biedronka_expenses/platform/pdf_text_extractor/pdf_text_extractor.dart';
+import 'package:receipts/data/repositories/analytics_repository.dart';
+import 'package:receipts/data/repositories/receipt_repository.dart';
+import 'package:receipts/domain/models/import_result.dart';
+import 'package:receipts/domain/models/receipt.dart';
+import 'package:receipts/domain/parsing/receipt_parser.dart';
+import 'package:receipts/platform/pdf_text_extractor/pdf_text_extractor.dart';
 
 class ImportService {
   ImportService({
@@ -28,9 +29,7 @@ class ImportService {
         );
       }
 
-      final pages = await pdf.extractTextPages(safUri);
-      final text = pages.join('\n');
-      final parsedReceipt = parser.parse(text);
+      final parsedReceipt = await _parseReceipt(safUri);
       final receipt = parsedReceipt.copyWith(sourceUri: safUri, fileHash: hash);
 
       if (await receipts.isDuplicateByHeuristic(receipt)) {
@@ -70,5 +69,29 @@ class ImportService {
       results.add(await importOne(uri));
     }
     return results;
+  }
+
+  Future<Receipt> _parseReceipt(String safUri) async {
+    try {
+      final pages = await pdf.extractTextPages(safUri);
+      final text = pages.join('\n');
+      return parser.parse(text);
+    } on PdfTextExtractionException {
+      return _parseTextFile(safUri);
+    } on FormatException {
+      return _parseTextFile(safUri);
+    }
+  }
+
+  Future<Receipt> _parseTextFile(String safUri) async {
+    final raw = await pdf.readTextFile(safUri);
+    final trimmed = raw.trimLeft();
+    if (trimmed.isEmpty) {
+      throw const FormatException('Empty file');
+    }
+    if (!trimmed.startsWith('{')) {
+      throw const FormatException('Unsupported receipt source');
+    }
+    return parser.parse(trimmed);
   }
 }

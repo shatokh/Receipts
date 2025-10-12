@@ -1,12 +1,7 @@
 name: Android Integration Tests
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   integration-test:
@@ -53,7 +48,15 @@ jobs:
           emulator-boot-timeout: 900
           emulator-options: >-
             -no-snapshot -no-window -gpu swiftshader_indirect -noaudio
-            -no-boot-anim -camera-back none -camera-front none
+            -no-boot-anim -camera-back none -camera-front none -accel off
           disable-animations: true
+          disable-linux-hw-accel: true
           script: |
+            adb kill-server
+            adb start-server
+            adb wait-for-device
+            until adb shell getprop sys.boot_completed | grep -m 1 '1'; do
+              sleep 5
+            done
+            adb shell input keyevent 82
             timeout --preserve-status 10m flutter test integration_test -d emulator-5554
