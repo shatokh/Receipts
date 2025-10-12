@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:biedronka_expenses/domain/models/line_item.dart';
-import 'package:biedronka_expenses/domain/models/receipt.dart';
+import 'package:receipts/domain/models/line_item.dart';
+import 'package:receipts/domain/models/receipt.dart';
 
 class ReceiptParser {
   static final RegExp _dateRegex =
@@ -46,9 +46,11 @@ class ReceiptParser {
 
     final text = _normalizeText(rawText);
 
-    if (!_isBiedronkaReceipt(text)) {
+    if (!_isSupportedReceipt(text)) {
       throw const FormatException('Unsupported receipt source');
     }
+
+    final merchantId = _detectMerchantIdFromText(text);
 
     final purchaseDate = _parsePurchaseDate(text);
     if (purchaseDate == null) {
@@ -65,7 +67,7 @@ class ReceiptParser {
 
     return Receipt(
       id: receiptId,
-      merchantId: 'biedronka',
+      merchantId: merchantId,
       purchaseTimestamp: purchaseDate,
       currency: totals.currency ?? 'PLN',
       totalGross: totals.totalGross!,
@@ -102,9 +104,11 @@ class ReceiptParser {
     final totalVat = _parseJsonVat(vatSummary);
     final currency = (sumInCurrency?['currency'] as String?) ?? 'PLN';
 
+    final merchantId = _detectMerchantIdFromJson(payload);
+
     return Receipt(
       id: receiptId,
-      merchantId: 'biedronka',
+      merchantId: merchantId,
       purchaseTimestamp: purchaseDate,
       currency: currency,
       totalGross: _fromMinorUnits(totalMinor),
@@ -456,22 +460,66 @@ class ReceiptParser {
         .replaceAll('\r', '\n');
   }
 
-  bool _isBiedronkaReceipt(String text) {
+  bool _isSupportedReceipt(String text) {
     final lower = text.toLowerCase();
     final collapsed = lower.replaceAll(RegExp(r'[\s-]'), '');
 
-    bool containsJeronimoChain() {
-      return RegExp(r'jeronimo\s+martins\s+polska', caseSensitive: false)
-              .hasMatch(text) ||
-          collapsed.contains('jeronimomartinspolska');
+    return _looksLikeBiedronka(lower, collapsed) ||
+        lower.contains('receipts') ||
+        lower.contains('paragon fiskalny') ||
+        lower.contains('paragon') ||
+        lower.contains('niefiskalny');
+  }
+
+  String _detectMerchantIdFromText(String text) {
+    final lower = text.toLowerCase();
+    final collapsed = lower.replaceAll(RegExp(r'[\s-]'), '');
+
+    if (_looksLikeBiedronka(lower, collapsed)) {
+      return 'biedronka';
     }
 
+    return 'receipts';
+  }
+
+  String _detectMerchantIdFromJson(Map<String, dynamic> payload) {
+    final header = payload['header'];
+    final headerData = _firstNestedMap(header, 'headerData');
+    final body = payload['body'];
+    final footer = _firstNestedMap(body, 'fiscalFooter');
+
+    final tin = headerData?['tin']?.toString();
+    final issuer = footer?['issuerName'] as String?;
+    final companyName = headerData?['companyName'] as String?;
+    final storeName = headerData?['storeName'] as String?;
+
+    final normalizedTin = tin?.replaceAll(RegExp(r'[^0-9]'), '');
+    if (normalizedTin == '5261040567' || normalizedTin == '7791011327') {
+      return 'biedronka';
+    }
+
+    final combinedText = [companyName, storeName, issuer]
+        .whereType<String>()
+        .map((value) => value.toLowerCase())
+        .join(' ');
+
+    if (combinedText.isNotEmpty &&
+        _looksLikeBiedronka(
+          combinedText,
+          combinedText.replaceAll(RegExp(r'[\s-]'), ''),
+        )) {
+      return 'biedronka';
+    }
+
+    return 'receipts';
+  }
+
+  bool _looksLikeBiedronka(String lower, String collapsed) {
     return lower.contains('biedronka') ||
-        containsJeronimoChain() ||
+        RegExp(r'jeronimo\s+martins\s+polska').hasMatch(lower) ||
+        collapsed.contains('jeronimomartinspolska') ||
         collapsed.contains('5261040567') ||
-        collapsed.contains('7791011327') ||
-        lower.contains('paragon fiskalny') ||
-        lower.contains('niefiskalny');
+        collapsed.contains('7791011327');
   }
 
   String _categorize(String name) {

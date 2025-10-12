@@ -8,9 +8,9 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:biedronka_expenses/data/database.dart';
-import 'package:biedronka_expenses/di/test_overrides.dart';
-import 'package:biedronka_expenses/platform/pdf_text_extractor/pdf_text_extractor.dart';
+import 'package:receipts/data/database.dart';
+import 'package:receipts/di/test_overrides.dart';
+import 'package:receipts/platform/pdf_text_extractor/pdf_text_extractor.dart';
 
 import '../test/test_infra/fakes/fake_file_import_service.dart';
 import 'test_keys.dart';

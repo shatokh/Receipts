@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:biedronka_expenses/app/providers.dart';
-import 'package:biedronka_expenses/domain/models/import_result.dart';
-import 'package:biedronka_expenses/features/import/file_import_service.dart';
-import 'package:biedronka_expenses/features/import/import_controller.dart';
-import 'package:biedronka_expenses/theme.dart';
+import 'package:receipts/app/providers.dart';
+import 'package:receipts/domain/models/import_result.dart';
+import 'package:receipts/features/import/file_import_service.dart';
+import 'package:receipts/features/import/import_controller.dart';
+import 'package:receipts/theme.dart';
 
 class ImportView extends ConsumerWidget {
   const ImportView({super.key});
@@ -125,7 +125,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Import your first Biedronka receipt (PDF or JSON)',
+            'Import your first receipt (PDF or JSON)',
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),

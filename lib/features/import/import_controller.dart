@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:biedronka_expenses/app/providers.dart';
-import 'package:biedronka_expenses/domain/models/import_result.dart';
+import 'package:receipts/app/providers.dart';
+import 'package:receipts/domain/models/import_result.dart';
 
 class ImportHistoryEntry {
   const ImportHistoryEntry({

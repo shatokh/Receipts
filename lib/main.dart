@@ -4,11 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
-import 'package:biedronka_expenses/app/providers.dart';
-import 'package:biedronka_expenses/app/router.dart';
-import 'package:biedronka_expenses/data/database.dart';
-import 'package:biedronka_expenses/data/repositories/settings_repository.dart';
-import 'package:biedronka_expenses/theme.dart';
+import 'package:receipts/app/providers.dart';
+import 'package:receipts/app/router.dart';
+import 'package:receipts/data/database.dart';
+import 'package:receipts/data/repositories/settings_repository.dart';
+import 'package:receipts/theme.dart';
 
 // Workmanager callback for background tasks
 @pragma('vm:entry-point')
@@ -22,7 +22,7 @@ void callbackDispatcher() {
 Widget buildApp({List<Override> overrides = const []}) {
   return ProviderScope(
     overrides: overrides,
-    child: const BiedronkaExpensesApp(),
+    child: const ReceiptsApp(),
   );
 }
 
@@ -65,13 +65,13 @@ void main() async {
   }
 }
 
-class BiedronkaExpensesApp extends StatelessWidget {
-  const BiedronkaExpensesApp({super.key});
+class ReceiptsApp extends StatelessWidget {
+  const ReceiptsApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Biedronka Expenses',
+      title: 'Receipts',
       debugShowCheckedModeBanner: false,
       theme: appTheme,
       routerConfig: router,

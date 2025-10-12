@@ -1,4 +1,4 @@
-import 'package:biedronka_expenses/domain/models/line_item.dart';
+import 'package:receipts/domain/models/line_item.dart';
 
 class Receipt {
   final String id;

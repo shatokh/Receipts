@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 class DatabaseHelper {
   static Database? _database;
-  static const String dbName = 'biedronka_expenses.db';
+  static const String dbName = 'receipts.db';
   static const int dbVersion = 1;
   static String? _databaseNameOverride;
 
@@ -140,13 +140,21 @@ class DatabaseHelper {
       await db.insert('categories', category);
     }
 
-    // Insert default Biedronka merchant
+    // Insert default merchants
+    await db.insert('merchants', {
+      'id': 'receipts',
+      'name': 'Receipts',
+      'nip': '0000000000',
+      'address': 'ul. Przykładowa 1',
+      'city': 'Warszawa',
+    });
+
     await db.insert('merchants', {
       'id': 'biedronka',
       'name': 'Biedronka',
       'nip': '5261040567',
-      'address': 'ul. Przykładowa 1',
-      'city': 'Warszawa',
+      'address': 'ul. Żółkiewskiego 17/19',
+      'city': 'Kraków',
     });
   }
 

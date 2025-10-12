@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:biedronka_expenses/theme.dart';
-import 'package:biedronka_expenses/app/providers.dart';
+import 'package:receipts/theme.dart';
+import 'package:receipts/app/providers.dart';
 
 class SettingsView extends ConsumerWidget {
   const SettingsView({super.key});
@@ -57,14 +57,14 @@ class SettingsView extends ConsumerWidget {
             children: [
               ListTile(
                 title: Text(
-                  'Biedronka Expenses — MVP',
+                  'Receipts — MVP',
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 subtitle: Text(
-                  'Biedronka PDF only (MVP). All processing on device.',
+                  'Receipts app (MVP). All processing on device.',
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),

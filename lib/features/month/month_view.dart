@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import 'package:biedronka_expenses/app/providers.dart';
-import 'package:biedronka_expenses/domain/models/month_overview.dart';
-import 'package:biedronka_expenses/domain/models/monthly_total.dart';
-import 'package:biedronka_expenses/domain/models/receipt_row.dart';
-import 'package:biedronka_expenses/theme.dart';
+import 'package:receipts/app/providers.dart';
+import 'package:receipts/domain/models/month_overview.dart';
+import 'package:receipts/domain/models/monthly_total.dart';
+import 'package:receipts/domain/models/receipt_row.dart';
+import 'package:receipts/theme.dart';
 
 class MonthView extends ConsumerWidget {
   const MonthView({super.key});

@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import 'package:biedronka_expenses/data/database.dart';
-import 'package:biedronka_expenses/data/database_update_bus.dart';
-import 'package:biedronka_expenses/data/database_update_bus_provider.dart';
+import 'package:receipts/data/database.dart';
+import 'package:receipts/data/database_update_bus.dart';
+import 'package:receipts/data/database_update_bus_provider.dart';
 
 bool _bootstrapped = false;
 

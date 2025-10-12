@@ -1,12 +1,12 @@
 import 'package:go_router/go_router.dart';
-import 'package:biedronka_expenses/features/onboarding/onboarding_view.dart';
-import 'package:biedronka_expenses/features/dashboard/dashboard_view.dart';
-import 'package:biedronka_expenses/features/month/month_view.dart';
-import 'package:biedronka_expenses/features/receipts/receipts_view.dart';
-import 'package:biedronka_expenses/features/receipt_details/receipt_details_view.dart';
-import 'package:biedronka_expenses/features/import/import_view.dart';
-import 'package:biedronka_expenses/features/settings/settings_view.dart';
-import 'package:biedronka_expenses/app/main_scaffold.dart';
+import 'package:receipts/features/onboarding/onboarding_view.dart';
+import 'package:receipts/features/dashboard/dashboard_view.dart';
+import 'package:receipts/features/month/month_view.dart';
+import 'package:receipts/features/receipts/receipts_view.dart';
+import 'package:receipts/features/receipt_details/receipt_details_view.dart';
+import 'package:receipts/features/import/import_view.dart';
+import 'package:receipts/features/settings/settings_view.dart';
+import 'package:receipts/app/main_scaffold.dart';
 
 final router = GoRouter(
   initialLocation: '/onboarding',

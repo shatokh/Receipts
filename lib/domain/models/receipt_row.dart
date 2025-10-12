@@ -20,7 +20,7 @@ class ReceiptRow {
         merchantId: map['merchant_id'] as String,
         merchantName: (map['merchant_name'] as String?)?.isNotEmpty == true
             ? map['merchant_name'] as String
-            : 'Biedronka',
+            : 'Receipts',
         purchaseTimestamp:
             DateTime.fromMillisecondsSinceEpoch(map['purchase_ts'] as int),
         currency: (map['currency'] as String?) ?? 'PLN',
