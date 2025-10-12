@@ -18,9 +18,12 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.security.MessageDigest
 import java.text.Normalizer
-import kotlin.text.Charsets.UTF_8
 import java.util.zip.GZIPInputStream
 import java.util.zip.ZipInputStream
+import kotlin.text.Charsets.UTF_8
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "pdf_text_extractor"
@@ -194,8 +197,17 @@ class MainActivity : FlutterActivity() {
         return embeddedFile.createInputStream().use { stream ->
             val rawBytes = stream.readAllBytes()
             val decoded = decodeEmbeddedBytes(rawBytes, embeddedFile.subtype)
-            val text = decoded.toString(UTF_8).trim()
-            if (text.isNotEmpty()) text else null
+            val text = decoded.toString(UTF_8)
+            val cleanedText = sanitizeEmbeddedText(text)
+
+            if (cleanedText.isEmpty()) {
+                return@use null
+            }
+
+            val mimeType = embeddedFile.subtype
+            val isJsonPayload = isJsonMimeType(mimeType) || isValidJson(cleanedText)
+
+            if (isJsonPayload) cleanedText else null
         }
     }
 
@@ -261,6 +273,38 @@ class MainActivity : FlutterActivity() {
             GZIPInputStream(ByteArrayInputStream(bytes)).use { it.readAllBytes() }
         } catch (_: Exception) {
             bytes
+        }
+    }
+
+    private fun sanitizeEmbeddedText(text: String): String {
+        val trimmed = text.trim()
+        return if (trimmed.startsWith("\uFEFF")) {
+            trimmed.removePrefix("\uFEFF").trimStart()
+        } else {
+            trimmed
+        }
+    }
+
+    private fun isJsonMimeType(mimeType: String?): Boolean {
+        val lowerMime = mimeType?.lowercase() ?: return false
+        return lowerMime.contains("json")
+    }
+
+    private fun isValidJson(text: String): Boolean {
+        if (text.isEmpty()) {
+            return false
+        }
+
+        val firstChar = text.first()
+        return try {
+            when (firstChar) {
+                '{' -> JSONObject(text)
+                '[' -> JSONArray(text)
+                else -> return false
+            }
+            true
+        } catch (_: JSONException) {
+            false
         }
     }
 
