@@ -8,11 +8,12 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.pdmodel.PDDocumentNameDictionary
+import com.tom_roush.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode
 import com.tom_roush.pdfbox.text.PDFTextStripper
-import com.tom_roush.pdfbox.pdmodel.common.PDDocumentNameDictionary
 import com.tom_roush.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification
 import com.tom_roush.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile
-import com.tom_roush.pdfbox.pdmodel.common.filespecification.PDEmbeddedFilesNameTreeNode
+import com.tom_roush.pdfbox.pdmodel.common.filespecification.PDFileSpecification
 import com.tom_roush.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -193,13 +194,18 @@ class MainActivity : FlutterActivity() {
         return null
     }
 
-    private fun decodeEmbeddedFile(spec: PDComplexFileSpecification?): String? {
-        if (spec == null) {
-            return null
+    private fun decodeEmbeddedFile(spec: PDFileSpecification?): String? {
+        val complexSpec = when (spec) {
+            null -> return null
+            is PDComplexFileSpecification -> spec
+            else -> {
+                Log.w(TAG, "Unsupported embedded file specification type: ${spec.javaClass.simpleName}")
+                return null
+            }
         }
 
         val embeddedFile: PDEmbeddedFile =
-            spec.embeddedFile ?: spec.embeddedFileUnicode ?: return null
+            complexSpec.embeddedFile ?: complexSpec.embeddedFileUnicode ?: return null
 
         return embeddedFile.createInputStream().use { stream ->
             val rawBytes = stream.readAllBytes()
