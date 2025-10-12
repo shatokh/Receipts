@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Biedronka brand colors per requirements
+  // Receipts brand colors
   static const primary = Color(0xFF2F6FED);
   static const surface = Color(0xFFFFFFFF);
   static const surfaceAlt = Color(0xFF0F172A);

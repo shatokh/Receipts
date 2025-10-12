@@ -1,7 +1,7 @@
-# AI Assistant Instructions for Reseipts Project
+# AI Assistant Instructions for Receipts Project
 
 ## Project Overview
-Reseipts is a Flutter application for tracking and analyzing Biedronka PDF receipts, with all processing done on-device. The app uses a feature-based architecture with the following key components:
+Receipts is a Flutter application for tracking and analyzing PDF receipts, with all processing done on-device. The app uses a feature-based architecture with the following key components:
 
 - State Management: flutter_riverpod
 - Navigation: go_router

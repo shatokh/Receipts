@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:biedronka_expenses/data/database.dart';
-import 'package:biedronka_expenses/data/database_update_bus.dart';
-import 'package:biedronka_expenses/data/database_update_bus_provider.dart';
-import 'package:biedronka_expenses/domain/models/line_item.dart';
-import 'package:biedronka_expenses/domain/models/merchant.dart';
-import 'package:biedronka_expenses/domain/models/receipt.dart';
-import 'package:biedronka_expenses/domain/models/receipt_details.dart';
-import 'package:biedronka_expenses/domain/models/receipt_row.dart';
+import 'package:receipts/data/database.dart';
+import 'package:receipts/data/database_update_bus.dart';
+import 'package:receipts/data/database_update_bus_provider.dart';
+import 'package:receipts/domain/models/line_item.dart';
+import 'package:receipts/domain/models/merchant.dart';
+import 'package:receipts/domain/models/receipt.dart';
+import 'package:receipts/domain/models/receipt_details.dart';
+import 'package:receipts/domain/models/receipt_row.dart';
 
 typedef Reader = T Function<T>(ProviderListenable<T> provider);
 

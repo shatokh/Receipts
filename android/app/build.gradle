@@ -56,7 +56,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "app.receipts_b"
+    namespace = "app.receipts"
     compileSdk = 34
 
     compileOptions {
@@ -78,7 +78,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "app.receipts_b"
+        applicationId = "app.receipts"
         minSdk = 24
         targetSdk = 34
         versionCode = flutter.versionCode

@@ -51,7 +51,7 @@ The workflow is tuned to keep total duration within ~3–5 minutes.
 - Use `flutter logs -d <device>` in a separate terminal to stream logs while tests run.
 - If database state leaks between runs, delete the `integration_test.db` file from the emulator with:
   ```bash
-  adb shell rm /data/data/com.example.biedronka_expenses/databases/integration_test.db
+  adb shell rm /data/data/com.example.receipts/databases/integration_test.db
   ```
 - When editing the integration test, prefer `pumpAndSettleSafe` and `waitForFinder` helpers instead of arbitrary delays.
 - For failures in CI, download the workflow logs to inspect the full emulator output.

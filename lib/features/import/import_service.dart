@@ -1,9 +1,9 @@
-import 'package:biedronka_expenses/data/repositories/analytics_repository.dart';
-import 'package:biedronka_expenses/data/repositories/receipt_repository.dart';
-import 'package:biedronka_expenses/domain/models/import_result.dart';
-import 'package:biedronka_expenses/domain/models/receipt.dart';
-import 'package:biedronka_expenses/domain/parsing/receipt_parser.dart';
-import 'package:biedronka_expenses/platform/pdf_text_extractor/pdf_text_extractor.dart';
+import 'package:receipts/data/repositories/analytics_repository.dart';
+import 'package:receipts/data/repositories/receipt_repository.dart';
+import 'package:receipts/domain/models/import_result.dart';
+import 'package:receipts/domain/models/receipt.dart';
+import 'package:receipts/domain/parsing/receipt_parser.dart';
+import 'package:receipts/platform/pdf_text_extractor/pdf_text_extractor.dart';
 
 class ImportService {
   ImportService({

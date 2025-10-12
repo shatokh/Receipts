@@ -1,5 +1,5 @@
-name: biedronka_expenses
-description: "Biedronka PDF receipt tracking - MVP. All processing on device."
+name: receipts
+description: "Receipts PDF tracking - MVP. All processing on device."
 publish_to: "none"
 version: 1.0.0+1
 

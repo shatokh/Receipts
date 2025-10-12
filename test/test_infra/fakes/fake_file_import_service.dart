@@ -4,8 +4,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 
-import 'package:biedronka_expenses/features/import/file_import_service.dart';
-import 'package:biedronka_expenses/platform/pdf_text_extractor/pdf_text_extractor.dart';
+import 'package:receipts/features/import/file_import_service.dart';
+import 'package:receipts/platform/pdf_text_extractor/pdf_text_extractor.dart';
 
 class FakeFileImportService implements FileImportService {
   FakeFileImportService({AssetBundle? bundle}) : _bundle = bundle ?? rootBundle;

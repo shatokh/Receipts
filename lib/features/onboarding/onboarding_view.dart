@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:biedronka_expenses/theme.dart';
+import 'package:receipts/theme.dart';
 
 class OnboardingView extends StatelessWidget {
   const OnboardingView({super.key});
@@ -30,7 +30,7 @@ class OnboardingView extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.lg),
-              _BulletPoint(text: 'Biedronka PDF receipts only (MVP)'),
+              _BulletPoint(text: 'Optimized for PDF receipts (MVP)'),
               const SizedBox(height: AppSpacing.md),
               _BulletPoint(text: 'All data stays on this device'),
               const SizedBox(height: AppSpacing.md),

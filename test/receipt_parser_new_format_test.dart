@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:biedronka_expenses/domain/parsing/receipt_parser.dart';
+import 'package:receipts/domain/parsing/receipt_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

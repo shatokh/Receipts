@@ -1,6 +1,6 @@
-import 'package:biedronka_expenses/domain/models/line_item.dart';
-import 'package:biedronka_expenses/domain/models/merchant.dart';
-import 'package:biedronka_expenses/domain/models/receipt.dart';
+import 'package:receipts/domain/models/line_item.dart';
+import 'package:receipts/domain/models/merchant.dart';
+import 'package:receipts/domain/models/receipt.dart';
 
 class ReceiptDetails {
   final Receipt receipt;
@@ -13,7 +13,7 @@ class ReceiptDetails {
     required this.items,
   });
 
-  String get merchantName => merchant?.name ?? 'Biedronka';
+  String get merchantName => merchant?.name ?? 'Receipts';
 
   double get totalVat => receipt.totalVat;
 

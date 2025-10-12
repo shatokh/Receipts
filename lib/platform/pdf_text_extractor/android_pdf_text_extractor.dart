@@ -83,10 +83,10 @@ class AndroidPdfTextExtractor implements PdfTextExtractor {
   }
 
   static const String _fallbackSampleText = '''
-Biedronka Sp. z o.o.
-ul. Żółkiewskiego 17/19
-31-539 Kraków
-NIP: 5261040567
+Receipts Sp. z o.o.
+ul. Zielona 10
+00-001 Warszawa
+NIP: 0000000000
 
 Paragon fiskalny
 14.08.2025 18:22

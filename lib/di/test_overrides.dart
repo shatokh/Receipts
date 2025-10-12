@@ -2,11 +2,11 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:biedronka_expenses/app/providers.dart';
-import 'package:biedronka_expenses/data/repositories/settings_repository.dart';
-import 'package:biedronka_expenses/features/import/file_import_service.dart';
-import 'package:biedronka_expenses/main.dart';
-import 'package:biedronka_expenses/platform/pdf_text_extractor/pdf_text_extractor.dart';
+import 'package:receipts/app/providers.dart';
+import 'package:receipts/data/repositories/settings_repository.dart';
+import 'package:receipts/features/import/file_import_service.dart';
+import 'package:receipts/main.dart';
+import 'package:receipts/platform/pdf_text_extractor/pdf_text_extractor.dart';
 
 Future<List<Override>> createIntegrationTestOverrides({
   required FileImportService fileImportService,

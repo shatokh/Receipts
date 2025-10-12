@@ -1,4 +1,4 @@
-package app.receipts_b
+package app.receipts
 
 import android.content.Context
 import android.net.Uri
