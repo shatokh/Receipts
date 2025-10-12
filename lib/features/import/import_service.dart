@@ -74,11 +74,17 @@ class ImportService {
   Future<Receipt> _parseReceipt(String safUri) async {
     try {
       final pages = await pdf.extractTextPages(safUri);
+      if (pages.isEmpty) {
+        throw const FormatException('Empty PDF content');
+      }
+
       final text = pages.join('\n');
+      if (text.trim().isEmpty) {
+        throw const FormatException('Empty PDF content');
+      }
+
       return parser.parse(text);
     } on PdfTextExtractionException {
-      return _parseTextFile(safUri);
-    } on FormatException {
       return _parseTextFile(safUri);
     }
   }
