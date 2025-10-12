@@ -46,4 +46,4 @@ jobs:
           name: biedronka_expenses-debug-${{ github.sha }}
           path: ${{ env.PROJECT_DIR }}/build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 4
