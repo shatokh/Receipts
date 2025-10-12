@@ -1,6 +1,7 @@
 package app.receipts
 
 import android.net.Uri
+import android.util.Log
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -27,6 +28,7 @@ import org.json.JSONObject
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "pdf_text_extractor"
+    private val TAG = "ReceiptsPdfExtractor"
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -42,6 +44,7 @@ class MainActivity : FlutterActivity() {
                         val pages = extractTextPages(safUri)
                         result.success(pages)
                     } catch (e: Exception) {
+                        Log.e(TAG, "extractTextPages failed for $safUri", e)
                         result.error("EXTRACTION_ERROR", e.message, e.toString())
                     }
                 }
@@ -51,6 +54,7 @@ class MainActivity : FlutterActivity() {
                         val count = getPageCount(safUri)
                         result.success(count)
                     } catch (e: Exception) {
+                        Log.e(TAG, "pageCount failed for $safUri", e)
                         result.error("PAGE_COUNT_ERROR", e.message, e.toString())
                     }
                 }
@@ -60,6 +64,7 @@ class MainActivity : FlutterActivity() {
                         val hash = getFileHash(safUri)
                         result.success(hash)
                     } catch (e: Exception) {
+                        Log.e(TAG, "fileHash failed for $safUri", e)
                         result.error("HASH_ERROR", e.message, e.toString())
                     }
                 }
@@ -69,6 +74,7 @@ class MainActivity : FlutterActivity() {
                         val text = readTextFile(safUri)
                         result.success(text)
                     } catch (e: Exception) {
+                        Log.e(TAG, "readTextFile failed for $safUri", e)
                         result.error("READ_TEXT_ERROR", e.message, e.toString())
                     }
                 }
@@ -192,7 +198,8 @@ class MainActivity : FlutterActivity() {
             return null
         }
 
-        val embeddedFile: PDEmbeddedFile = spec.embeddedFile ?: return null
+        val embeddedFile: PDEmbeddedFile =
+            spec.embeddedFile ?: spec.embeddedFileUnicode ?: return null
 
         return embeddedFile.createInputStream().use { stream ->
             val rawBytes = stream.readAllBytes()
@@ -201,6 +208,7 @@ class MainActivity : FlutterActivity() {
             val cleanedText = sanitizeEmbeddedText(text)
 
             if (cleanedText.isEmpty()) {
+                Log.w(TAG, "Embedded receipt payload was empty")
                 return@use null
             }
 
