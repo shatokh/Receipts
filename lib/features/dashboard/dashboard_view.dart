@@ -98,7 +98,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
-                  'Top categories — ${monthFormat.format(selectedMonth)}',
+                  'Spending by category — ${monthFormat.format(selectedMonth)}',
                   style: AppTextStyles.titleMedium.copyWith(
                     color: AppColors.textPrimary,
                   ),
@@ -448,12 +448,15 @@ class _TopCategoriesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return overview.when(
       data: (data) {
-        if (data.topCategories.isEmpty) {
+        final hasSpending =
+            data.topCategories.any((category) => category.amount > 0);
+
+        if (!hasSpending) {
           return Card(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(
-                'No categories yet for this month',
+                'No categorized spending for this month yet',
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -487,7 +490,7 @@ class _TopCategoriesSection extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Top 5 of ${currencyFormat.format(data.total)}',
+                  'Total — ${currencyFormat.format(data.total)}',
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.textSecondary,
                   ),

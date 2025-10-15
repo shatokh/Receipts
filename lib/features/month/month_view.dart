@@ -35,9 +35,8 @@ class MonthView extends ConsumerWidget {
     );
 
     final overviewData = monthOverviewAsync.asData?.value;
-    final totalValue = overviewData != null
-        ? currencyFormat.format(overviewData.total)
-        : '—';
+    final totalValue =
+        overviewData != null ? currencyFormat.format(overviewData.total) : '—';
     final receiptsCount = overviewData?.receiptsCount ?? 0;
 
     return Scaffold(
@@ -54,6 +53,13 @@ class MonthView extends ConsumerWidget {
               selectedMonth: DateTime(selectedMonth.year, selectedMonth.month),
             ),
             const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Spending by category — ${monthFormat.format(selectedMonth)}',
+              style: AppTextStyles.titleMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
             _CategoryBreakdown(overview: monthOverviewAsync),
             const SizedBox(height: AppSpacing.lg),
             Row(
@@ -164,7 +170,8 @@ class MonthView extends ConsumerWidget {
     List<MonthlyTotal> totals,
     DateTime selectedMonth,
   ) {
-    final normalizedSelected = DateTime(selectedMonth.year, selectedMonth.month);
+    final normalizedSelected =
+        DateTime(selectedMonth.year, selectedMonth.month);
     final uniqueMonths = <DateTime>{};
 
     for (final total in totals) {
@@ -174,16 +181,17 @@ class MonthView extends ConsumerWidget {
     }
 
     if (uniqueMonths.isEmpty) {
-      uniqueMonths.addAll(totals.map((total) => DateTime(total.year, total.month)));
+      uniqueMonths
+          .addAll(totals.map((total) => DateTime(total.year, total.month)));
     }
 
     uniqueMonths.add(normalizedSelected);
-    final months = uniqueMonths.toList()
-      ..sort((a, b) => a.compareTo(b));
+    final months = uniqueMonths.toList()..sort((a, b) => a.compareTo(b));
     return months;
   }
 
-  bool _isSameMonth(DateTime a, DateTime b) => a.year == b.year && a.month == b.month;
+  bool _isSameMonth(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month;
 }
 
 class _MonthPicker extends ConsumerWidget {
@@ -199,7 +207,9 @@ class _MonthPicker extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final monthFormat = DateFormat('MMMM yyyy');
     final value = months.firstWhere(
-      (month) => month.year == selectedMonth.year && month.month == selectedMonth.month,
+      (month) =>
+          month.year == selectedMonth.year &&
+          month.month == selectedMonth.month,
       orElse: () => selectedMonth,
     );
 
@@ -241,12 +251,15 @@ class _CategoryBreakdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return overview.when(
       data: (data) {
-        if (data.topCategories.isEmpty) {
+        final hasSpending =
+            data.topCategories.any((category) => category.amount > 0);
+
+        if (!hasSpending) {
           return Card(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(
-                'No categories tracked for this month yet',
+                'No categorized spending for this month yet',
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -280,7 +293,7 @@ class _CategoryBreakdown extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Top 5 of ${currencyFormat.format(data.total)}',
+                  'Total — ${currencyFormat.format(data.total)}',
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.textSecondary,
                   ),

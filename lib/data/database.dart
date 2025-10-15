@@ -2,6 +2,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:receipts/domain/category_definitions.dart';
+
 class DatabaseHelper {
   static Database? _database;
   static const String dbName = 'receipts.db';
@@ -141,17 +143,11 @@ class DatabaseHelper {
   }
 
   static Future<void> _insertDefaultCategories(Database db) async {
-    final categories = [
-      {'id': 'produce', 'name': 'Produce'},
-      {'id': 'meat', 'name': 'Meat'},
-      {'id': 'dairy', 'name': 'Dairy'},
-      {'id': 'household', 'name': 'Household'},
-      {'id': 'bakery', 'name': 'Bakery'},
-      {'id': 'other', 'name': 'Other'},
-    ];
-
-    for (final category in categories) {
-      await db.insert('categories', category);
+    for (final definition in categoryDefinitions) {
+      await db.insert('categories', {
+        'id': definition.id,
+        'name': definition.label,
+      });
     }
 
     // Insert default merchants
