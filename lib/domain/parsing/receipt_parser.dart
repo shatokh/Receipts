@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:receipts/domain/category_definitions.dart';
 import 'package:receipts/domain/models/line_item.dart';
 import 'package:receipts/domain/models/receipt.dart';
 
@@ -18,22 +19,6 @@ class ReceiptParser {
       caseSensitive: false);
   static final RegExp _discountLineRegex =
       RegExp(r'(-?\d+(?:[,.]\d+)?)\s*PLN', caseSensitive: false);
-  static final Map<String, List<String>> _categoryKeywords = {
-    'dairy': ['mleko', 'ser', 'jogurt', 'masło', 'śmiet', 'twaróg', 'kefir'],
-    'meat': ['mięso', 'kiełb', 'szynk', 'kurczak', 'wołow', 'wieprz', 'indyk'],
-    'bakery': ['chleb', 'bułk', 'pieczy', 'bagiet', 'ciasto'],
-    'produce': ['jabł', 'banan', 'pomidor', 'ogór', 'warzyw', 'owoc', 'sałat'],
-    'household': [
-      'papier',
-      'deterg',
-      'mydł',
-      'proszek',
-      'chemia',
-      'ręcz',
-      'środek'
-    ],
-  };
-
   Receipt parse(String rawText) {
     final maybeJson = rawText.trimLeft();
     if (maybeJson.startsWith('{')) {
@@ -523,13 +508,7 @@ class ReceiptParser {
   }
 
   String _categorize(String name) {
-    final lower = name.toLowerCase();
-    for (final entry in _categoryKeywords.entries) {
-      if (entry.value.any((keyword) => lower.contains(keyword))) {
-        return entry.key;
-      }
-    }
-    return 'other';
+    return categorizeItemName(name);
   }
 
   double _vatRateFromCode(String? code) {

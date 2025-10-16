@@ -1,4 +1,5 @@
 import 'package:receipts/data/database.dart';
+import 'package:receipts/domain/category_definitions.dart';
 import 'package:receipts/domain/models/category.dart';
 import 'package:receipts/domain/models/monthly_total.dart';
 
@@ -16,11 +17,8 @@ class CategoryRepository {
     return Category.fromMap(maps.first);
   }
 
-  Future<List<CategoryMonthTotal>> getTopCategoriesForMonth(
-    int year, 
-    int month, 
-    {int limit = 5}
-  ) async {
+  Future<List<CategoryMonthTotal>> getTopCategoriesForMonth(int year, int month,
+      {int limit = 5}) async {
     final db = await DatabaseHelper.database;
     final maps = await db.query(
       'category_month_totals',
@@ -40,7 +38,7 @@ class CategoryRepository {
       where: 'year = ? AND month = ?',
       whereArgs: [year, month],
     );
-    
+
     if (result.isEmpty) return 0.0;
     return result.first['total'] as double;
   }
@@ -49,41 +47,18 @@ class CategoryRepository {
     final db = await DatabaseHelper.database;
     final startOfMonth = DateTime(year, month).millisecondsSinceEpoch;
     final startOfNextMonth = DateTime(year, month + 1).millisecondsSinceEpoch;
-    
+
     final result = await db.query(
       'receipts',
       columns: ['COUNT(*) as count'],
       where: 'purchase_ts >= ? AND purchase_ts < ?',
       whereArgs: [startOfMonth, startOfNextMonth],
     );
-    
+
     return result.first['count'] as int;
   }
 
   Future<String> categorizeName(String itemName) async {
-    final lowercaseName = itemName.toLowerCase();
-    
-    // Polish categorization rules
-    if (_containsAny(lowercaseName, ['mleko', 'ser', 'jogurt', 'masło', 'śmietana', 'twaróg'])) {
-      return 'dairy';
-    }
-    if (_containsAny(lowercaseName, ['mięso', 'kiełbasa', 'szynka', 'kurczak', 'wołowina', 'wieprzowina'])) {
-      return 'meat';
-    }
-    if (_containsAny(lowercaseName, ['chleb', 'bułka', 'pieczywo', 'bagietka'])) {
-      return 'bakery';
-    }
-    if (_containsAny(lowercaseName, ['jabłko', 'banan', 'pomidor', 'ogórek', 'warzywa', 'owoce', 'sałata'])) {
-      return 'produce';
-    }
-    if (_containsAny(lowercaseName, ['papier', 'detergent', 'mydło', 'proszek', 'chemia', 'ręcznik'])) {
-      return 'household';
-    }
-    
-    return 'other';
-  }
-
-  bool _containsAny(String text, List<String> keywords) {
-    return keywords.any((keyword) => text.contains(keyword));
+    return categorizeItemName(itemName);
   }
 }
