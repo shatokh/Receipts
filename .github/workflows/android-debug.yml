@@ -32,6 +32,11 @@ jobs:
           flutter-version: "3.35.3"
           channel: "stable"
 
+      - name: Install Android NDK 27.0.12077973
+        run: |
+          yes | "${ANDROID_SDK_ROOT:-$ANDROID_HOME}"/cmdline-tools/latest/bin/sdkmanager \
+            --sdk_root="${ANDROID_SDK_ROOT:-$ANDROID_HOME}" "ndk;27.0.12077973"
+
       - name: Flutter pub get
         working-directory: ${{ env.PROJECT_DIR }}
         run: flutter pub get
