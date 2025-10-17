@@ -9,7 +9,7 @@ import io.flutter.plugin.common.MethodChannel
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.PDDocumentNameDictionary
-import com.tom_roush.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode
+import com.tom_roush.pdfbox.pdmodel.common.PDNameTreeNode
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import com.tom_roush.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification
 import com.tom_roush.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile
@@ -171,7 +171,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun extractFromEmbeddedTree(
-        node: PDEmbeddedFilesNameTreeNode?
+        node: PDNameTreeNode<PDComplexFileSpecification>?,
     ): String? {
         if (node == null) {
             return null
