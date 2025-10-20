@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -6,6 +7,7 @@ import 'package:workmanager/workmanager.dart';
 
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/app/router.dart';
+import 'package:receipts/core/localization/locale_controller.dart';
 import 'package:receipts/data/database.dart';
 import 'package:receipts/data/repositories/settings_repository.dart';
 import 'package:receipts/theme.dart';
@@ -65,16 +67,21 @@ void main() async {
   }
 }
 
-class ReceiptsApp extends StatelessWidget {
+class ReceiptsApp extends ConsumerWidget {
   const ReceiptsApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+
     return MaterialApp.router(
-      title: 'Receipts',
       debugShowCheckedModeBanner: false,
       theme: appTheme,
       routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: locale,
+      onGenerateTitle: (ctx) => AppLocalizations.of(ctx)!.appTitle,
     );
   }
 }

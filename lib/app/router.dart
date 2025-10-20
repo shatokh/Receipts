@@ -5,6 +5,7 @@ import 'package:receipts/features/month/month_view.dart';
 import 'package:receipts/features/receipts/receipts_view.dart';
 import 'package:receipts/features/receipt_details/receipt_details_view.dart';
 import 'package:receipts/features/import/import_view.dart';
+import 'package:receipts/features/settings/language_page.dart';
 import 'package:receipts/features/settings/settings_view.dart';
 import 'package:receipts/app/main_scaffold.dart';
 
@@ -33,6 +34,10 @@ final router = GoRouter(
         GoRoute(
           path: '/settings',
           builder: (context, state) => const SettingsView(),
+        ),
+        GoRoute(
+          path: '/settings/language',
+          builder: (context, state) => const LanguagePage(),
         ),
         GoRoute(
           path: '/import',
