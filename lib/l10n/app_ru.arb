@@ -1,0 +1,16 @@
+{
+  "@@locale": "ru",
+  "appTitle": "Receipts",
+  "settingsTitle": "Настройки",
+  "languageTitle": "Язык",
+  "chooseLanguage": "Выберите язык",
+  "english": "Английский",
+  "russian": "Русский",
+  "aboutLegal": "Политика и Условия",
+  "privacyPolicy": "Политика конфиденциальности",
+  "termsOfUse": "Условия использования",
+  "openInBrowser": "Открыть в браузере",
+  "couldNotOpenLink": "Не удалось открыть ссылку",
+  "ok": "ОК",
+  "cancel": "Отмена"
+}

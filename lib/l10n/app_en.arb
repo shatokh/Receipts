@@ -1,0 +1,16 @@
+{
+  "@@locale": "en",
+  "appTitle": "Receipts",
+  "settingsTitle": "Settings",
+  "languageTitle": "Language",
+  "chooseLanguage": "Choose language",
+  "english": "English",
+  "russian": "Russian",
+  "aboutLegal": "Privacy & Terms",
+  "privacyPolicy": "Privacy Policy",
+  "termsOfUse": "Terms of Use",
+  "openInBrowser": "Open in browser",
+  "couldNotOpenLink": "Could not open link",
+  "ok": "OK",
+  "cancel": "Cancel"
+}

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:receipts/theme.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:receipts/app/providers.dart';
+import 'package:receipts/core/localization/locale_controller.dart';
+import 'package:receipts/theme.dart';
 
 class SettingsView extends ConsumerWidget {
   const SettingsView({super.key});
@@ -9,14 +13,44 @@ class SettingsView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sentryEnabled = ref.watch(sentryEnabledProvider);
-    
+    final t = AppLocalizations.of(context)!;
+    final locale = ref.watch(localeProvider);
+
+    final languageName = switch (locale.languageCode) {
+      'ru' => t.russian,
+      _ => t.english,
+    };
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(t.settingsTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
+          _SettingsSection(
+            title: t.languageTitle,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.language),
+                title: Text(
+                  t.languageTitle,
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  languageName,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                onTap: () => context.push('/settings/language'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
           _SettingsSection(
             title: 'Crash reports',
             children: [
@@ -35,7 +69,9 @@ class SettingsView extends ConsumerWidget {
                 ),
                 value: sentryEnabled,
                 onChanged: (value) async {
-                  await ref.read(sentryEnabledProvider.notifier).setEnabled(value);
+                  await ref
+                      .read(sentryEnabledProvider.notifier)
+                      .setEnabled(value);
 
                   final message = value
                       ? 'Crash reporting enabled'
@@ -177,7 +213,7 @@ class SettingsView extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () {
