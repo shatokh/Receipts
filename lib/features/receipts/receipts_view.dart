@@ -143,10 +143,12 @@ class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
             onChanged: widget.onSearchChanged,
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<DateTime?>(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 600;
+
+              Widget buildMonthDropdown({bool expandWidth = false}) {
+                final dropdown = DropdownButtonFormField<DateTime?>(
                   value: widget.selectedMonth,
                   decoration: const InputDecoration(
                     labelText: 'Month',
@@ -165,11 +167,17 @@ class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
                     ),
                   ],
                   onChanged: widget.onMonthChanged,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
+                );
+
+                if (expandWidth) {
+                  return SizedBox(width: double.infinity, child: dropdown);
+                }
+
+                return dropdown;
+              }
+
+              Widget buildAmountFilter() {
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -184,9 +192,28 @@ class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
                       onChanged: widget.onAmountChanged,
                     ),
                   ],
-                ),
-              ),
-            ],
+                );
+              }
+
+              if (isNarrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    buildMonthDropdown(expandWidth: true),
+                    const SizedBox(height: AppSpacing.md),
+                    buildAmountFilter(),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(child: buildMonthDropdown()),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(child: buildAmountFilter()),
+                ],
+              );
+            },
           ),
         ],
       ),

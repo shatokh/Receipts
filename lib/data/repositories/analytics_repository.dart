@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:receipts/data/database.dart';
 import 'package:receipts/data/database_update_bus.dart';
 import 'package:receipts/data/database_update_bus_provider.dart';
+import 'package:receipts/domain/category_definitions.dart';
 import 'package:receipts/domain/models/dashboard_kpis.dart';
 import 'package:receipts/domain/models/month_overview.dart';
 import 'package:receipts/domain/models/monthly_total.dart';
@@ -80,14 +81,24 @@ class AnalyticsRepository {
         [start, end],
       );
 
+      final totalsByCategory = <String, double>{};
       for (final row in categoryRows) {
-        final categoryId = (row['category_id'] as String?) ?? 'other';
+        final rawCategoryId = row['category_id'] as String?;
         final amount = (row['total'] as num?)?.toDouble() ?? 0.0;
+        final categoryId = normalizeCategoryId(rawCategoryId);
+        totalsByCategory.update(
+          categoryId,
+          (value) => value + amount,
+          ifAbsent: () => amount,
+        );
+      }
+
+      for (final entry in totalsByCategory.entries) {
         await txn.rawInsert(
           'INSERT INTO category_month_totals (category_id, year, month, total) '
           'VALUES (?, ?, ?, ?) '
           'ON CONFLICT(category_id, year, month) DO UPDATE SET total = excluded.total',
-          [categoryId, month.year, month.month, amount],
+          [entry.key, month.year, month.month, entry.value],
         );
       }
 
@@ -139,27 +150,37 @@ class AnalyticsRepository {
         : null;
 
     final categoriesResult = await db.rawQuery(
-      'SELECT li.category_id as category_id, c.name as category_name, SUM(li.total) as total '
+      'SELECT li.category_id as category_id, SUM(li.total) as total '
       'FROM line_items li '
       'JOIN receipts r ON r.id = li.receipt_id '
-      'LEFT JOIN categories c ON c.id = li.category_id '
       'WHERE r.purchase_ts >= ? AND r.purchase_ts < ? '
-      'GROUP BY li.category_id '
-      'ORDER BY total DESC '
-      'LIMIT 5',
+      'GROUP BY li.category_id',
       [startOfMonth, startOfNextMonth],
     );
 
-    final topCategories = categoriesResult
-        .map(
-          (row) => CategoryBreakdown(
-            categoryId: row['category_id'] as String,
-            categoryName: (row['category_name'] as String?) ??
-                row['category_id'] as String,
-            amount: (row['total'] as num?)?.toDouble() ?? 0.0,
-          ),
-        )
-        .toList();
+    final totalsByCategory = <String, double>{
+      for (final definition in categoryDefinitions) definition.id: 0.0,
+    };
+
+    for (final row in categoriesResult) {
+      final rawCategoryId = row['category_id'] as String?;
+      final amount = (row['total'] as num?)?.toDouble() ?? 0.0;
+      final categoryId = normalizeCategoryId(rawCategoryId);
+      totalsByCategory.update(
+        categoryId,
+        (value) => value + amount,
+        ifAbsent: () => amount,
+      );
+    }
+
+    final topCategories = [
+      for (final definition in categoryDefinitions)
+        CategoryBreakdown(
+          categoryId: definition.id,
+          categoryName: definition.label,
+          amount: totalsByCategory[definition.id] ?? 0.0,
+        ),
+    ];
 
     return MonthOverview(
       month: normalized,

@@ -34,6 +34,11 @@ dev_dependencies:
   flutter_launcher_icons: ^0.13.1
   mocktail: ^1.0.3
 
+dependency_overrides:
+  # The Flutter SDK's integration_test package still pins collection to 1.19.0.
+  # Force the workspace to use the ^1.19.1 constraint that the app requires.
+  collection: ^1.19.1
+
 flutter:
   uses-material-design: true
   assets:
