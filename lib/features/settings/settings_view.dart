@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:receipts/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -52,17 +52,17 @@ class SettingsView extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           _SettingsSection(
-            title: 'Crash reports',
+            title: t.crashReportsTitle,
             children: [
               SwitchListTile(
                 title: Text(
-                  'Enable Sentry crash reports',
+                  t.enableSentryCrashReports,
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: AppColors.textPrimary,
                   ),
                 ),
                 subtitle: Text(
-                  'No personal data is sent. Changes take effect immediately.',
+                  t.crashReportsDescription,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -74,8 +74,8 @@ class SettingsView extends ConsumerWidget {
                       .setEnabled(value);
 
                   final message = value
-                      ? 'Crash reporting enabled'
-                      : 'Crash reporting disabled';
+                      ? t.crashReportingEnabled
+                      : t.crashReportingDisabled;
 
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -89,18 +89,18 @@ class SettingsView extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           _SettingsSection(
-            title: 'About',
+            title: t.aboutSectionTitle,
             children: [
               ListTile(
                 title: Text(
-                  'Receipts — MVP',
+                  t.aboutAppTitle,
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 subtitle: Text(
-                  'Receipts app (MVP). All processing on device.',
+                  t.aboutAppDescription,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -109,7 +109,7 @@ class SettingsView extends ConsumerWidget {
               ),
               ListTile(
                 title: Text(
-                  'Version',
+                  t.versionLabel,
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: AppColors.textPrimary,
                   ),
@@ -124,13 +124,13 @@ class SettingsView extends ConsumerWidget {
               ),
               ListTile(
                 title: Text(
-                  'Data storage',
+                  t.dataStorageTitle,
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: AppColors.textPrimary,
                   ),
                 ),
                 subtitle: Text(
-                  'All receipts and data are stored locally on this device',
+                  t.dataStorageDescription,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -154,7 +154,7 @@ class SettingsView extends ConsumerWidget {
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           Text(
-                            'Privacy First',
+                            t.privacyFirstTitle,
                             style: AppTextStyles.bodyLarge.copyWith(
                               color: AppColors.primary,
                               fontWeight: FontWeight.w600,
@@ -164,7 +164,7 @@ class SettingsView extends ConsumerWidget {
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        'Your receipts are processed entirely on your device. No data is sent to external servers except for optional crash reports.',
+                        t.privacyFirstDescription,
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -177,17 +177,17 @@ class SettingsView extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           _SettingsSection(
-            title: 'Debug',
+            title: t.debugSectionTitle,
             children: [
               ListTile(
                 title: Text(
-                  'Clear all data',
+                  t.clearAllData,
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: AppColors.error,
                   ),
                 ),
                 subtitle: Text(
-                  'Remove all receipts and reset the app',
+                  t.clearAllDataDescription,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -203,13 +203,12 @@ class SettingsView extends ConsumerWidget {
   }
 
   void _showClearDataDialog(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear all data?'),
-        content: const Text(
-          'This will permanently delete all receipts and data. This action cannot be undone.',
-        ),
+        title: Text(t.clearAllDataDialogTitle),
+        content: Text(t.clearAllDataDialogMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -219,13 +218,11 @@ class SettingsView extends ConsumerWidget {
             onPressed: () {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Data clearing not implemented yet'),
-                ),
+                SnackBar(content: Text(t.clearDataNotImplemented)),
               );
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Clear'),
+            child: Text(t.clearAction),
           ),
         ],
       ),

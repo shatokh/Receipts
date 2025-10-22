@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:receipts/l10n/app_localizations.dart';
 
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/domain/models/line_item.dart';
@@ -32,7 +33,7 @@ class _LoadingState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Receipt'),
+        title: Text(AppLocalizations.of(context)!.receiptTitle),
       ),
       body: const Center(child: CircularProgressIndicator()),
     );
@@ -46,8 +47,9 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Receipt')),
+      appBar: AppBar(title: Text(t.receiptTitle)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -59,7 +61,7 @@ class _ErrorState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Receipt not found',
+              t.receiptNotFound,
               style: AppTextStyles.titleMedium.copyWith(
                 color: AppColors.textPrimary,
               ),
@@ -75,7 +77,7 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             ElevatedButton(
               onPressed: () => GoRouter.of(context).go('/receipts'),
-              child: const Text('Back to receipts'),
+              child: Text(t.backToReceipts),
             ),
           ],
         ),
@@ -91,9 +93,10 @@ class _ReceiptDetailsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Receipt'),
+        title: Text(t.receiptTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -184,7 +187,7 @@ class _ItemsTable extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Text(
-            'No line items were recorded for this receipt',
+            AppLocalizations.of(context)!.noLineItems,
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -216,12 +219,13 @@ class _ItemsTable extends StatelessWidget {
 class _TableHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
           flex: 3,
           child: Text(
-            'Item',
+            t.itemHeader,
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
@@ -231,7 +235,7 @@ class _TableHeader extends StatelessWidget {
         Expanded(
           flex: 2,
           child: Text(
-            'Qty × Price',
+            t.quantityPriceHeader,
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
@@ -241,7 +245,7 @@ class _TableHeader extends StatelessWidget {
         ),
         Expanded(
           child: Text(
-            'VAT',
+            t.vatHeader,
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
@@ -251,7 +255,7 @@ class _TableHeader extends StatelessWidget {
         ),
         Expanded(
           child: Text(
-            'Total',
+            t.totalHeader,
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
@@ -359,7 +363,7 @@ class _VATSummary extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'VAT total:',
+              AppLocalizations.of(context)!.vatTotalLabel,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -383,17 +387,18 @@ class _ActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
           child: ElevatedButton.icon(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('PDF opening not implemented yet')),
+                SnackBar(content: Text(t.pdfOpenNotImplemented)),
               );
             },
             icon: const Icon(Icons.picture_as_pdf),
-            label: const Text('Open PDF'),
+            label: Text(t.openPdf),
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -401,11 +406,11 @@ class _ActionButtons extends StatelessWidget {
           child: TextButton.icon(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Re-categorization not implemented yet')),
+                SnackBar(content: Text(t.recategorizationNotImplemented)),
               );
             },
             icon: const Icon(Icons.category),
-            label: const Text('Re-categorize'),
+            label: Text(t.recategorize),
           ),
         ),
       ],

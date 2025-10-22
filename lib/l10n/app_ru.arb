@@ -1,16 +1,190 @@
 {
   "@@locale": "ru",
-  "appTitle": "Receipts",
+  "appTitle": "Чеки",
   "settingsTitle": "Настройки",
   "languageTitle": "Язык",
   "chooseLanguage": "Выберите язык",
   "english": "Английский",
   "russian": "Русский",
-  "aboutLegal": "Политика и Условия",
+  "aboutLegal": "Политика и условия",
   "privacyPolicy": "Политика конфиденциальности",
   "termsOfUse": "Условия использования",
   "openInBrowser": "Открыть в браузере",
   "couldNotOpenLink": "Не удалось открыть ссылку",
   "ok": "ОК",
-  "cancel": "Отмена"
+  "cancel": "Отмена",
+  "crashReportsTitle": "Отчёты об ошибках",
+  "enableSentryCrashReports": "Включить отправку отчётов об ошибках Sentry",
+  "crashReportsDescription": "Личные данные не отправляются. Изменения применяются сразу.",
+  "crashReportingEnabled": "Отчёты об ошибках включены",
+  "crashReportingDisabled": "Отчёты об ошибках выключены",
+  "aboutSectionTitle": "О приложении",
+  "aboutAppTitle": "Receipts — MVP",
+  "aboutAppDescription": "Приложение Receipts (MVP). Вся обработка на устройстве.",
+  "versionLabel": "Версия",
+  "dataStorageTitle": "Хранение данных",
+  "dataStorageDescription": "Все чеки и данные хранятся локально на этом устройстве",
+  "privacyFirstTitle": "Приватность прежде всего",
+  "privacyFirstDescription": "Ваши чеки обрабатываются полностью на вашем устройстве. Данные не отправляются на внешние серверы, кроме необязательных отчётов об ошибках.",
+  "debugSectionTitle": "Отладка",
+  "clearAllData": "Удалить все данные",
+  "clearAllDataDescription": "Удалить все чеки и сбросить приложение",
+  "clearAllDataDialogTitle": "Удалить все данные?",
+  "clearAllDataDialogMessage": "Это действие навсегда удалит все чеки и данные. Его нельзя отменить.",
+  "clearDataNotImplemented": "Удаление данных пока не реализовано",
+  "clearAction": "Удалить",
+  "onboardingTitle": "Обработка только на устройстве",
+  "onboardingBulletOptimized": "Оптимизировано для PDF-чеков (MVP)",
+  "onboardingBulletLocalData": "Все данные остаются на этом устройстве",
+  "onboardingBulletCrashReports": "Необязательные отчёты об ошибках (их можно отключить в любой момент)",
+  "onboardingGetStarted": "Начать работу",
+  "monthOverviewTitle": "Обзор месяца",
+  "spendingByCategoryForMonth": "Расходы по категориям — {month}",
+  "@spendingByCategoryForMonth": {
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "totalForMonth": "Итого — {month}",
+  "@totalForMonth": {
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "totalLast30Days": "Итого (30 дн.)",
+  "averageReceipt": "Средний чек",
+  "receiptsMetricLabel": "Чеки",
+  "recentReceipts": "Недавние чеки",
+  "noReceiptsForMonth": "За этот месяц ещё нет чеков",
+  "unableToLoadReceipts": "Не удалось загрузить чеки: {error}",
+  "@unableToLoadReceipts": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "showAllReceipts": "Показать все чеки ({count})",
+  "@showAllReceipts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noCategorizedSpending": "За этот месяц ещё нет расходов по категориям",
+  "totalWithAmount": "Итого — {amount}",
+  "@totalWithAmount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "unableToLoadCategoriesWithError": "Не удалось загрузить категории: {error}",
+  "@unableToLoadCategoriesWithError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "unableToLoadCategories": "Не удалось загрузить категории",
+  "importReceiptsTitle": "Импорт чеков",
+  "importReceiptsButton": "Импорт чеков (PDF или JSON)",
+  "filesCopiedInfo": "Файлы копируются в память приложения для надёжного доступа.",
+  "importFailed": "Не удалось импортировать: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "noImportsYet": "Импортов ещё нет",
+  "importFirstReceiptPrompt": "Импортируйте первый чек (PDF или JSON)",
+  "importStatusSuccess": "Успех",
+  "importStatusDuplicate": "Дубликат",
+  "importStatusError": "Ошибка",
+  "unknownFile": "Неизвестный файл",
+  "justNow": "Только что",
+  "minutesAgo": "{count, plural, one {{count} мин назад} few {{count} мин назад} many {{count} мин назад} other {{count} мин назад}}",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count, plural, one {{count} ч назад} few {{count} ч назад} many {{count} ч назад} other {{count} ч назад}}",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count, plural, one {{count} д назад} few {{count} д назад} many {{count} д назад} other {{count} д назад}}",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "receiptsTitle": "Чеки",
+  "searchHint": "Поиск по продавцу или дате",
+  "monthFilterLabel": "Месяц",
+  "allMonths": "Все месяцы",
+  "totalRangeLabel": "Диапазон суммы: PLN {start} – PLN {end}",
+  "@totalRangeLabel": {
+    "placeholders": {
+      "start": {
+        "type": "int"
+      },
+      "end": {
+        "type": "int"
+      }
+    }
+  },
+  "noReceiptsFound": "Чеки не найдены",
+  "adjustSearchFilters": "Измените запрос или фильтры",
+  "receiptTitle": "Чек",
+  "receiptNotFound": "Чек не найден",
+  "backToReceipts": "Назад к чекам",
+  "noLineItems": "Для этого чека нет позиций",
+  "itemHeader": "Позиция",
+  "quantityPriceHeader": "Кол-во × Цена",
+  "vatHeader": "НДС",
+  "totalHeader": "Итого",
+  "vatTotalLabel": "НДС всего:",
+  "pdfOpenNotImplemented": "Открытие PDF пока не реализовано",
+  "openPdf": "Открыть PDF",
+  "recategorizationNotImplemented": "Повторная категоризация пока не реализована",
+  "recategorize": "Переклассифицировать",
+  "dashboardTitle": "Панель расходов",
+  "importPdf": "Импорт PDF",
+  "selectedMonthLabel": "Выбранный месяц",
+  "onDeviceProcessing": "Все данные обрабатываются на устройстве",
+  "monthlySpend": "Месячные расходы",
+  "noReceiptsThisMonth": "В этом месяце нет чеков",
+  "receiptMerchantAndDate": "{merchant}, {date}",
+  "@receiptMerchantAndDate": {
+    "placeholders": {
+      "merchant": {},
+      "date": {}
+    }
+  },
+  "receiptCount": "{count, plural, one {{count} чек} few {{count} чека} many {{count} чеков} other {{count} чеков}}",
+  "@receiptCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "maxReceiptForMonth": "Максимальный чек — {month}",
+  "@maxReceiptForMonth": {
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "maxReceipt": "Максимальный чек",
+  "totalLabel": "Итого",
+  "unableToLoadData": "Не удалось загрузить данные",
+  "dashboardEmptyTitle": "Чеков ещё нет",
+  "dashboardEmptyMessage": "Импортируйте первый чек, чтобы увидеть аналитику",
+  "dashboardErrorMessage": "Что-то пошло не так"
 }
