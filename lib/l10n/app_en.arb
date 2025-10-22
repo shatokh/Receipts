@@ -12,5 +12,179 @@
   "openInBrowser": "Open in browser",
   "couldNotOpenLink": "Could not open link",
   "ok": "OK",
-  "cancel": "Cancel"
+  "cancel": "Cancel",
+  "crashReportsTitle": "Crash reports",
+  "enableSentryCrashReports": "Enable Sentry crash reports",
+  "crashReportsDescription": "No personal data is sent. Changes take effect immediately.",
+  "crashReportingEnabled": "Crash reporting enabled",
+  "crashReportingDisabled": "Crash reporting disabled",
+  "aboutSectionTitle": "About",
+  "aboutAppTitle": "Receipts — MVP",
+  "aboutAppDescription": "Receipts app (MVP). All processing on device.",
+  "versionLabel": "Version",
+  "dataStorageTitle": "Data storage",
+  "dataStorageDescription": "All receipts and data are stored locally on this device",
+  "privacyFirstTitle": "Privacy First",
+  "privacyFirstDescription": "Your receipts are processed entirely on your device. No data is sent to external servers except for optional crash reports.",
+  "debugSectionTitle": "Debug",
+  "clearAllData": "Clear all data",
+  "clearAllDataDescription": "Remove all receipts and reset the app",
+  "clearAllDataDialogTitle": "Clear all data?",
+  "clearAllDataDialogMessage": "This will permanently delete all receipts and data. This action cannot be undone.",
+  "clearDataNotImplemented": "Data clearing not implemented yet",
+  "clearAction": "Clear",
+  "onboardingTitle": "Local-only processing",
+  "onboardingBulletOptimized": "Optimized for PDF receipts (MVP)",
+  "onboardingBulletLocalData": "All data stays on this device",
+  "onboardingBulletCrashReports": "Optional crash reports (you can disable any time)",
+  "onboardingGetStarted": "Get started",
+  "monthOverviewTitle": "Month overview",
+  "spendingByCategoryForMonth": "Spending by category — {month}",
+  "@spendingByCategoryForMonth": {
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "totalForMonth": "Total — {month}",
+  "@totalForMonth": {
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "totalLast30Days": "Total (30d)",
+  "averageReceipt": "Average receipt",
+  "receiptsMetricLabel": "Receipts",
+  "recentReceipts": "Recent receipts",
+  "noReceiptsForMonth": "No receipts recorded for this month yet",
+  "unableToLoadReceipts": "Unable to load receipts: {error}",
+  "@unableToLoadReceipts": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "showAllReceipts": "Show all receipts ({count})",
+  "@showAllReceipts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noCategorizedSpending": "No categorized spending for this month yet",
+  "totalWithAmount": "Total — {amount}",
+  "@totalWithAmount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "unableToLoadCategoriesWithError": "Unable to load categories: {error}",
+  "@unableToLoadCategoriesWithError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "unableToLoadCategories": "Unable to load categories",
+  "importReceiptsTitle": "Import receipts",
+  "importReceiptsButton": "Import receipts (PDF or JSON)",
+  "filesCopiedInfo": "Files are copied to app storage for reliable access.",
+  "importFailed": "Import failed: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "noImportsYet": "No imports yet",
+  "importFirstReceiptPrompt": "Import your first receipt (PDF or JSON)",
+  "importStatusSuccess": "Success",
+  "importStatusDuplicate": "Duplicate",
+  "importStatusError": "Error",
+  "unknownFile": "Unknown file",
+  "justNow": "Just now",
+  "minutesAgo": "{count, plural, one {{count} min ago} other {{count} min ago}}",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count, plural, one {{count} h ago} other {{count} h ago}}",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count, plural, one {{count} d ago} other {{count} d ago}}",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "receiptsTitle": "Receipts",
+  "searchHint": "Search by merchant or date",
+  "monthFilterLabel": "Month",
+  "allMonths": "All months",
+  "totalRangeLabel": "Total range: PLN {start} - PLN {end}",
+  "@totalRangeLabel": {
+    "placeholders": {
+      "start": {
+        "type": "int"
+      },
+      "end": {
+        "type": "int"
+      }
+    }
+  },
+  "noReceiptsFound": "No receipts found",
+  "adjustSearchFilters": "Try adjusting your search or filters",
+  "receiptTitle": "Receipt",
+  "receiptNotFound": "Receipt not found",
+  "backToReceipts": "Back to receipts",
+  "noLineItems": "No line items were recorded for this receipt",
+  "itemHeader": "Item",
+  "quantityPriceHeader": "Qty × Price",
+  "vatHeader": "VAT",
+  "totalHeader": "Total",
+  "vatTotalLabel": "VAT total:",
+  "pdfOpenNotImplemented": "PDF opening not implemented yet",
+  "openPdf": "Open PDF",
+  "recategorizationNotImplemented": "Re-categorization not implemented yet",
+  "recategorize": "Re-categorize",
+  "dashboardTitle": "Spending dashboard",
+  "importPdf": "Import PDF",
+  "selectedMonthLabel": "Selected month",
+  "onDeviceProcessing": "All data is processed on device",
+  "monthlySpend": "Monthly spend",
+  "noReceiptsThisMonth": "No receipts this month",
+  "receiptMerchantAndDate": "{merchant}, {date}",
+  "@receiptMerchantAndDate": {
+    "placeholders": {
+      "merchant": {},
+      "date": {}
+    }
+  },
+  "receiptCount": "{count, plural, one {1 receipt} other {{count} receipts}}",
+  "@receiptCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "maxReceiptForMonth": "Max receipt — {month}",
+  "@maxReceiptForMonth": {
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "maxReceipt": "Max receipt",
+  "totalLabel": "Total",
+  "unableToLoadData": "Unable to load data",
+  "dashboardEmptyTitle": "No receipts yet",
+  "dashboardEmptyMessage": "Import your first receipt to see analytics",
+  "dashboardErrorMessage": "Something went wrong"
 }

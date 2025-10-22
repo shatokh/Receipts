@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:receipts/l10n/app_localizations.dart';
+
 import 'package:receipts/theme.dart';
 
 class OnboardingView extends StatelessWidget {
@@ -7,6 +9,8 @@ class OnboardingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -23,24 +27,23 @@ class OnboardingView extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(
-                'Local-only processing',
+                t.onboardingTitle,
                 style: AppTextStyles.titleLarge.copyWith(
                   color: AppColors.textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.lg),
-              _BulletPoint(text: 'Optimized for PDF receipts (MVP)'),
+              _BulletPoint(text: t.onboardingBulletOptimized),
               const SizedBox(height: AppSpacing.md),
-              _BulletPoint(text: 'All data stays on this device'),
+              _BulletPoint(text: t.onboardingBulletLocalData),
               const SizedBox(height: AppSpacing.md),
-              _BulletPoint(
-                  text: 'Optional crash reports (you can disable any time)'),
+              _BulletPoint(text: t.onboardingBulletCrashReports),
               const Spacer(),
               ElevatedButton(
                 key: const ValueKey('onboarding_get_started'),
                 onPressed: () => context.go('/dashboard'),
-                child: const Text('Get started'),
+                child: Text(t.onboardingGetStarted),
               ),
               const SizedBox(height: AppSpacing.lg),
             ],
