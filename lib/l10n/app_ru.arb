@@ -1,6 +1,11 @@
 {
   "@@locale": "ru",
   "appTitle": "Чеки",
+  "navHome": "Главная",
+  "navImport": "Импорт",
+  "navStats": "Статистика",
+  "navReceipts": "Чеки",
+  "navSettings": "Настройки",
   "settingsTitle": "Настройки",
   "languageTitle": "Язык",
   "chooseLanguage": "Выберите язык",
