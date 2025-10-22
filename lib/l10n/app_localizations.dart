@@ -101,6 +101,36 @@ abstract class AppLocalizations {
   /// **'Receipts'**
   String get appTitle;
 
+  /// No description provided for @navHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get navHome;
+
+  /// No description provided for @navImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get navImport;
+
+  /// No description provided for @navStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get navStats;
+
+  /// No description provided for @navReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts'**
+  String get navReceipts;
+
+  /// No description provided for @navSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get navSettings;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

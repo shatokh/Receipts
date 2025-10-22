@@ -12,6 +12,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Receipts';
 
   @override
+  String get navHome => 'Home';
+
+  @override
+  String get navImport => 'Import';
+
+  @override
+  String get navStats => 'Stats';
+
+  @override
+  String get navReceipts => 'Receipts';
+
+  @override
+  String get navSettings => 'Settings';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

@@ -1,6 +1,11 @@
 {
   "@@locale": "en",
   "appTitle": "Receipts",
+  "navHome": "Home",
+  "navImport": "Import",
+  "navStats": "Stats",
+  "navReceipts": "Receipts",
+  "navSettings": "Settings",
   "settingsTitle": "Settings",
   "languageTitle": "Language",
   "chooseLanguage": "Choose language",
