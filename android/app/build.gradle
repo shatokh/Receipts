@@ -13,7 +13,11 @@ def jp2Aar = "jp2-android-${jp2Ver}.aar"
 def envUrl = (System.getenv("JP2_AAR_URL") ?: "").trim()
 def envSha = (System.getenv("JP2_AAR_SHA256") ?: "").trim()
 
-def hasJp2 = envUrl.startsWith("http")
+def hasJp2 = envUrl.startsWith("https://")
+
+if (envUrl && !hasJp2) {
+    logger.lifecycle("JP2: ignoring non-HTTPS JP2_AAR_URL. Build will proceed without it.")
+}
 
 if (hasJp2) {
     tasks.register("fetchJp2Aar") {
