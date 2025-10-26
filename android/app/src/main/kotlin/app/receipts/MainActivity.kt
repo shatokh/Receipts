@@ -256,7 +256,12 @@ class MainActivity : FlutterActivity() {
         val maxDimension = 2000f
         val largestSide = max(width, height).toFloat()
         val scaleToMax = maxDimension / largestSide
-        return scaleToMax.coerceIn(1f, 2.5f)
+        val normalizedScale = if (largestSide > maxDimension) {
+            scaleToMax
+        } else {
+            scaleToMax.coerceAtMost(2.5f)
+        }
+        return normalizedScale
     }
 
     private fun hasMeaningfulText(pages: List<String>): Boolean {
