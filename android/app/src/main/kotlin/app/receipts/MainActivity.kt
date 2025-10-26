@@ -1,6 +1,12 @@
 package app.receipts
 
 import android.net.Uri
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.Matrix
+import android.graphics.pdf.PdfRenderer
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
@@ -15,9 +21,14 @@ import com.tom_roush.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecif
 import com.tom_roush.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile
 import com.tom_roush.pdfbox.pdmodel.common.filespecification.PDFileSpecification
 import com.tom_roush.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment
+import com.google.android.gms.tasks.Tasks
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.lang.Integer.max
 import java.security.MessageDigest
 import java.text.Normalizer
 import java.util.zip.GZIPInputStream
@@ -30,53 +41,71 @@ import org.json.JSONObject
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "pdf_text_extractor"
     private val TAG = "ReceiptsPdfExtractor"
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val backgroundExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        
+
         // Initialize PDFBox
         PDFBoxResourceLoader.init(applicationContext)
-        
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "extractTextPages" -> {
                     val safUri = call.arguments as String
-                    try {
-                        val pages = extractTextPages(safUri)
-                        result.success(pages)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "extractTextPages failed for $safUri", e)
-                        result.error("EXTRACTION_ERROR", e.message, e.toString())
+                    backgroundExecutor.execute {
+                        try {
+                            val pages = extractTextPages(safUri)
+                            mainHandler.post { result.success(pages) }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "extractTextPages failed for $safUri", e)
+                            mainHandler.post {
+                                result.error("EXTRACTION_ERROR", e.message, e.toString())
+                            }
+                        }
                     }
                 }
                 "pageCount" -> {
                     val safUri = call.arguments as String
-                    try {
-                        val count = getPageCount(safUri)
-                        result.success(count)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "pageCount failed for $safUri", e)
-                        result.error("PAGE_COUNT_ERROR", e.message, e.toString())
+                    backgroundExecutor.execute {
+                        try {
+                            val count = getPageCount(safUri)
+                            mainHandler.post { result.success(count) }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "pageCount failed for $safUri", e)
+                            mainHandler.post {
+                                result.error("PAGE_COUNT_ERROR", e.message, e.toString())
+                            }
+                        }
                     }
                 }
                 "fileHash" -> {
                     val safUri = call.arguments as String
-                    try {
-                        val hash = getFileHash(safUri)
-                        result.success(hash)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "fileHash failed for $safUri", e)
-                        result.error("HASH_ERROR", e.message, e.toString())
+                    backgroundExecutor.execute {
+                        try {
+                            val hash = getFileHash(safUri)
+                            mainHandler.post { result.success(hash) }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "fileHash failed for $safUri", e)
+                            mainHandler.post {
+                                result.error("HASH_ERROR", e.message, e.toString())
+                            }
+                        }
                     }
                 }
                 "readTextFile" -> {
                     val safUri = call.arguments as String
-                    try {
-                        val text = readTextFile(safUri)
-                        result.success(text)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "readTextFile failed for $safUri", e)
-                        result.error("READ_TEXT_ERROR", e.message, e.toString())
+                    backgroundExecutor.execute {
+                        try {
+                            val text = readTextFile(safUri)
+                            mainHandler.post { result.success(text) }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "readTextFile failed for $safUri", e)
+                            mainHandler.post {
+                                result.error("READ_TEXT_ERROR", e.message, e.toString())
+                            }
+                        }
                     }
                 }
                 else -> result.notImplemented()
@@ -110,6 +139,16 @@ class MainActivity : FlutterActivity() {
 
                     pages.add(text)
                 }
+                if (hasMeaningfulText(pages)) {
+                    return pages
+                }
+
+                val ocrPages = extractTextWithOcr(uri)
+                if (hasMeaningfulText(ocrPages)) {
+                    Log.i(TAG, "Falling back to OCR text extraction for $safUri")
+                    return ocrPages
+                }
+
                 pages
             }
         }
@@ -168,6 +207,70 @@ class MainActivity : FlutterActivity() {
         }
 
         return null
+    }
+
+    private fun extractTextWithOcr(uri: Uri): List<String> {
+        return try {
+            contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
+                PdfRenderer(descriptor).use { renderer ->
+                    if (renderer.pageCount == 0) {
+                        return emptyList()
+                    }
+
+                    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                    try {
+                        val pages = mutableListOf<String>()
+                        for (i in 0 until renderer.pageCount) {
+                            renderer.openPage(i).use { page ->
+                                val scale = computeOcrScale(page.width, page.height)
+                                val width = (page.width * scale).toInt()
+                                val height = (page.height * scale).toInt()
+                                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                                try {
+                                    bitmap.eraseColor(Color.WHITE)
+                                    val matrix = Matrix().apply { postScale(scale, scale) }
+                                    page.render(bitmap, null, matrix, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+
+                                    val image = InputImage.fromBitmap(bitmap, 0)
+                                    val result = Tasks.await(recognizer.process(image))
+                                    val normalized = Normalizer.normalize(result.text, Normalizer.Form.NFC)
+                                    pages.add(normalized)
+                                } finally {
+                                    bitmap.recycle()
+                                }
+                            }
+                        }
+                        pages
+                    } finally {
+                        recognizer.close()
+                    }
+                }
+            } ?: emptyList()
+        } catch (e: Exception) {
+            Log.e(TAG, "OCR fallback failed for $uri", e)
+            emptyList()
+        }
+    }
+
+    private fun computeOcrScale(width: Int, height: Int): Float {
+        val maxDimension = 2000f
+        val largestSide = max(width, height).toFloat()
+        val scaleToMax = maxDimension / largestSide
+        val normalizedScale = if (largestSide > maxDimension) {
+            scaleToMax
+        } else {
+            scaleToMax.coerceAtMost(2.5f)
+        }
+        return normalizedScale
+    }
+
+    private fun hasMeaningfulText(pages: List<String>): Boolean {
+        for (page in pages) {
+            if (page.any { !it.isWhitespace() }) {
+                return true
+            }
+        }
+        return false
     }
 
     private fun extractFromEmbeddedTree(
