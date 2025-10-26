@@ -155,11 +155,11 @@ class DatabaseHelper {
       for (final definition in categoryDefinitions) {
         await txn.execute(
           'INSERT OR IGNORE INTO categories (id, name) VALUES (?, ?)',
-          [definition.id, definition.label],
+          [definition.id, definition.fallbackLabel],
         );
         await txn.update(
           'categories',
-          {'name': definition.label},
+          {'name': definition.fallbackLabel},
           where: 'id = ?',
           whereArgs: [definition.id],
         );
@@ -215,7 +215,7 @@ class DatabaseHelper {
     for (final definition in categoryDefinitions) {
       await db.insert('categories', {
         'id': definition.id,
-        'name': definition.label,
+        'name': definition.fallbackLabel,
       });
     }
 

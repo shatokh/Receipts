@@ -28,12 +28,10 @@ class MonthOverview {
 
 class CategoryBreakdown {
   final String categoryId;
-  final String categoryName;
   final double amount;
 
   const CategoryBreakdown({
     required this.categoryId,
-    required this.categoryName,
     required this.amount,
   });
 }

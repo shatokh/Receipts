@@ -177,7 +177,6 @@ class AnalyticsRepository {
       for (final definition in categoryDefinitions)
         CategoryBreakdown(
           categoryId: definition.id,
-          categoryName: definition.label,
           amount: totalsByCategory[definition.id] ?? 0.0,
         ),
     ];

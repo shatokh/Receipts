@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:receipts/l10n/app_localizations.dart';
+import 'package:receipts/l10n/app_localizations_extensions.dart';
 
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/domain/models/monthly_total.dart';
@@ -165,7 +166,7 @@ class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
                     ...widget.monthOptions.map(
                       (month) => DropdownMenuItem(
                         value: month,
-                        child: Text(DateFormat('MMMM yyyy').format(month)),
+                        child: Text(t.formatMonthYear(month)),
                       ),
                     ),
                   ],
