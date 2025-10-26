@@ -179,6 +179,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noCategorizedSpending => 'No categorized spending for this month yet';
 
   @override
+  String get categoryFreshProduce => 'Fresh Produce & Vegetables';
+
+  @override
+  String get categoryDairyEggsBakery => 'Dairy, Eggs & Bakery';
+
+  @override
+  String get categoryPackagedPantry => 'Packaged & Pantry Foods';
+
+  @override
+  String get categoryDrinksSnacks => 'Drinks & Snacks';
+
+  @override
+  String get categoryHouseholdGoods => 'Household Goods';
+
+  @override
+  String get categoryMisc => 'Miscellaneous / Other';
+
+  @override
   String totalWithAmount(Object amount) {
     return 'Total — $amount';
   }

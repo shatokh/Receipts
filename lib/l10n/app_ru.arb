@@ -76,6 +76,12 @@
     }
   },
   "noCategorizedSpending": "За этот месяц ещё нет расходов по категориям",
+  "categoryFreshProduce": "Свежие продукты и овощи",
+  "categoryDairyEggsBakery": "Молочные продукты, яйца и выпечка",
+  "categoryPackagedPantry": "Упакованные продукты и бакалея",
+  "categoryDrinksSnacks": "Напитки и снеки",
+  "categoryHouseholdGoods": "Товары для дома",
+  "categoryMisc": "Разное / Другое",
   "totalWithAmount": "Итого — {amount}",
   "@totalWithAmount": {
     "placeholders": {

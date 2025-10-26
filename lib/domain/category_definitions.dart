@@ -10,13 +10,13 @@ class CategoryIds {
 class CategoryDefinition {
   const CategoryDefinition({
     required this.id,
-    required this.label,
+    required this.fallbackLabel,
     this.keywords = const <String>[],
     this.legacyIds = const <String>[],
   });
 
   final String id;
-  final String label;
+  final String fallbackLabel;
   final List<String> keywords;
   final List<String> legacyIds;
 }
@@ -24,7 +24,7 @@ class CategoryDefinition {
 const List<CategoryDefinition> categoryDefinitions = [
   CategoryDefinition(
     id: CategoryIds.freshProduce,
-    label: 'Fresh Produce & Vegetables',
+    fallbackLabel: 'Fresh Produce & Vegetables',
     keywords: const [
       'jabł',
       'jabl',
@@ -60,7 +60,7 @@ const List<CategoryDefinition> categoryDefinitions = [
   ),
   CategoryDefinition(
     id: CategoryIds.dairyEggsBakery,
-    label: 'Dairy, Eggs & Bakery',
+    fallbackLabel: 'Dairy, Eggs & Bakery',
     keywords: const [
       'mleko',
       'milk',
@@ -99,7 +99,7 @@ const List<CategoryDefinition> categoryDefinitions = [
   ),
   CategoryDefinition(
     id: CategoryIds.packagedPantry,
-    label: 'Packaged & Pantry Foods',
+    fallbackLabel: 'Packaged & Pantry Foods',
     keywords: const [
       'makaron',
       'pasta',
@@ -156,7 +156,7 @@ const List<CategoryDefinition> categoryDefinitions = [
   ),
   CategoryDefinition(
     id: CategoryIds.drinksSnacks,
-    label: 'Drinks & Snacks',
+    fallbackLabel: 'Drinks & Snacks',
     keywords: const [
       'napój',
       'napoj',
@@ -194,7 +194,7 @@ const List<CategoryDefinition> categoryDefinitions = [
   ),
   CategoryDefinition(
     id: CategoryIds.householdGoods,
-    label: 'Household Goods',
+    fallbackLabel: 'Household Goods',
     keywords: const [
       'papier',
       'deterg',
@@ -231,7 +231,7 @@ const List<CategoryDefinition> categoryDefinitions = [
   ),
   CategoryDefinition(
     id: CategoryIds.misc,
-    label: 'Miscellaneous / Other',
+    fallbackLabel: 'Miscellaneous / Other',
     legacyIds: const ['other'],
   ),
 ];

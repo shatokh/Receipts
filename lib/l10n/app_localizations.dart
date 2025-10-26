@@ -419,6 +419,42 @@ abstract class AppLocalizations {
   /// **'No categorized spending for this month yet'**
   String get noCategorizedSpending;
 
+  /// No description provided for @categoryFreshProduce.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh Produce & Vegetables'**
+  String get categoryFreshProduce;
+
+  /// No description provided for @categoryDairyEggsBakery.
+  ///
+  /// In en, this message translates to:
+  /// **'Dairy, Eggs & Bakery'**
+  String get categoryDairyEggsBakery;
+
+  /// No description provided for @categoryPackagedPantry.
+  ///
+  /// In en, this message translates to:
+  /// **'Packaged & Pantry Foods'**
+  String get categoryPackagedPantry;
+
+  /// No description provided for @categoryDrinksSnacks.
+  ///
+  /// In en, this message translates to:
+  /// **'Drinks & Snacks'**
+  String get categoryDrinksSnacks;
+
+  /// No description provided for @categoryHouseholdGoods.
+  ///
+  /// In en, this message translates to:
+  /// **'Household Goods'**
+  String get categoryHouseholdGoods;
+
+  /// No description provided for @categoryMisc.
+  ///
+  /// In en, this message translates to:
+  /// **'Miscellaneous / Other'**
+  String get categoryMisc;
+
   /// No description provided for @totalWithAmount.
   ///
   /// In en, this message translates to:

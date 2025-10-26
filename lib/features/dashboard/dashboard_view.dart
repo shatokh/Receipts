@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:receipts/l10n/app_localizations.dart';
+import 'package:receipts/l10n/app_localizations_extensions.dart';
 
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/domain/models/dashboard_kpis.dart';
@@ -29,8 +30,6 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     final monthlyTotalsAsync = ref.watch(monthlyTotalsProvider);
     final monthOverviewAsync = ref.watch(monthOverviewProvider(selectedMonth));
     final kpisAsync = ref.watch(dashboardKpisProvider);
-    final monthFormat = DateFormat('MMMM yyyy');
-
     monthlyTotalsAsync.whenData(_ensureSelectedMonthIsAvailable);
 
     return Scaffold(
@@ -101,7 +100,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                 const SizedBox(height: AppSpacing.lg),
                 Text(
                   t.spendingByCategoryForMonth(
-                    monthFormat.format(selectedMonth),
+                    t.formatMonthYear(selectedMonth),
                   ),
                   style: AppTextStyles.titleMedium.copyWith(
                     color: AppColors.textPrimary,
@@ -112,7 +111,6 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                 const SizedBox(height: AppSpacing.lg),
                 _QuickInsights(
                   overview: monthOverviewAsync,
-                  monthFormat: monthFormat,
                 ),
               ],
             ),
@@ -317,8 +315,9 @@ class _MonthlyChart extends StatelessWidget {
                     touchTooltipData: BarTouchTooltipData(
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         final month = totals[groupIndex];
-                        final monthName = DateFormat('MMM yyyy')
-                            .format(DateTime(month.year, month.month));
+                        final monthName = t.formatMonthYearShort(
+                          DateTime(month.year, month.month),
+                        );
                         return BarTooltipItem(
                           '$monthName\n${currencyFormat.format(month.total)}',
                           const TextStyle(color: Colors.white),
@@ -336,8 +335,9 @@ class _MonthlyChart extends StatelessWidget {
                           if (index >= 0 && index < totals.length) {
                             final month = totals[index];
                             return Text(
-                              DateFormat('MMM')
-                                  .format(DateTime(month.year, month.month)),
+                              t.formatMonthAbbreviated(
+                                DateTime(month.year, month.month),
+                              ),
                               style: const TextStyle(fontSize: 10),
                             );
                           }
@@ -413,7 +413,7 @@ class _MonthDropdown extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final monthFormat = DateFormat('MMMM yyyy');
+    final t = AppLocalizations.of(context)!;
     final normalizedSelected =
         DateTime(selectedMonth.year, selectedMonth.month);
 
@@ -430,7 +430,7 @@ class _MonthDropdown extends ConsumerWidget {
           .map(
             (month) => DropdownMenuItem(
               value: month,
-              child: Text(monthFormat.format(month)),
+              child: Text(t.formatMonthYear(month)),
             ),
           )
           .toList(),
@@ -486,7 +486,7 @@ class _TopCategoriesSection extends StatelessWidget {
                   (category) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: _CategoryBar(
-                      name: category.categoryName,
+                      name: t.categoryLabel(category.categoryId),
                       amount: category.amount,
                       maxAmount: maxAmount,
                       formattedAmount: currencyFormat.format(category.amount),
@@ -577,11 +577,9 @@ class _CategoryBar extends StatelessWidget {
 class _QuickInsights extends StatelessWidget {
   const _QuickInsights({
     required this.overview,
-    required this.monthFormat,
   });
 
   final AsyncValue<MonthOverview> overview;
-  final DateFormat monthFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -610,7 +608,7 @@ class _QuickInsights extends StatelessWidget {
             Expanded(
               child: _InsightCard(
                 title: t.maxReceiptForMonth(
-                  monthFormat.format(data.month),
+                  t.formatMonthYear(data.month),
                 ),
                 value: maxReceipt == null
                     ? '—'
@@ -622,7 +620,7 @@ class _QuickInsights extends StatelessWidget {
             Expanded(
               child: _InsightCard(
                 title: t.totalForMonth(
-                  monthFormat.format(data.month),
+                  t.formatMonthYear(data.month),
                 ),
                 value: currencyFormat.format(data.total),
                 subtitle: receiptsLabel,

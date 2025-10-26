@@ -179,6 +179,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noCategorizedSpending => 'За этот месяц ещё нет расходов по категориям';
 
   @override
+  String get categoryFreshProduce => 'Свежие продукты и овощи';
+
+  @override
+  String get categoryDairyEggsBakery => 'Молочные продукты, яйца и выпечка';
+
+  @override
+  String get categoryPackagedPantry => 'Упакованные продукты и бакалея';
+
+  @override
+  String get categoryDrinksSnacks => 'Напитки и снеки';
+
+  @override
+  String get categoryHouseholdGoods => 'Товары для дома';
+
+  @override
+  String get categoryMisc => 'Разное / Другое';
+
+  @override
   String totalWithAmount(Object amount) {
     return 'Итого — $amount';
   }

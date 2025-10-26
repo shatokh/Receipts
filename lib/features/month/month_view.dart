@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:receipts/l10n/app_localizations.dart';
+import 'package:receipts/l10n/app_localizations_extensions.dart';
 
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/domain/models/month_overview.dart';
@@ -20,7 +21,6 @@ class MonthView extends ConsumerWidget {
     final monthlyTotalsAsync = ref.watch(monthlyTotalsProvider);
     final monthOverviewAsync = ref.watch(monthOverviewProvider(selectedMonth));
     final receiptsAsync = ref.watch(receiptsByMonthProvider(selectedMonth));
-    final monthFormat = DateFormat('MMMM yyyy');
     final currencyFormat = NumberFormat.currency(
       locale: 'en_US',
       symbol: 'PLN ',
@@ -57,7 +57,7 @@ class MonthView extends ConsumerWidget {
             const SizedBox(height: AppSpacing.lg),
             Text(
               t.spendingByCategoryForMonth(
-                monthFormat.format(selectedMonth),
+                t.formatMonthYear(selectedMonth),
               ),
               style: AppTextStyles.titleMedium.copyWith(
                 color: AppColors.textPrimary,
@@ -71,7 +71,7 @@ class MonthView extends ConsumerWidget {
                 Expanded(
                   child: _MetricCard(
                     title: t.totalForMonth(
-                      monthFormat.format(selectedMonth),
+                      t.formatMonthYear(selectedMonth),
                     ),
                     value: totalValue,
                   ),
@@ -211,7 +211,7 @@ class _MonthPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final monthFormat = DateFormat('MMMM yyyy');
+    final t = AppLocalizations.of(context)!;
     final value = months.firstWhere(
       (month) =>
           month.year == selectedMonth.year &&
@@ -234,7 +234,7 @@ class _MonthPicker extends ConsumerWidget {
             .map(
               (month) => DropdownMenuItem(
                 value: month,
-                child: Text(monthFormat.format(month)),
+                child: Text(t.formatMonthYear(month)),
               ),
             )
             .toList(),
@@ -291,7 +291,7 @@ class _CategoryBreakdown extends StatelessWidget {
                   (category) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: _CategoryBar(
-                      name: category.categoryName,
+                      name: t.categoryLabel(category.categoryId),
                       amount: category.amount,
                       maxAmount: maxAmount,
                       formattedAmount: currencyFormat.format(category.amount),
