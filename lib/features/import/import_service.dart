@@ -117,8 +117,11 @@ class ImportService {
 
   String _mapImportError(Object error) {
     if (error is FormatException) {
-      return error.message ??
-          'The receipt file could not be parsed because its structure is invalid.';
+      final message = error.message;
+      if (message.isEmpty) {
+        return 'The receipt file could not be parsed because its structure is invalid.';
+      }
+      return message;
     }
     if (error is PdfTextExtractionException) {
       return 'The receipt file could not be read. ${error.message}';

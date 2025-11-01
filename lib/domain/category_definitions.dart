@@ -25,7 +25,7 @@ const List<CategoryDefinition> categoryDefinitions = [
   CategoryDefinition(
     id: CategoryIds.freshProduce,
     fallbackLabel: 'Fresh Produce & Vegetables',
-    keywords: const [
+    keywords: [
       'jabł',
       'jabl',
       'banan',
@@ -56,12 +56,12 @@ const List<CategoryDefinition> categoryDefinitions = [
       'berry',
       'herb',
     ],
-    legacyIds: const ['produce'],
+    legacyIds: ['produce'],
   ),
   CategoryDefinition(
     id: CategoryIds.dairyEggsBakery,
     fallbackLabel: 'Dairy, Eggs & Bakery',
-    keywords: const [
+    keywords: [
       'mleko',
       'milk',
       'ser',
@@ -95,12 +95,12 @@ const List<CategoryDefinition> categoryDefinitions = [
       'bake',
       'bakery',
     ],
-    legacyIds: const ['dairy', 'bakery'],
+    legacyIds: ['dairy', 'bakery'],
   ),
   CategoryDefinition(
     id: CategoryIds.packagedPantry,
     fallbackLabel: 'Packaged & Pantry Foods',
-    keywords: const [
+    keywords: [
       'makaron',
       'pasta',
       'ryż',
@@ -152,12 +152,12 @@ const List<CategoryDefinition> categoryDefinitions = [
       'broth',
       'bouillon',
     ],
-    legacyIds: const ['meat'],
+    legacyIds: ['meat'],
   ),
   CategoryDefinition(
     id: CategoryIds.drinksSnacks,
     fallbackLabel: 'Drinks & Snacks',
-    keywords: const [
+    keywords: [
       'napój',
       'napoj',
       'sok',
@@ -195,7 +195,7 @@ const List<CategoryDefinition> categoryDefinitions = [
   CategoryDefinition(
     id: CategoryIds.householdGoods,
     fallbackLabel: 'Household Goods',
-    keywords: const [
+    keywords: [
       'papier',
       'deterg',
       'mydł',
@@ -227,12 +227,12 @@ const List<CategoryDefinition> categoryDefinitions = [
       'toalet',
       'toilet',
     ],
-    legacyIds: const ['household'],
+    legacyIds: ['household'],
   ),
   CategoryDefinition(
     id: CategoryIds.misc,
     fallbackLabel: 'Miscellaneous / Other',
-    legacyIds: const ['other'],
+    legacyIds: ['other'],
   ),
 ];
 
