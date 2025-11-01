@@ -19,17 +19,26 @@ class LanguagePage extends ConsumerWidget {
         children: [
           ListTile(title: Text(t.chooseLanguage)),
           const Divider(),
-          RadioListTile<Locale>(
-            value: const Locale('en'),
-            groupValue: current,
-            onChanged: (_) => controller.setLocale(const Locale('en')),
-            title: Text(t.english),
-          ),
-          RadioListTile<Locale>(
-            value: const Locale('ru'),
-            groupValue: current,
-            onChanged: (_) => controller.setLocale(const Locale('ru')),
-            title: Text(t.russian),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SegmentedButton<Locale>(
+              segments: [
+                ButtonSegment(
+                  value: const Locale('en'),
+                  label: Text(t.english),
+                ),
+                ButtonSegment(
+                  value: const Locale('ru'),
+                  label: Text(t.russian),
+                ),
+              ],
+              selected: {current},
+              onSelectionChanged: (selection) {
+                if (selection.isNotEmpty) {
+                  controller.setLocale(selection.first);
+                }
+              },
+            ),
           ),
         ],
       ),
