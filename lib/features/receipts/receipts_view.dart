@@ -106,13 +106,11 @@ class _SearchAndFilters extends ConsumerStatefulWidget {
 
 class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
   late final TextEditingController _controller;
-  late final FormFieldController<DateTime?> _monthController;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.searchQuery);
-    _monthController = FormFieldController<DateTime?>(widget.selectedMonth);
   }
 
   @override
@@ -125,10 +123,6 @@ class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
       );
     }
 
-    if (widget.selectedMonth != oldWidget.selectedMonth &&
-        widget.selectedMonth != _monthController.value) {
-      _monthController.value = widget.selectedMonth;
-    }
   }
 
   @override
@@ -160,8 +154,7 @@ class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
 
               Widget buildMonthDropdown({bool expandWidth = false}) {
                 final dropdown = DropdownButtonFormField<DateTime?>(
-                  controller: _monthController,
-                  initialValue: widget.selectedMonth,
+                  value: widget.selectedMonth,
                   decoration: InputDecoration(
                     labelText: t.monthFilterLabel,
                     border: const OutlineInputBorder(),
