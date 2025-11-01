@@ -13,7 +13,7 @@ class DatabaseHelper {
 
   static void configureForTesting({String? databaseName}) {
     _databaseNameOverride = databaseName;
-    if (!kIsWeb && databaseFactoryOrNull == null) {
+    if (!kIsWeb) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
@@ -40,15 +40,13 @@ class DatabaseHelper {
     var path = join(dbPath, name);
 
     if (!kIsWeb && _databaseNameOverride == null) {
-      final factory = databaseFactoryOrNull;
-      if (factory != null) {
-        final legacyPath = join(dbPath, legacyDbName);
-        final hasLegacy = await factory.databaseExists(legacyPath);
-        final hasNew = await factory.databaseExists(path);
+      final factory = databaseFactory;
+      final legacyPath = join(dbPath, legacyDbName);
+      final hasLegacy = await factory.databaseExists(legacyPath);
+      final hasNew = await factory.databaseExists(path);
 
-        if (hasLegacy && !hasNew) {
-          path = legacyPath;
-        }
+      if (hasLegacy && !hasNew) {
+        path = legacyPath;
       }
     }
 
