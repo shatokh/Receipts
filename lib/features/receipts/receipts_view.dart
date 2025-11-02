@@ -154,7 +154,7 @@ class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
 
               Widget buildMonthDropdown({bool expandWidth = false}) {
                 final dropdown = DropdownButtonFormField<DateTime?>(
-                  value: widget.selectedMonth,
+                  initialValue: widget.selectedMonth,
                   decoration: InputDecoration(
                     labelText: t.monthFilterLabel,
                     border: const OutlineInputBorder(),
