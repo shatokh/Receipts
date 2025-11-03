@@ -61,7 +61,7 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL != '' && secrets.SONAR_HOST_URL || 'https://sonarcloud.io' }}
 
       - name: Upload artifact (app-debug.apk)
         uses: actions/upload-artifact@v4
