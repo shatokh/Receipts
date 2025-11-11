@@ -17,6 +17,7 @@ class SettingsView extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
 
     final languageName = switch (locale.languageCode) {
+      'pl' => t.polish,
       'ru' => t.russian,
       _ => t.english,
     };

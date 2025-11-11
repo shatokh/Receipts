@@ -28,6 +28,10 @@ class LanguagePage extends ConsumerWidget {
                   label: Text(t.english),
                 ),
                 ButtonSegment(
+                  value: const Locale('pl'),
+                  label: Text(t.polish),
+                ),
+                ButtonSegment(
                   value: const Locale('ru'),
                   label: Text(t.russian),
                 ),

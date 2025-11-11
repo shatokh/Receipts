@@ -42,6 +42,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get russian => 'Russian';
 
   @override
+  String get polish => 'Polish';
+
+  @override
   String get aboutLegal => 'Privacy & Terms';
 
   @override
@@ -69,7 +72,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enableSentryCrashReports => 'Enable Sentry crash reports';
 
   @override
-  String get crashReportsDescription => 'No personal data is sent. Changes take effect immediately.';
+  String get crashReportsDescription =>
+      'No personal data is sent. Changes take effect immediately.';
 
   @override
   String get crashReportingEnabled => 'Crash reporting enabled';
@@ -84,7 +88,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutAppTitle => 'Receipts — MVP';
 
   @override
-  String get aboutAppDescription => 'Receipts app (MVP). All processing on device.';
+  String get aboutAppDescription =>
+      'Receipts app (MVP). All processing on device.';
 
   @override
   String get versionLabel => 'Version';
@@ -93,13 +98,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dataStorageTitle => 'Data storage';
 
   @override
-  String get dataStorageDescription => 'All receipts and data are stored locally on this device';
+  String get dataStorageDescription =>
+      'All receipts and data are stored locally on this device';
 
   @override
   String get privacyFirstTitle => 'Privacy First';
 
   @override
-  String get privacyFirstDescription => 'Your receipts are processed entirely on your device. No data is sent to external servers except for optional crash reports.';
+  String get privacyFirstDescription =>
+      'Your receipts are processed entirely on your device. No data is sent to external servers except for optional crash reports.';
 
   @override
   String get debugSectionTitle => 'Debug';
@@ -114,7 +121,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clearAllDataDialogTitle => 'Clear all data?';
 
   @override
-  String get clearAllDataDialogMessage => 'This will permanently delete all receipts and data. This action cannot be undone.';
+  String get clearAllDataDialogMessage =>
+      'This will permanently delete all receipts and data. This action cannot be undone.';
 
   @override
   String get clearDataNotImplemented => 'Data clearing not implemented yet';
@@ -132,7 +140,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingBulletLocalData => 'All data stays on this device';
 
   @override
-  String get onboardingBulletCrashReports => 'Optional crash reports (you can disable any time)';
+  String get onboardingBulletCrashReports =>
+      'Optional crash reports (you can disable any time)';
 
   @override
   String get onboardingGetStarted => 'Get started';
@@ -176,7 +185,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get noCategorizedSpending => 'No categorized spending for this month yet';
+  String get noCategorizedSpending =>
+      'No categorized spending for this month yet';
 
   @override
   String get categoryFreshProduce => 'Fresh Produce & Vegetables';
@@ -216,7 +226,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importReceiptsButton => 'Import receipts (PDF or JSON)';
 
   @override
-  String get filesCopiedInfo => 'Files are copied to app storage for reliable access.';
+  String get filesCopiedInfo =>
+      'Files are copied to app storage for reliable access.';
 
   @override
   String importFailed(Object error) {
@@ -227,7 +238,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noImportsYet => 'No imports yet';
 
   @override
-  String get importFirstReceiptPrompt => 'Import your first receipt (PDF or JSON)';
+  String get importFirstReceiptPrompt =>
+      'Import your first receipt (PDF or JSON)';
 
   @override
   String get importStatusSuccess => 'Success';
@@ -334,7 +346,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openPdf => 'Open PDF';
 
   @override
-  String get recategorizationNotImplemented => 'Re-categorization not implemented yet';
+  String get recategorizationNotImplemented =>
+      'Re-categorization not implemented yet';
 
   @override
   String get recategorize => 'Re-categorize';
@@ -391,7 +404,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardEmptyTitle => 'No receipts yet';
 
   @override
-  String get dashboardEmptyMessage => 'Import your first receipt to see analytics';
+  String get dashboardEmptyMessage =>
+      'Import your first receipt to see analytics';
 
   @override
   String get dashboardErrorMessage => 'Something went wrong';

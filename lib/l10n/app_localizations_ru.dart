@@ -42,6 +42,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get russian => 'Русский';
 
   @override
+  String get polish => 'Польский';
+
+  @override
   String get aboutLegal => 'Политика и условия';
 
   @override
@@ -66,10 +69,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get crashReportsTitle => 'Отчёты об ошибках';
 
   @override
-  String get enableSentryCrashReports => 'Включить отправку отчётов об ошибках Sentry';
+  String get enableSentryCrashReports =>
+      'Включить отправку отчётов об ошибках Sentry';
 
   @override
-  String get crashReportsDescription => 'Личные данные не отправляются. Изменения применяются сразу.';
+  String get crashReportsDescription =>
+      'Личные данные не отправляются. Изменения применяются сразу.';
 
   @override
   String get crashReportingEnabled => 'Отчёты об ошибках включены';
@@ -84,7 +89,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get aboutAppTitle => 'Receipts — MVP';
 
   @override
-  String get aboutAppDescription => 'Приложение Receipts (MVP). Вся обработка на устройстве.';
+  String get aboutAppDescription =>
+      'Приложение Receipts (MVP). Вся обработка на устройстве.';
 
   @override
   String get versionLabel => 'Версия';
@@ -93,13 +99,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dataStorageTitle => 'Хранение данных';
 
   @override
-  String get dataStorageDescription => 'Все чеки и данные хранятся локально на этом устройстве';
+  String get dataStorageDescription =>
+      'Все чеки и данные хранятся локально на этом устройстве';
 
   @override
   String get privacyFirstTitle => 'Приватность прежде всего';
 
   @override
-  String get privacyFirstDescription => 'Ваши чеки обрабатываются полностью на вашем устройстве. Данные не отправляются на внешние серверы, кроме необязательных отчётов об ошибках.';
+  String get privacyFirstDescription =>
+      'Ваши чеки обрабатываются полностью на вашем устройстве. Данные не отправляются на внешние серверы, кроме необязательных отчётов об ошибках.';
 
   @override
   String get debugSectionTitle => 'Отладка';
@@ -108,13 +116,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get clearAllData => 'Удалить все данные';
 
   @override
-  String get clearAllDataDescription => 'Удалить все чеки и сбросить приложение';
+  String get clearAllDataDescription =>
+      'Удалить все чеки и сбросить приложение';
 
   @override
   String get clearAllDataDialogTitle => 'Удалить все данные?';
 
   @override
-  String get clearAllDataDialogMessage => 'Это действие навсегда удалит все чеки и данные. Его нельзя отменить.';
+  String get clearAllDataDialogMessage =>
+      'Это действие навсегда удалит все чеки и данные. Его нельзя отменить.';
 
   @override
   String get clearDataNotImplemented => 'Удаление данных пока не реализовано';
@@ -129,10 +139,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get onboardingBulletOptimized => 'Оптимизировано для PDF-чеков (MVP)';
 
   @override
-  String get onboardingBulletLocalData => 'Все данные остаются на этом устройстве';
+  String get onboardingBulletLocalData =>
+      'Все данные остаются на этом устройстве';
 
   @override
-  String get onboardingBulletCrashReports => 'Необязательные отчёты об ошибках (их можно отключить в любой момент)';
+  String get onboardingBulletCrashReports =>
+      'Необязательные отчёты об ошибках (их можно отключить в любой момент)';
 
   @override
   String get onboardingGetStarted => 'Начать работу';
@@ -176,7 +188,8 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get noCategorizedSpending => 'За этот месяц ещё нет расходов по категориям';
+  String get noCategorizedSpending =>
+      'За этот месяц ещё нет расходов по категориям';
 
   @override
   String get categoryFreshProduce => 'Свежие продукты и овощи';
@@ -216,7 +229,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get importReceiptsButton => 'Импорт чеков (PDF или JSON)';
 
   @override
-  String get filesCopiedInfo => 'Файлы копируются в память приложения для надёжного доступа.';
+  String get filesCopiedInfo =>
+      'Файлы копируются в память приложения для надёжного доступа.';
 
   @override
   String importFailed(Object error) {
@@ -227,7 +241,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noImportsYet => 'Импортов ещё нет';
 
   @override
-  String get importFirstReceiptPrompt => 'Импортируйте первый чек (PDF или JSON)';
+  String get importFirstReceiptPrompt =>
+      'Импортируйте первый чек (PDF или JSON)';
 
   @override
   String get importStatusSuccess => 'Успех';
@@ -340,7 +355,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get openPdf => 'Открыть PDF';
 
   @override
-  String get recategorizationNotImplemented => 'Повторная категоризация пока не реализована';
+  String get recategorizationNotImplemented =>
+      'Повторная категоризация пока не реализована';
 
   @override
   String get recategorize => 'Переклассифицировать';
@@ -399,7 +415,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dashboardEmptyTitle => 'Чеков ещё нет';
 
   @override
-  String get dashboardEmptyMessage => 'Импортируйте первый чек, чтобы увидеть аналитику';
+  String get dashboardEmptyMessage =>
+      'Импортируйте первый чек, чтобы увидеть аналитику';
 
   @override
   String get dashboardErrorMessage => 'Что-то пошло не так';
