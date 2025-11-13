@@ -110,6 +110,8 @@
   "importStatusSuccess": "Success",
   "importStatusDuplicate": "Duplicate",
   "importStatusError": "Error",
+  "ocrInProgressMessage": "Performing OCR. The first run may take longer while text recognition models download.",
+  "retryOcrButtonLabel": "Retry OCR",
   "unknownFile": "Unknown file",
   "justNow": "Just now",
   "minutesAgo": "{count, plural, one {{count} min ago} other {{count} min ago}}",

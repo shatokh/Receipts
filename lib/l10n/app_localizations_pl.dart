@@ -255,6 +255,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get importStatusError => 'Błąd';
 
   @override
+  String get ocrInProgressMessage =>
+      'Trwa rozpoznawanie tekstu (OCR). Pierwsze uruchomienie może potrwać dłużej podczas pobierania modeli.';
+
+  @override
+  String get retryOcrButtonLabel => 'Ponów OCR';
+
+  @override
   String get unknownFile => 'Nieznany plik';
 
   @override

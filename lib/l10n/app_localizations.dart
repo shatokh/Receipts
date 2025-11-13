@@ -538,6 +538,18 @@ abstract class AppLocalizations {
   /// **'Error'**
   String get importStatusError;
 
+  /// No description provided for @ocrInProgressMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Performing OCR. The first run may take longer while text recognition models download.'**
+  String get ocrInProgressMessage;
+
+  /// No description provided for @retryOcrButtonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry OCR'**
+  String get retryOcrButtonLabel;
+
   /// No description provided for @unknownFile.
   ///
   /// In en, this message translates to:

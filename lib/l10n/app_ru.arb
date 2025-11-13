@@ -110,6 +110,8 @@
   "importStatusSuccess": "Успех",
   "importStatusDuplicate": "Дубликат",
   "importStatusError": "Ошибка",
+  "ocrInProgressMessage": "Выполняется распознавание текста (OCR). Первый запуск может занять больше времени из-за загрузки моделей.",
+  "retryOcrButtonLabel": "Повторить OCR",
   "unknownFile": "Неизвестный файл",
   "justNow": "Только что",
   "minutesAgo": "{count, plural, one {{count} мин назад} few {{count} мин назад} many {{count} мин назад} other {{count} мин назад}}",
