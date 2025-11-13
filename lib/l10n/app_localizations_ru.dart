@@ -254,6 +254,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get importStatusError => 'Ошибка';
 
   @override
+  String get ocrInProgressMessage =>
+      'Выполняется распознавание текста (OCR). Первый запуск может занять больше времени из-за загрузки моделей.';
+
+  @override
+  String get retryOcrButtonLabel => 'Повторить OCR';
+
+  @override
   String get unknownFile => 'Неизвестный файл';
 
   @override

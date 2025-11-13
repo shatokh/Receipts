@@ -110,6 +110,8 @@
   "importStatusSuccess": "Sukces",
   "importStatusDuplicate": "Duplikat",
   "importStatusError": "Błąd",
+  "ocrInProgressMessage": "Trwa rozpoznawanie tekstu (OCR). Pierwsze uruchomienie może potrwać dłużej podczas pobierania modeli.",
+  "retryOcrButtonLabel": "Ponów OCR",
   "unknownFile": "Nieznany plik",
   "justNow": "Przed chwilą",
   "minutesAgo": "{count, plural, one {{count} min temu} few {{count} min temu} many {{count} min temu} other {{count} min temu}}",

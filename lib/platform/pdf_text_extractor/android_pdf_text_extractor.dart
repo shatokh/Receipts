@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'pdf_text_extractor.dart';
@@ -16,9 +18,16 @@ class AndroidPdfTextExtractor implements PdfTextExtractor {
       final result = await _channel.invokeMethod('extractTextPages', safUri);
       return List<String>.from(result);
     } on PlatformException catch (e) {
+      if (e.code == 'EMPTY_PDF_TEXT') {
+        throw PdfTextExtractionException(
+          e.message ??
+              'PDF does not contain any machine-readable text or embedded receipt data.',
+          _encodeDetails(e.details),
+        );
+      }
       throw PdfTextExtractionException(
         'Failed to extract text: ${e.message}',
-        e.details?.toString(),
+        _encodeDetails(e.details),
       );
     }
   }
@@ -34,7 +43,7 @@ class AndroidPdfTextExtractor implements PdfTextExtractor {
     } on PlatformException catch (e) {
       throw PdfTextExtractionException(
         'Failed to get page count: ${e.message}',
-        e.details?.toString(),
+        _encodeDetails(e.details),
       );
     }
   }
@@ -50,7 +59,7 @@ class AndroidPdfTextExtractor implements PdfTextExtractor {
     } on PlatformException catch (e) {
       throw PdfTextExtractionException(
         'Failed to compute file hash: ${e.message}',
-        e.details?.toString(),
+        _encodeDetails(e.details),
       );
     }
   }
@@ -66,7 +75,7 @@ class AndroidPdfTextExtractor implements PdfTextExtractor {
     } on PlatformException catch (e) {
       throw PdfTextExtractionException(
         'Failed to read text file: ${e.message}',
-        e.details?.toString(),
+        _encodeDetails(e.details),
       );
     }
   }
@@ -79,6 +88,20 @@ class AndroidPdfTextExtractor implements PdfTextExtractor {
     } catch (e) {
       // Fallback sample receipt text
       return [_fallbackSampleText];
+    }
+  }
+
+  String? _encodeDetails(Object? details) {
+    if (details == null) {
+      return null;
+    }
+    if (details is String) {
+      return details;
+    }
+    try {
+      return jsonEncode(details);
+    } catch (_) {
+      return details.toString();
     }
   }
 

@@ -251,6 +251,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importStatusError => 'Error';
 
   @override
+  String get ocrInProgressMessage =>
+      'Performing OCR. The first run may take longer while text recognition models download.';
+
+  @override
+  String get retryOcrButtonLabel => 'Retry OCR';
+
+  @override
   String get unknownFile => 'Unknown file';
 
   @override

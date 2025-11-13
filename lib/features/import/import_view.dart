@@ -20,10 +20,16 @@ class ImportView extends ConsumerWidget {
     final historyContent = importState.maybeWhen(
       data: (results) => results.isEmpty
           ? const _EmptyState()
-          : _ImportHistoryList(entries: entries),
+          : _ImportHistoryList(
+              entries: entries,
+              onRetry: (uri) => controller.importUris([uri]),
+            ),
       orElse: () => entries.isEmpty
           ? const _EmptyState()
-          : _ImportHistoryList(entries: entries),
+          : _ImportHistoryList(
+              entries: entries,
+              onRetry: (uri) => controller.importUris([uri]),
+            ),
     );
 
     return Scaffold(
@@ -95,10 +101,27 @@ class _LoadingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return ColoredBox(
       color: Colors.black.withValues(alpha: 0.05),
-      child: const Center(
-        child: CircularProgressIndicator(),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: AppSpacing.md),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              child: Text(
+                t.ocrInProgressMessage,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -140,25 +163,36 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _ImportHistoryList extends StatelessWidget {
-  const _ImportHistoryList({required this.entries});
+  const _ImportHistoryList({
+    required this.entries,
+    required this.onRetry,
+  });
 
   final List<ImportHistoryEntry> entries;
+  final void Function(String safUri) onRetry;
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: entries.length,
       itemBuilder: (context, index) {
-        return _ImportHistoryItem(entry: entries[index]);
+        return _ImportHistoryItem(
+          entry: entries[index],
+          onRetry: onRetry,
+        );
       },
     );
   }
 }
 
 class _ImportHistoryItem extends StatelessWidget {
-  const _ImportHistoryItem({required this.entry});
+  const _ImportHistoryItem({
+    required this.entry,
+    required this.onRetry,
+  });
 
   final ImportHistoryEntry entry;
+  final void Function(String safUri) onRetry;
 
   ImportResult get result => entry.result;
 
@@ -168,6 +202,12 @@ class _ImportHistoryItem extends StatelessWidget {
     final fileName = _resolveFileName(t, result.sourceUri);
     final subtitle = _buildSubtitle(t, entry.timestamp, result.message);
     final badgeStyle = _badgeStyle(result.status, t);
+    final retryButton = result.status == ImportStatus.error
+        ? TextButton(
+            onPressed: () => onRetry(result.sourceUri),
+            child: Text(t.retryOcrButtonLabel),
+          )
+        : null;
 
     return Card(
       child: ListTile(
@@ -177,11 +217,17 @@ class _ImportHistoryItem extends StatelessWidget {
             color: AppColors.textPrimary,
           ),
         ),
-        subtitle: Text(
-          subtitle,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              subtitle,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            if (retryButton != null) retryButton,
+          ],
         ),
         trailing: _StatusBadge(
           label: badgeStyle.label,
@@ -207,7 +253,8 @@ class _ImportHistoryItem extends StatelessWidget {
   _BadgeStyle _badgeStyle(ImportStatus status, AppLocalizations t) {
     switch (status) {
       case ImportStatus.success:
-        return _BadgeStyle(label: t.importStatusSuccess, color: AppColors.success);
+        return _BadgeStyle(
+            label: t.importStatusSuccess, color: AppColors.success);
       case ImportStatus.duplicate:
         return _BadgeStyle(
           label: t.importStatusDuplicate,
