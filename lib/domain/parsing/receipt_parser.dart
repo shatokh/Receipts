@@ -450,7 +450,7 @@ class ReceiptParser {
     final collapsed = lower.replaceAll(RegExp(r'[\s-]'), '');
 
     return _looksLikeBiedronka(lower, collapsed) ||
-        lower.contains('receipts') ||
+        lower.contains('receipt') ||
         lower.contains('paragon fiskalny') ||
         lower.contains('paragon') ||
         lower.contains('niefiskalny');

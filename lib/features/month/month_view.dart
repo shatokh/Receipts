@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:receipts/l10n/app_localizations.dart';
+import 'package:receipts/l10n/app_localizations_extensions.dart';
 
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/domain/models/month_overview.dart';
@@ -14,11 +16,11 @@ class MonthView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context)!;
     final selectedMonth = ref.watch(selectedMonthProvider);
     final monthlyTotalsAsync = ref.watch(monthlyTotalsProvider);
     final monthOverviewAsync = ref.watch(monthOverviewProvider(selectedMonth));
     final receiptsAsync = ref.watch(receiptsByMonthProvider(selectedMonth));
-    final monthFormat = DateFormat('MMMM yyyy');
     final currencyFormat = NumberFormat.currency(
       locale: 'en_US',
       symbol: 'PLN ',
@@ -41,7 +43,7 @@ class MonthView extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Month overview'),
+        title: Text(t.monthOverviewTitle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -54,7 +56,9 @@ class MonthView extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Spending by category — ${monthFormat.format(selectedMonth)}',
+              t.spendingByCategoryForMonth(
+                t.formatMonthYear(selectedMonth),
+              ),
               style: AppTextStyles.titleMedium.copyWith(
                 color: AppColors.textPrimary,
               ),
@@ -66,14 +70,16 @@ class MonthView extends ConsumerWidget {
               children: [
                 Expanded(
                   child: _MetricCard(
-                    title: 'Total — ${monthFormat.format(selectedMonth)}',
+                    title: t.totalForMonth(
+                      t.formatMonthYear(selectedMonth),
+                    ),
                     value: totalValue,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: _MetricCard(
-                    title: 'Receipts',
+                    title: t.receiptsMetricLabel,
                     value: '$receiptsCount',
                   ),
                 ),
@@ -81,7 +87,7 @@ class MonthView extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Recent receipts',
+              t.recentReceipts,
               style: AppTextStyles.titleMedium.copyWith(
                 color: AppColors.textPrimary,
               ),
@@ -94,7 +100,7 @@ class MonthView extends ConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(AppSpacing.md),
                       child: Text(
-                        'No receipts recorded for this month yet',
+                        t.noReceiptsForMonth,
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -118,7 +124,7 @@ class MonthView extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   child: Text(
-                    'Unable to load receipts: $error',
+                    t.unableToLoadReceipts('$error'),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.error,
                     ),
@@ -131,7 +137,7 @@ class MonthView extends ConsumerWidget {
               alignment: Alignment.center,
               child: TextButton(
                 onPressed: () => context.go('/receipts'),
-                child: Text('Show all receipts ($receiptsCount)'),
+                child: Text(t.showAllReceipts(receiptsCount)),
               ),
             ),
           ],
@@ -205,7 +211,7 @@ class _MonthPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final monthFormat = DateFormat('MMMM yyyy');
+    final t = AppLocalizations.of(context)!;
     final value = months.firstWhere(
       (month) =>
           month.year == selectedMonth.year &&
@@ -228,7 +234,7 @@ class _MonthPicker extends ConsumerWidget {
             .map(
               (month) => DropdownMenuItem(
                 value: month,
-                child: Text(monthFormat.format(month)),
+                child: Text(t.formatMonthYear(month)),
               ),
             )
             .toList(),
@@ -249,6 +255,7 @@ class _CategoryBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return overview.when(
       data: (data) {
         final hasSpending =
@@ -259,7 +266,7 @@ class _CategoryBreakdown extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(
-                'No categorized spending for this month yet',
+                t.noCategorizedSpending,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -284,7 +291,7 @@ class _CategoryBreakdown extends StatelessWidget {
                   (category) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: _CategoryBar(
-                      name: category.categoryName,
+                      name: t.categoryLabel(category.categoryId),
                       amount: category.amount,
                       maxAmount: maxAmount,
                       formattedAmount: currencyFormat.format(category.amount),
@@ -293,7 +300,9 @@ class _CategoryBreakdown extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Total — ${currencyFormat.format(data.total)}',
+                  t.totalWithAmount(
+                    currencyFormat.format(data.total),
+                  ),
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -308,7 +317,7 @@ class _CategoryBreakdown extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Text(
-            'Unable to load categories: $error',
+            t.unableToLoadCategoriesWithError('$error'),
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.error,
             ),

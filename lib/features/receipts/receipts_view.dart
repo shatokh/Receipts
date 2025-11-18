@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:receipts/l10n/app_localizations.dart';
+import 'package:receipts/l10n/app_localizations_extensions.dart';
 
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/domain/models/monthly_total.dart';
@@ -13,6 +15,7 @@ class ReceiptsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context)!;
     final filteredReceiptsAsync = ref.watch(filteredReceiptsProvider);
     final searchQuery = ref.watch(receiptsSearchQueryProvider);
     final selectedMonth = ref.watch(receiptsFilterMonthProvider);
@@ -26,7 +29,7 @@ class ReceiptsView extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Receipts'),
+        title: Text(t.receiptsTitle),
       ),
       body: Column(
         children: [
@@ -50,7 +53,7 @@ class ReceiptsView extends ConsumerWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
                 child: Text(
-                  'Unable to load receipts: $error',
+                  t.unableToLoadReceipts('$error'),
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.error,
                   ),
@@ -119,6 +122,7 @@ class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
         selection: TextSelection.collapsed(offset: widget.searchQuery.length),
       );
     }
+
   }
 
   @override
@@ -129,16 +133,17 @@ class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         children: [
           TextField(
             controller: _controller,
-            decoration: const InputDecoration(
-              hintText: 'Search by merchant or date',
-              prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              hintText: t.searchHint,
+              prefixIcon: const Icon(Icons.search),
+              border: const OutlineInputBorder(),
             ),
             onChanged: widget.onSearchChanged,
           ),
@@ -149,20 +154,20 @@ class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
 
               Widget buildMonthDropdown({bool expandWidth = false}) {
                 final dropdown = DropdownButtonFormField<DateTime?>(
-                  value: widget.selectedMonth,
-                  decoration: const InputDecoration(
-                    labelText: 'Month',
-                    border: OutlineInputBorder(),
+                  initialValue: widget.selectedMonth,
+                  decoration: InputDecoration(
+                    labelText: t.monthFilterLabel,
+                    border: const OutlineInputBorder(),
                   ),
                   items: [
-                    const DropdownMenuItem(
+                    DropdownMenuItem(
                       value: null,
-                      child: Text('All months'),
+                      child: Text(t.allMonths),
                     ),
                     ...widget.monthOptions.map(
                       (month) => DropdownMenuItem(
                         value: month,
-                        child: Text(DateFormat('MMMM yyyy').format(month)),
+                        child: Text(t.formatMonthYear(month)),
                       ),
                     ),
                   ],
@@ -181,7 +186,10 @@ class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Total range: PLN ${widget.amountRange.start.round()} - ${widget.amountRange.end.round()}',
+                      t.totalRangeLabel(
+                        widget.amountRange.start.round(),
+                        widget.amountRange.end.round(),
+                      ),
                       style: AppTextStyles.labelSmall,
                     ),
                     RangeSlider(
@@ -226,6 +234,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -237,14 +246,14 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'No receipts found',
+            t.noReceiptsFound,
             style: AppTextStyles.titleMedium.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Try adjusting your search or filters',
+            t.adjustSearchFilters,
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),

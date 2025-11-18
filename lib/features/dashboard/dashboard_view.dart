@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:receipts/l10n/app_localizations.dart';
+import 'package:receipts/l10n/app_localizations_extensions.dart';
 
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/domain/models/dashboard_kpis.dart';
@@ -23,23 +25,22 @@ class DashboardView extends ConsumerStatefulWidget {
 class _DashboardViewState extends ConsumerState<DashboardView> {
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final selectedMonth = ref.watch(selectedMonthProvider);
     final monthlyTotalsAsync = ref.watch(monthlyTotalsProvider);
     final monthOverviewAsync = ref.watch(monthOverviewProvider(selectedMonth));
     final kpisAsync = ref.watch(dashboardKpisProvider);
-    final monthFormat = DateFormat('MMMM yyyy');
-
     monthlyTotalsAsync.whenData(_ensureSelectedMonthIsAvailable);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Spending dashboard'),
+        title: Text(t.dashboardTitle),
         actions: [
           IconButton(
             key: const ValueKey('nav_import_action'),
             icon: const Icon(Icons.add),
             onPressed: () => context.go('/import'),
-            tooltip: 'Import PDF',
+            tooltip: t.importPdf,
           ),
         ],
       ),
@@ -66,7 +67,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Selected month',
+                        t.selectedMonthLabel,
                         style: AppTextStyles.bodyLarge.copyWith(
                           color: AppColors.textPrimary,
                         ),
@@ -90,7 +91,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    'All data is processed on device',
+                    t.onDeviceProcessing,
                     style: AppTextStyles.labelSmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -98,19 +99,18 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
-                  'Spending by category — ${monthFormat.format(selectedMonth)}',
+                  t.spendingByCategoryForMonth(
+                    t.formatMonthYear(selectedMonth),
+                  ),
                   style: AppTextStyles.titleMedium.copyWith(
                     color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                _TopCategoriesSection(
-                  overview: monthOverviewAsync,
-                ),
+                _TopCategoriesSection(overview: monthOverviewAsync),
                 const SizedBox(height: AppSpacing.lg),
                 _QuickInsights(
                   overview: monthOverviewAsync,
-                  monthFormat: monthFormat,
                 ),
               ],
             ),
@@ -184,6 +184,7 @@ class _KPICards extends StatelessWidget {
       symbol: 'PLN ',
       decimalDigits: 2,
     );
+    final t = AppLocalizations.of(context)!;
     final data = kpis.asData?.value;
     final isLoading = kpis.isLoading;
 
@@ -197,7 +198,7 @@ class _KPICards extends StatelessWidget {
       children: [
         Expanded(
           child: _KPICard(
-            title: 'Total (30d)',
+            title: t.totalLast30Days,
             value: totalValue,
             isLoading: isLoading && data == null,
           ),
@@ -205,7 +206,7 @@ class _KPICards extends StatelessWidget {
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: _KPICard(
-            title: 'Average receipt',
+            title: t.averageReceipt,
             value: averageValue,
             isLoading: isLoading && data == null,
           ),
@@ -213,7 +214,7 @@ class _KPICards extends StatelessWidget {
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: _KPICard(
-            title: 'Receipts',
+            title: t.receiptsMetricLabel,
             value: receiptsValue,
             isLoading: isLoading && data == null,
           ),
@@ -288,6 +289,7 @@ class _MonthlyChart extends StatelessWidget {
       symbol: 'PLN ',
       decimalDigits: 2,
     );
+    final t = AppLocalizations.of(context)!;
 
     return Card(
       child: Padding(
@@ -296,7 +298,7 @@ class _MonthlyChart extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Monthly spend',
+              t.monthlySpend,
               style: AppTextStyles.titleMedium.copyWith(
                 color: AppColors.textPrimary,
               ),
@@ -313,8 +315,9 @@ class _MonthlyChart extends StatelessWidget {
                     touchTooltipData: BarTouchTooltipData(
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         final month = totals[groupIndex];
-                        final monthName = DateFormat('MMM yyyy')
-                            .format(DateTime(month.year, month.month));
+                        final monthName = t.formatMonthYearShort(
+                          DateTime(month.year, month.month),
+                        );
                         return BarTooltipItem(
                           '$monthName\n${currencyFormat.format(month.total)}',
                           const TextStyle(color: Colors.white),
@@ -332,8 +335,9 @@ class _MonthlyChart extends StatelessWidget {
                           if (index >= 0 && index < totals.length) {
                             final month = totals[index];
                             return Text(
-                              DateFormat('MMM')
-                                  .format(DateTime(month.year, month.month)),
+                              t.formatMonthAbbreviated(
+                                DateTime(month.year, month.month),
+                              ),
                               style: const TextStyle(fontSize: 10),
                             );
                           }
@@ -409,7 +413,7 @@ class _MonthDropdown extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final monthFormat = DateFormat('MMMM yyyy');
+    final t = AppLocalizations.of(context)!;
     final normalizedSelected =
         DateTime(selectedMonth.year, selectedMonth.month);
 
@@ -426,7 +430,7 @@ class _MonthDropdown extends ConsumerWidget {
           .map(
             (month) => DropdownMenuItem(
               value: month,
-              child: Text(monthFormat.format(month)),
+              child: Text(t.formatMonthYear(month)),
             ),
           )
           .toList(),
@@ -446,6 +450,7 @@ class _TopCategoriesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return overview.when(
       data: (data) {
         final hasSpending =
@@ -456,7 +461,7 @@ class _TopCategoriesSection extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(
-                'No categorized spending for this month yet',
+                t.noCategorizedSpending,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -481,7 +486,7 @@ class _TopCategoriesSection extends StatelessWidget {
                   (category) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: _CategoryBar(
-                      name: category.categoryName,
+                      name: t.categoryLabel(category.categoryId),
                       amount: category.amount,
                       maxAmount: maxAmount,
                       formattedAmount: currencyFormat.format(category.amount),
@@ -490,7 +495,9 @@ class _TopCategoriesSection extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Total — ${currencyFormat.format(data.total)}',
+                  t.totalWithAmount(
+                    currencyFormat.format(data.total),
+                  ),
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -505,7 +512,7 @@ class _TopCategoriesSection extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Text(
-            'Unable to load categories',
+            t.unableToLoadCategories,
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.error,
             ),
@@ -570,14 +577,13 @@ class _CategoryBar extends StatelessWidget {
 class _QuickInsights extends StatelessWidget {
   const _QuickInsights({
     required this.overview,
-    required this.monthFormat,
   });
 
   final AsyncValue<MonthOverview> overview;
-  final DateFormat monthFormat;
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return overview.when(
       data: (data) {
         final currencyFormat = NumberFormat.currency(
@@ -588,18 +594,22 @@ class _QuickInsights extends StatelessWidget {
 
         final ReceiptRow? maxReceipt = data.maxReceipt;
         final maxReceiptSubtitle = maxReceipt == null
-            ? 'No receipts this month'
-            : '${maxReceipt.merchantName}, ${DateFormat('yyyy-MM-dd HH:mm').format(maxReceipt.purchaseTimestamp)}';
+            ? t.noReceiptsThisMonth
+            : t.receiptMerchantAndDate(
+                maxReceipt.merchantName,
+                DateFormat('yyyy-MM-dd HH:mm')
+                    .format(maxReceipt.purchaseTimestamp),
+              );
 
-        final receiptsLabel = data.receiptsCount == 1
-            ? '1 receipt'
-            : '${data.receiptsCount} receipts';
+        final receiptsLabel = t.receiptCount(data.receiptsCount);
 
         return Row(
           children: [
             Expanded(
               child: _InsightCard(
-                title: 'Max receipt — ${monthFormat.format(data.month)}',
+                title: t.maxReceiptForMonth(
+                  t.formatMonthYear(data.month),
+                ),
                 value: maxReceipt == null
                     ? '—'
                     : currencyFormat.format(maxReceipt.totalGross),
@@ -609,7 +619,9 @@ class _QuickInsights extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _InsightCard(
-                title: 'Total — ${monthFormat.format(data.month)}',
+                title: t.totalForMonth(
+                  t.formatMonthYear(data.month),
+                ),
                 value: currencyFormat.format(data.total),
                 subtitle: receiptsLabel,
               ),
@@ -619,20 +631,20 @@ class _QuickInsights extends StatelessWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => Row(
-        children: const [
+        children: [
           Expanded(
             child: _InsightCard(
-              title: 'Max receipt',
+              title: t.maxReceipt,
               value: '—',
-              subtitle: 'Unable to load data',
+              subtitle: t.unableToLoadData,
             ),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: _InsightCard(
-              title: 'Total',
+              title: t.totalLabel,
               value: '—',
-              subtitle: 'Unable to load data',
+              subtitle: t.unableToLoadData,
             ),
           ),
         ],
@@ -694,6 +706,7 @@ class _DashboardEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -707,14 +720,14 @@ class _DashboardEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'No receipts yet',
+              t.dashboardEmptyTitle,
               style: AppTextStyles.titleMedium.copyWith(
                 color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Import your first receipt to see analytics',
+              t.dashboardEmptyMessage,
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
@@ -723,7 +736,7 @@ class _DashboardEmptyState extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             ElevatedButton(
               onPressed: onImport,
-              child: const Text('Import PDF'),
+              child: Text(t.importPdf),
             ),
           ],
         ),
@@ -739,6 +752,7 @@ class _DashboardErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -752,7 +766,7 @@ class _DashboardErrorState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Something went wrong',
+              t.dashboardErrorMessage,
               style: AppTextStyles.titleMedium.copyWith(
                 color: AppColors.textPrimary,
               ),

@@ -47,6 +47,18 @@ void main() {
     expect(receipt.items, isNotEmpty);
   });
 
+  test('accepts e-receipt header as supported source', () async {
+    final parser = ReceiptParser();
+    final original = await File('assets/sample_receipt.txt').readAsString();
+    final eReceipt =
+        original.replaceFirst('Paragon fiskalny', 'E-Receipt');
+
+    final receipt = parser.parse(eReceipt);
+
+    expect(receipt.merchantId, 'biedronka');
+    expect(receipt.items, isNotEmpty);
+  });
+
   test('parses JSON receipt export', () async {
     final parser = ReceiptParser();
     final text = await File('assets/sample_receipt.json').readAsString();

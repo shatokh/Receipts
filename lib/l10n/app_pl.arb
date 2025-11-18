@@ -1,0 +1,204 @@
+{
+  "@@locale": "pl",
+  "appTitle": "Paragony",
+  "navHome": "Strona główna",
+  "navImport": "Import",
+  "navStats": "Statystyki",
+  "navReceipts": "Paragony",
+  "navSettings": "Ustawienia",
+  "settingsTitle": "Ustawienia",
+  "languageTitle": "Język",
+  "chooseLanguage": "Wybierz język",
+  "english": "Angielski",
+  "russian": "Rosyjski",
+  "polish": "Polski",
+  "aboutLegal": "Prywatność i warunki",
+  "privacyPolicy": "Polityka prywatności",
+  "termsOfUse": "Warunki korzystania",
+  "openInBrowser": "Otwórz w przeglądarce",
+  "couldNotOpenLink": "Nie udało się otworzyć linku",
+  "ok": "OK",
+  "cancel": "Anuluj",
+  "crashReportsTitle": "Raporty o awariach",
+  "enableSentryCrashReports": "Włącz raporty o awariach Sentry",
+  "crashReportsDescription": "Żadne dane osobowe nie są wysyłane. Zmiany obowiązują od razu.",
+  "crashReportingEnabled": "Raportowanie awarii włączone",
+  "crashReportingDisabled": "Raportowanie awarii wyłączone",
+  "aboutSectionTitle": "Informacje",
+  "aboutAppTitle": "Receipts — MVP",
+  "aboutAppDescription": "Aplikacja Receipts (MVP). Cała obróbka odbywa się na urządzeniu.",
+  "versionLabel": "Wersja",
+  "dataStorageTitle": "Przechowywanie danych",
+  "dataStorageDescription": "Wszystkie paragony i dane są przechowywane lokalnie na tym urządzeniu",
+  "privacyFirstTitle": "Prywatność na pierwszym miejscu",
+  "privacyFirstDescription": "Twoje paragony są przetwarzane wyłącznie na Twoim urządzeniu. Żadne dane nie są wysyłane na zewnętrzne serwery, poza opcjonalnymi raportami o awariach.",
+  "debugSectionTitle": "Debugowanie",
+  "clearAllData": "Wyczyść wszystkie dane",
+  "clearAllDataDescription": "Usuń wszystkie paragony i zresetuj aplikację",
+  "clearAllDataDialogTitle": "Wyczyścić wszystkie dane?",
+  "clearAllDataDialogMessage": "Spowoduje to trwałe usunięcie wszystkich paragonów i danych. Tej akcji nie można cofnąć.",
+  "clearDataNotImplemented": "Czyszczenie danych nie jest jeszcze dostępne",
+  "clearAction": "Wyczyść",
+  "onboardingTitle": "Przetwarzanie tylko lokalne",
+  "onboardingBulletOptimized": "Zoptymalizowane pod paragony PDF (MVP)",
+  "onboardingBulletLocalData": "Wszystkie dane pozostają na tym urządzeniu",
+  "onboardingBulletCrashReports": "Opcjonalne raporty o awariach (możesz wyłączyć w każdej chwili)",
+  "onboardingGetStarted": "Zacznij",
+  "monthOverviewTitle": "Przegląd miesiąca",
+  "spendingByCategoryForMonth": "Wydatki według kategorii — {month}",
+  "@spendingByCategoryForMonth": {
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "totalForMonth": "Suma — {month}",
+  "@totalForMonth": {
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "totalLast30Days": "Suma (30 dni)",
+  "averageReceipt": "Średni paragon",
+  "receiptsMetricLabel": "Paragony",
+  "recentReceipts": "Ostatnie paragony",
+  "noReceiptsForMonth": "Brak paragonów zapisanych w tym miesiącu",
+  "unableToLoadReceipts": "Nie można wczytać paragonów: {error}",
+  "@unableToLoadReceipts": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "showAllReceipts": "Pokaż wszystkie paragony ({count})",
+  "@showAllReceipts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noCategorizedSpending": "Brak wydatków z kategoriami w tym miesiącu",
+  "categoryFreshProduce": "Świeże produkty i warzywa",
+  "categoryDairyEggsBakery": "Nabiał, jajka i pieczywo",
+  "categoryPackagedPantry": "Produkty pakowane i spiżarniane",
+  "categoryDrinksSnacks": "Napoje i przekąski",
+  "categoryHouseholdGoods": "Artykuły gospodarstwa domowego",
+  "categoryMisc": "Różne / inne",
+  "totalWithAmount": "Suma — {amount}",
+  "@totalWithAmount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "unableToLoadCategoriesWithError": "Nie można wczytać kategorii: {error}",
+  "@unableToLoadCategoriesWithError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "unableToLoadCategories": "Nie można wczytać kategorii",
+  "importReceiptsTitle": "Import paragonów",
+  "importReceiptsButton": "Importuj paragony (PDF lub JSON)",
+  "filesCopiedInfo": "Pliki są kopiowane do pamięci aplikacji dla niezawodnego dostępu.",
+  "importFailed": "Import nie powiódł się: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "noImportsYet": "Brak importów",
+  "importFirstReceiptPrompt": "Zaimportuj swój pierwszy paragon (PDF lub JSON)",
+  "importStatusSuccess": "Sukces",
+  "importStatusDuplicate": "Duplikat",
+  "importStatusError": "Błąd",
+  "ocrInProgressMessage": "Trwa rozpoznawanie tekstu (OCR). Pierwsze uruchomienie może potrwać dłużej podczas pobierania modeli.",
+  "retryOcrButtonLabel": "Ponów OCR",
+  "unknownFile": "Nieznany plik",
+  "justNow": "Przed chwilą",
+  "minutesAgo": "{count, plural, one {{count} min temu} few {{count} min temu} many {{count} min temu} other {{count} min temu}}",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count, plural, one {{count} godz. temu} few {{count} godz. temu} many {{count} godz. temu} other {{count} godz. temu}}",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count, plural, one {{count} dzień temu} few {{count} dni temu} many {{count} dni temu} other {{count} dni temu}}",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "receiptsTitle": "Paragony",
+  "searchHint": "Szukaj po sklepie lub dacie",
+  "monthFilterLabel": "Miesiąc",
+  "allMonths": "Wszystkie miesiące",
+  "totalRangeLabel": "Zakres sumy: PLN {start} – PLN {end}",
+  "@totalRangeLabel": {
+    "placeholders": {
+      "start": {
+        "type": "int"
+      },
+      "end": {
+        "type": "int"
+      }
+    }
+  },
+  "noReceiptsFound": "Nie znaleziono paragonów",
+  "adjustSearchFilters": "Spróbuj zmienić wyszukiwanie lub filtry",
+  "receiptTitle": "Paragon",
+  "receiptNotFound": "Nie znaleziono paragonu",
+  "backToReceipts": "Wróć do paragonów",
+  "noLineItems": "Dla tego paragonu nie zapisano pozycji",
+  "itemHeader": "Pozycja",
+  "quantityPriceHeader": "Ilość × Cena",
+  "vatHeader": "VAT",
+  "totalHeader": "Suma",
+  "vatTotalLabel": "Suma VAT:",
+  "pdfOpenNotImplemented": "Otwieranie PDF nie jest jeszcze dostępne",
+  "openPdf": "Otwórz PDF",
+  "recategorizationNotImplemented": "Ponowna kategoryzacja nie jest jeszcze dostępna",
+  "recategorize": "Zmień kategorię",
+  "dashboardTitle": "Panel wydatków",
+  "importPdf": "Importuj PDF",
+  "selectedMonthLabel": "Wybrany miesiąc",
+  "onDeviceProcessing": "Wszystkie dane są przetwarzane na urządzeniu",
+  "monthlySpend": "Wydatki miesięczne",
+  "noReceiptsThisMonth": "Brak paragonów w tym miesiącu",
+  "receiptMerchantAndDate": "{merchant}, {date}",
+  "@receiptMerchantAndDate": {
+    "placeholders": {
+      "merchant": {},
+      "date": {}
+    }
+  },
+  "receiptCount": "{count, plural, one {{count} paragon} few {{count} paragony} many {{count} paragonów} other {{count} paragonu}}",
+  "@receiptCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "maxReceiptForMonth": "Największy paragon — {month}",
+  "@maxReceiptForMonth": {
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "maxReceipt": "Największy paragon",
+  "totalLabel": "Suma",
+  "unableToLoadData": "Nie można wczytać danych",
+  "dashboardEmptyTitle": "Brak paragonów",
+  "dashboardEmptyMessage": "Zaimportuj pierwszy paragon, aby zobaczyć analizy",
+  "dashboardErrorMessage": "Coś poszło nie tak"
+}

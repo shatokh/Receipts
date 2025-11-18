@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer' as developer;
 
 import 'package:receipts/data/repositories/analytics_repository.dart';
@@ -96,7 +97,23 @@ class ImportService {
       }
 
       return parser.parse(text);
-    } on PdfTextExtractionException {
+    } on FormatException catch (error) {
+      if (_isEmptyPdfFormatError(error)) {
+        _recordExtractionTelemetry(
+          safUri: safUri,
+          outcome: 'normalized_text_empty',
+          details: {'message': error.message},
+        );
+        return _parseTextFile(safUri);
+      }
+      rethrow;
+    } on PdfTextExtractionException catch (error) {
+      final stageDetails = _decodeStageDetails(error.details);
+      _recordExtractionTelemetry(
+        safUri: safUri,
+        outcome: 'empty_pdf_text',
+        details: stageDetails ?? {'message': error.message},
+      );
       return _parseTextFile(safUri);
     }
   }
@@ -117,10 +134,18 @@ class ImportService {
 
   String _mapImportError(Object error) {
     if (error is FormatException) {
-      return error.message ??
-          'The receipt file could not be parsed because its structure is invalid.';
+      final message = error.message;
+      if (message.isEmpty) {
+        return 'The receipt file could not be parsed because its structure is invalid.';
+      }
+      return message;
     }
     if (error is PdfTextExtractionException) {
+      final stageDetails = _decodeStageDetails(error.details);
+      final ocrStatus = stageDetails?['ocr']?.toString();
+      if (ocrStatus == 'empty' || ocrStatus == 'error') {
+        return 'Unable to extract text from the PDF. OCR models may still be downloading. Use Retry OCR after the download completes or import the JSON export from the Receipts app.';
+      }
       return 'The receipt file could not be read. ${error.message}';
     }
     return 'Unexpected error while importing the receipt: ${error.toString()}';
@@ -135,5 +160,40 @@ class ImportService {
         ..write('\n');
     }
     return buffer.toString().trimRight();
+  }
+
+  void _recordExtractionTelemetry({
+    required String safUri,
+    required String outcome,
+    Map<String, dynamic>? details,
+  }) {
+    analytics.recordImportTelemetry(
+      sourceUri: safUri,
+      stage: outcome,
+      details: details ?? const {},
+    );
+  }
+
+  Map<String, dynamic>? _decodeStageDetails(String? raw) {
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+    } catch (_) {
+      // ignore malformed detail payloads
+    }
+
+    return null;
+  }
+
+  bool _isEmptyPdfFormatError(FormatException error) {
+    final normalized = error.message.toLowerCase();
+    return normalized.contains('machine-readable text') ||
+        normalized.contains('pdf does not contain');
   }
 }

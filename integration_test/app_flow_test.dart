@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,7 +36,7 @@ Future<void> pumpAndSettleSafe(
       );
       return;
     } on FlutterError catch (error) {
-      final message = error.message ?? error.toString();
+      final message = error.message;
       if (!message.contains('pumpAndSettle timed out')) {
         rethrow;
       }

@@ -10,13 +10,13 @@ class CategoryIds {
 class CategoryDefinition {
   const CategoryDefinition({
     required this.id,
-    required this.label,
+    required this.fallbackLabel,
     this.keywords = const <String>[],
     this.legacyIds = const <String>[],
   });
 
   final String id;
-  final String label;
+  final String fallbackLabel;
   final List<String> keywords;
   final List<String> legacyIds;
 }
@@ -24,8 +24,8 @@ class CategoryDefinition {
 const List<CategoryDefinition> categoryDefinitions = [
   CategoryDefinition(
     id: CategoryIds.freshProduce,
-    label: 'Fresh Produce & Vegetables',
-    keywords: const [
+    fallbackLabel: 'Fresh Produce & Vegetables',
+    keywords: [
       'jabł',
       'jabl',
       'banan',
@@ -56,12 +56,12 @@ const List<CategoryDefinition> categoryDefinitions = [
       'berry',
       'herb',
     ],
-    legacyIds: const ['produce'],
+    legacyIds: ['produce'],
   ),
   CategoryDefinition(
     id: CategoryIds.dairyEggsBakery,
-    label: 'Dairy, Eggs & Bakery',
-    keywords: const [
+    fallbackLabel: 'Dairy, Eggs & Bakery',
+    keywords: [
       'mleko',
       'milk',
       'ser',
@@ -95,12 +95,12 @@ const List<CategoryDefinition> categoryDefinitions = [
       'bake',
       'bakery',
     ],
-    legacyIds: const ['dairy', 'bakery'],
+    legacyIds: ['dairy', 'bakery'],
   ),
   CategoryDefinition(
     id: CategoryIds.packagedPantry,
-    label: 'Packaged & Pantry Foods',
-    keywords: const [
+    fallbackLabel: 'Packaged & Pantry Foods',
+    keywords: [
       'makaron',
       'pasta',
       'ryż',
@@ -152,12 +152,12 @@ const List<CategoryDefinition> categoryDefinitions = [
       'broth',
       'bouillon',
     ],
-    legacyIds: const ['meat'],
+    legacyIds: ['meat'],
   ),
   CategoryDefinition(
     id: CategoryIds.drinksSnacks,
-    label: 'Drinks & Snacks',
-    keywords: const [
+    fallbackLabel: 'Drinks & Snacks',
+    keywords: [
       'napój',
       'napoj',
       'sok',
@@ -194,8 +194,8 @@ const List<CategoryDefinition> categoryDefinitions = [
   ),
   CategoryDefinition(
     id: CategoryIds.householdGoods,
-    label: 'Household Goods',
-    keywords: const [
+    fallbackLabel: 'Household Goods',
+    keywords: [
       'papier',
       'deterg',
       'mydł',
@@ -227,12 +227,12 @@ const List<CategoryDefinition> categoryDefinitions = [
       'toalet',
       'toilet',
     ],
-    legacyIds: const ['household'],
+    legacyIds: ['household'],
   ),
   CategoryDefinition(
     id: CategoryIds.misc,
-    label: 'Miscellaneous / Other',
-    legacyIds: const ['other'],
+    fallbackLabel: 'Miscellaneous / Other',
+    legacyIds: ['other'],
   ),
 ];
 

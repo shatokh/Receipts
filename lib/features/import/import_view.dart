@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:receipts/l10n/app_localizations.dart';
 
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/domain/models/import_result.dart';
@@ -11,6 +12,7 @@ class ImportView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context)!;
     final importState = ref.watch(importControllerProvider);
     final controller = ref.watch(importControllerProvider.notifier);
     final entries = controller.historyEntries;
@@ -18,15 +20,21 @@ class ImportView extends ConsumerWidget {
     final historyContent = importState.maybeWhen(
       data: (results) => results.isEmpty
           ? const _EmptyState()
-          : _ImportHistoryList(entries: entries),
+          : _ImportHistoryList(
+              entries: entries,
+              onRetry: (uri) => controller.importUris([uri]),
+            ),
       orElse: () => entries.isEmpty
           ? const _EmptyState()
-          : _ImportHistoryList(entries: entries),
+          : _ImportHistoryList(
+              entries: entries,
+              onRetry: (uri) => controller.importUris([uri]),
+            ),
     );
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Import receipts'),
+        title: Text(t.importReceiptsTitle),
       ),
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -37,7 +45,7 @@ class ImportView extends ConsumerWidget {
               key: const ValueKey('import_button'),
               onPressed: () => _importReceipts(context, ref),
               icon: const Icon(Icons.upload_file),
-              label: const Text('Import receipts (PDF or JSON)'),
+              label: Text(t.importReceiptsButton),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.all(AppSpacing.md),
               ),
@@ -56,7 +64,7 @@ class ImportView extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Files are copied to app storage for reliable access.',
+              t.filesCopiedInfo,
               style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -80,8 +88,9 @@ class ImportView extends ConsumerWidget {
       await ref.read(importControllerProvider.notifier).importUris(uris);
     } catch (error) {
       if (!context.mounted) return;
+      final t = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Import failed: $error')),
+        SnackBar(content: Text(t.importFailed('$error'))),
       );
     }
   }
@@ -92,10 +101,27 @@ class _LoadingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return ColoredBox(
       color: Colors.black.withValues(alpha: 0.05),
-      child: const Center(
-        child: CircularProgressIndicator(),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: AppSpacing.md),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              child: Text(
+                t.ocrInProgressMessage,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -106,6 +132,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -117,14 +144,14 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'No imports yet',
+            t.noImportsYet,
             style: AppTextStyles.titleMedium.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Import your first receipt (PDF or JSON)',
+            t.importFirstReceiptPrompt,
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -136,33 +163,51 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _ImportHistoryList extends StatelessWidget {
-  const _ImportHistoryList({required this.entries});
+  const _ImportHistoryList({
+    required this.entries,
+    required this.onRetry,
+  });
 
   final List<ImportHistoryEntry> entries;
+  final void Function(String safUri) onRetry;
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: entries.length,
       itemBuilder: (context, index) {
-        return _ImportHistoryItem(entry: entries[index]);
+        return _ImportHistoryItem(
+          entry: entries[index],
+          onRetry: onRetry,
+        );
       },
     );
   }
 }
 
 class _ImportHistoryItem extends StatelessWidget {
-  const _ImportHistoryItem({required this.entry});
+  const _ImportHistoryItem({
+    required this.entry,
+    required this.onRetry,
+  });
 
   final ImportHistoryEntry entry;
+  final void Function(String safUri) onRetry;
 
   ImportResult get result => entry.result;
 
   @override
   Widget build(BuildContext context) {
-    final fileName = _resolveFileName(result.sourceUri);
-    final subtitle = _buildSubtitle(entry.timestamp, result.message);
-    final badgeStyle = _badgeStyle(result.status);
+    final t = AppLocalizations.of(context)!;
+    final fileName = _resolveFileName(t, result.sourceUri);
+    final subtitle = _buildSubtitle(t, entry.timestamp, result.message);
+    final badgeStyle = _badgeStyle(result.status, t);
+    final retryButton = result.status == ImportStatus.error
+        ? TextButton(
+            onPressed: () => onRetry(result.sourceUri),
+            child: Text(t.retryOcrButtonLabel),
+          )
+        : null;
 
     return Card(
       child: ListTile(
@@ -172,11 +217,17 @@ class _ImportHistoryItem extends StatelessWidget {
             color: AppColors.textPrimary,
           ),
         ),
-        subtitle: Text(
-          subtitle,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              subtitle,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            if (retryButton != null) retryButton,
+          ],
         ),
         trailing: _StatusBadge(
           label: badgeStyle.label,
@@ -187,32 +238,37 @@ class _ImportHistoryItem extends StatelessWidget {
     );
   }
 
-  String _buildSubtitle(DateTime timestamp, String? message) {
-    final parts = <String>[_formatTimestamp(timestamp)];
+  String _buildSubtitle(
+    AppLocalizations t,
+    DateTime timestamp,
+    String? message,
+  ) {
+    final parts = <String>[_formatTimestamp(t, timestamp)];
     if (message != null && message.isNotEmpty) {
       parts.add(message);
     }
     return parts.join(' • ');
   }
 
-  _BadgeStyle _badgeStyle(ImportStatus status) {
+  _BadgeStyle _badgeStyle(ImportStatus status, AppLocalizations t) {
     switch (status) {
       case ImportStatus.success:
-        return const _BadgeStyle(label: 'Success', color: AppColors.success);
+        return _BadgeStyle(
+            label: t.importStatusSuccess, color: AppColors.success);
       case ImportStatus.duplicate:
-        return const _BadgeStyle(
-          label: 'Duplicate',
+        return _BadgeStyle(
+          label: t.importStatusDuplicate,
           color: AppColors.warning,
           outlined: true,
         );
       case ImportStatus.error:
-        return const _BadgeStyle(label: 'Error', color: AppColors.error);
+        return _BadgeStyle(label: t.importStatusError, color: AppColors.error);
     }
   }
 
-  String _resolveFileName(String? sourceUri) {
+  String _resolveFileName(AppLocalizations t, String? sourceUri) {
     if (sourceUri == null || sourceUri.isEmpty) {
-      return 'Unknown file';
+      return t.unknownFile;
     }
 
     try {
@@ -227,18 +283,21 @@ class _ImportHistoryItem extends StatelessWidget {
     }
   }
 
-  String _formatTimestamp(DateTime timestamp) {
+  String _formatTimestamp(AppLocalizations t, DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
 
     if (difference.inMinutes < 1) {
-      return 'Just now';
+      return t.justNow;
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
+      final minutes = difference.inMinutes;
+      return t.minutesAgo(minutes);
     } else if (difference.inDays < 1) {
-      return '${difference.inHours}h ago';
+      final hours = difference.inHours;
+      return t.hoursAgo(hours);
     } else {
-      return '${difference.inDays}d ago';
+      final days = difference.inDays;
+      return t.daysAgo(days);
     }
   }
 }

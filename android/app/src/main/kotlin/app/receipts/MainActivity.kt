@@ -1,6 +1,13 @@
 package app.receipts
 
 import android.net.Uri
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.Matrix
+import android.graphics.pdf.PdfRenderer
+import android.os.Handler
+import android.os.Looper
+import android.util.Base64
 import android.util.Log
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
@@ -15,13 +22,22 @@ import com.tom_roush.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecif
 import com.tom_roush.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile
 import com.tom_roush.pdfbox.pdmodel.common.filespecification.PDFileSpecification
 import com.tom_roush.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment
+import com.google.android.gms.tasks.Tasks
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.io.InputStream
 import java.security.MessageDigest
 import java.text.Normalizer
+import java.util.Locale
 import java.util.zip.GZIPInputStream
 import java.util.zip.ZipInputStream
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.text.Charsets.UTF_8
 import org.json.JSONArray
 import org.json.JSONException
@@ -30,53 +46,79 @@ import org.json.JSONObject
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "pdf_text_extractor"
     private val TAG = "ReceiptsPdfExtractor"
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val backgroundExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        
+
         // Initialize PDFBox
         PDFBoxResourceLoader.init(applicationContext)
-        
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "extractTextPages" -> {
                     val safUri = call.arguments as String
-                    try {
-                        val pages = extractTextPages(safUri)
-                        result.success(pages)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "extractTextPages failed for $safUri", e)
-                        result.error("EXTRACTION_ERROR", e.message, e.toString())
+                    backgroundExecutor.execute {
+                        try {
+                            val pages = extractTextPages(safUri)
+                            mainHandler.post { result.success(pages) }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "extractTextPages failed for $safUri", e)
+                            mainHandler.post {
+                                if (e is EmptyPdfTextException) {
+                                    result.error(
+                                        "EMPTY_PDF_TEXT",
+                                        e.message,
+                                        e.stages,
+                                    )
+                                } else {
+                                    result.error("EXTRACTION_ERROR", e.message, e.toString())
+                                }
+                            }
+                        }
                     }
                 }
                 "pageCount" -> {
                     val safUri = call.arguments as String
-                    try {
-                        val count = getPageCount(safUri)
-                        result.success(count)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "pageCount failed for $safUri", e)
-                        result.error("PAGE_COUNT_ERROR", e.message, e.toString())
+                    backgroundExecutor.execute {
+                        try {
+                            val count = getPageCount(safUri)
+                            mainHandler.post { result.success(count) }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "pageCount failed for $safUri", e)
+                            mainHandler.post {
+                                result.error("PAGE_COUNT_ERROR", e.message, e.toString())
+                            }
+                        }
                     }
                 }
                 "fileHash" -> {
                     val safUri = call.arguments as String
-                    try {
-                        val hash = getFileHash(safUri)
-                        result.success(hash)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "fileHash failed for $safUri", e)
-                        result.error("HASH_ERROR", e.message, e.toString())
+                    backgroundExecutor.execute {
+                        try {
+                            val hash = getFileHash(safUri)
+                            mainHandler.post { result.success(hash) }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "fileHash failed for $safUri", e)
+                            mainHandler.post {
+                                result.error("HASH_ERROR", e.message, e.toString())
+                            }
+                        }
                     }
                 }
                 "readTextFile" -> {
                     val safUri = call.arguments as String
-                    try {
-                        val text = readTextFile(safUri)
-                        result.success(text)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "readTextFile failed for $safUri", e)
-                        result.error("READ_TEXT_ERROR", e.message, e.toString())
+                    backgroundExecutor.execute {
+                        try {
+                            val text = readTextFile(safUri)
+                            mainHandler.post { result.success(text) }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "readTextFile failed for $safUri", e)
+                            mainHandler.post {
+                                result.error("READ_TEXT_ERROR", e.message, e.toString())
+                            }
+                        }
                     }
                 }
                 else -> result.notImplemented()
@@ -88,10 +130,12 @@ class MainActivity : FlutterActivity() {
         val uri = Uri.parse(safUri)
         val inputStream: InputStream = contentResolver.openInputStream(uri)
             ?: throw Exception("Cannot open file")
-        
+
         return inputStream.use { stream ->
             PDDocument.load(stream).use { document ->
-                extractEmbeddedReceipt(document)?.let { payload ->
+                val embeddedResult = extractEmbeddedReceipt(document)
+                logExtractionStage(safUri, "embedded", embeddedResult.status)
+                embeddedResult.value?.let { payload ->
                     return payload
                 }
 
@@ -110,7 +154,32 @@ class MainActivity : FlutterActivity() {
 
                     pages.add(text)
                 }
-                pages
+
+                val stripperStatus = if (hasMeaningfulText(pages)) {
+                    StageStatus.SUCCESS
+                } else {
+                    StageStatus.EMPTY
+                }
+                logExtractionStage(safUri, "stripper", stripperStatus)
+
+                if (stripperStatus == StageStatus.SUCCESS) {
+                    return pages
+                }
+
+                val ocrResult = extractTextWithOcr(uri)
+                logExtractionStage(safUri, "ocr", ocrResult.status)
+                if (hasMeaningfulText(ocrResult.value ?: emptyList())) {
+                    Log.i(TAG, "Falling back to OCR text extraction for $safUri")
+                    return ocrResult.value ?: pages
+                }
+
+                val stages = mapOf(
+                    "embedded" to embeddedResult.status.value,
+                    "stripper" to stripperStatus.value,
+                    "ocr" to ocrResult.status.value,
+                )
+
+                throw EmptyPdfTextException(stages)
             }
         }
     }
@@ -153,89 +222,252 @@ class MainActivity : FlutterActivity() {
         return inputStream.bufferedReader(UTF_8).use { it.readText() }
     }
 
-    private fun extractEmbeddedReceipt(document: PDDocument): List<String>? {
+    private fun extractEmbeddedReceipt(document: PDDocument): StageResult<List<String>> {
         val nameDictionary: PDDocumentNameDictionary? = document.documentCatalog.names
         val embeddedTree = nameDictionary?.embeddedFiles
-        extractFromEmbeddedTree(embeddedTree)?.let { return listOf(it) }
+        val treeResult = extractFromEmbeddedTree(embeddedTree)
+        treeResult.value?.let { payload ->
+            return StageResult(listOf(payload), StageStatus.SUCCESS)
+        }
+
+        var status = treeResult.status
 
         // Some PDFs store attachments directly on pages as annotations.
         for (page in document.pages) {
             for (annotation in page.annotations) {
                 if (annotation is PDAnnotationFileAttachment) {
-                    decodeEmbeddedFile(annotation.file)?.let { return listOf(it) }
+                    val attachmentResult = decodeEmbeddedFile(annotation.file)
+                    status = dominantStatus(status, attachmentResult.status)
+                    attachmentResult.value?.let { payload ->
+                        return StageResult(listOf(payload), StageStatus.SUCCESS)
+                    }
                 }
             }
         }
 
-        return null
+        return StageResult(null, status)
+    }
+
+    private fun extractTextWithOcr(uri: Uri): StageResult<List<String>> {
+        return try {
+            contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
+                PdfRenderer(descriptor).use { renderer ->
+                    if (renderer.pageCount == 0) {
+                        return StageResult(emptyList(), StageStatus.EMPTY)
+                    }
+
+                    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                    try {
+                        val pages = mutableListOf<String>()
+                        var status = StageStatus.EMPTY
+
+                        for (i in 0 until renderer.pageCount) {
+                            renderer.openPage(i).use { page ->
+                                val primaryScale = computeOcrScale(page.width, page.height)
+                                val primaryText = runOcrPass(page, recognizer, primaryScale, applyBinarization = false)
+
+                                val normalizedPrimary = Normalizer.normalize(primaryText, Normalizer.Form.NFC)
+
+                                val finalText = if (normalizedPrimary.isNotBlank()) {
+                                    normalizedPrimary
+                                } else {
+                                    val enhancedScale = (primaryScale * 1.35f).coerceAtMost(3.5f)
+                                    val secondaryText = runOcrPass(
+                                        page,
+                                        recognizer,
+                                        enhancedScale,
+                                        applyBinarization = true,
+                                    )
+                                    Normalizer.normalize(secondaryText, Normalizer.Form.NFC)
+                                }
+
+                                if (finalText.any { !it.isWhitespace() }) {
+                                    status = StageStatus.SUCCESS
+                                }
+
+                                pages.add(finalText)
+                            }
+                        }
+
+                        StageResult(pages, status)
+                    } finally {
+                        recognizer.close()
+                    }
+                }
+            } ?: StageResult(emptyList(), StageStatus.EMPTY)
+        } catch (e: Exception) {
+            Log.e(TAG, "OCR fallback failed for $uri", e)
+            StageResult(emptyList(), StageStatus.ERROR)
+        }
+    }
+
+    private fun runOcrPass(
+        page: PdfRenderer.Page,
+        recognizer: com.google.mlkit.vision.text.TextRecognizer,
+        scale: Float,
+        applyBinarization: Boolean,
+    ): String {
+        val width = (page.width * scale).toInt().coerceAtLeast(1)
+        val height = (page.height * scale).toInt().coerceAtLeast(1)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        return try {
+            bitmap.eraseColor(Color.WHITE)
+            val matrix = Matrix().apply { postScale(scale, scale) }
+            page.render(bitmap, null, matrix, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+
+            if (applyBinarization) {
+                binarizeBitmap(bitmap)
+            }
+
+            val image = InputImage.fromBitmap(bitmap, 0)
+            val result = Tasks.await(recognizer.process(image))
+            result.text
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
+    private fun binarizeBitmap(bitmap: Bitmap) {
+        val width = bitmap.width
+        val height = bitmap.height
+        val pixels = IntArray(width * height)
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+
+        for (index in pixels.indices) {
+            val color = pixels[index]
+            val red = Color.red(color)
+            val green = Color.green(color)
+            val blue = Color.blue(color)
+            val luminance = (0.299 * red + 0.587 * green + 0.114 * blue).toInt()
+            pixels[index] = if (luminance > 180) Color.WHITE else Color.BLACK
+        }
+
+        bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
+    }
+
+    private fun computeOcrScale(width: Int, height: Int): Float {
+        val maxDimension = 2000f
+        val largestSide = max(width, height).toFloat()
+        val scaleToMax = maxDimension / largestSide
+        val normalizedScale = if (largestSide > maxDimension) {
+            scaleToMax
+        } else {
+            scaleToMax.coerceAtMost(2.5f)
+        }
+        return normalizedScale
+    }
+
+    private fun hasMeaningfulText(pages: List<String>): Boolean {
+        for (page in pages) {
+            if (page.any { !it.isWhitespace() }) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun logExtractionStage(safUri: String, stage: String, status: StageStatus) {
+        Log.d(TAG, "Extraction stage $stage=${status.value} for $safUri")
     }
 
     private fun extractFromEmbeddedTree(
         node: PDNameTreeNode<PDComplexFileSpecification>?,
-    ): String? {
+    ): StageResult<String> {
         if (node == null) {
-            return null
+            return StageResult(null, StageStatus.ABSENT)
         }
+
+        var status = StageStatus.ABSENT
 
         val names = node.names
         if (names != null) {
             for ((_, spec) in names) {
-                decodeEmbeddedFile(spec)?.let { return it }
+                val result = decodeEmbeddedFile(spec)
+                status = dominantStatus(status, result.status)
+                result.value?.let { return StageResult(it, StageStatus.SUCCESS) }
             }
         }
 
         val kids = node.kids
         if (kids != null) {
             for (child in kids) {
-                extractFromEmbeddedTree(child)?.let { return it }
+                val result = extractFromEmbeddedTree(child)
+                status = dominantStatus(status, result.status)
+                result.value?.let { return result }
             }
         }
 
-        return null
+        return StageResult(null, status)
     }
 
-    private fun decodeEmbeddedFile(spec: PDFileSpecification?): String? {
+    private fun decodeEmbeddedFile(spec: PDFileSpecification?): StageResult<String> {
         val complexSpec = when (spec) {
-            null -> return null
+            null -> return StageResult(null, StageStatus.ABSENT)
             is PDComplexFileSpecification -> spec
             else -> {
                 Log.w(TAG, "Unsupported embedded file specification type: ${spec.javaClass.simpleName}")
-                return null
+                return StageResult(null, StageStatus.INVALID)
             }
         }
 
-        val embeddedFile: PDEmbeddedFile =
-            complexSpec.embeddedFile ?: complexSpec.embeddedFileUnicode ?: return null
+        val embeddedFile: PDEmbeddedFile = complexSpec.embeddedFile
+            ?: complexSpec.embeddedFileUnicode
+            ?: return StageResult(null, StageStatus.EMPTY)
+
+        val attachmentName = listOfNotNull(
+            complexSpec.file,
+            complexSpec.fileUnicode,
+            embeddedFile.subtype,
+        ).firstOrNull().orEmpty()
 
         return embeddedFile.createInputStream().use { stream ->
             val rawBytes = stream.readAllBytes()
-            val decoded = decodeEmbeddedBytes(rawBytes, embeddedFile.subtype)
+            if (rawBytes.isNotEmpty()) {
+                dumpAttachment("${attachmentName}_raw", rawBytes)
+            }
+
+            val decoded = decodeEmbeddedBytes(rawBytes, embeddedFile.subtype, attachmentName)
+            if (decoded.isNotEmpty()) {
+                dumpAttachment("${attachmentName}_decoded", decoded)
+            }
+
             val text = decoded.toString(UTF_8)
             val cleanedText = sanitizeEmbeddedText(text)
 
             if (cleanedText.isEmpty()) {
-                Log.w(TAG, "Embedded receipt payload was empty")
-                return@use null
+                Log.w(TAG, "Embedded receipt payload was empty (${attachmentName.ifEmpty { "unnamed" }})")
+                return@use StageResult(null, StageStatus.EMPTY)
             }
 
             val mimeType = embeddedFile.subtype
             val isJsonPayload = isJsonMimeType(mimeType) || isValidJson(cleanedText)
 
-            if (isJsonPayload) cleanedText else null
+            if (isJsonPayload) {
+                Log.i(TAG, "Embedded receipt payload decoded from ${attachmentName.ifEmpty { "unnamed attachment" }}")
+                StageResult(cleanedText, StageStatus.SUCCESS)
+            } else {
+                Log.w(TAG, "Embedded receipt payload ${attachmentName.ifEmpty { "unnamed" }} was not JSON")
+                StageResult(null, StageStatus.INVALID)
+            }
         }
     }
 
     private fun decodeEmbeddedBytes(
         bytes: ByteArray,
-        mimeType: String?
+        mimeType: String?,
+        sourceName: String,
     ): ByteArray {
-        val lowerMime = mimeType?.lowercase() ?: ""
+        val lowerMime = mimeType?.lowercase(Locale.ROOT) ?: ""
 
-        return when {
-            isZipPayload(lowerMime, bytes) -> decodeZip(bytes)
+        var decoded = when {
+            isZipPayload(lowerMime, bytes) -> decodeZip(bytes, sourceName)
             isGzipPayload(lowerMime, bytes) -> decodeGzip(bytes)
             else -> bytes
         }
+
+        decoded = decodeNestedContainers(decoded, sourceName)
+
+        return decoded
     }
 
     private fun isZipPayload(mimeType: String, bytes: ByteArray): Boolean {
@@ -262,24 +494,99 @@ class MainActivity : FlutterActivity() {
             bytes[1] == 0x8b.toByte()
     }
 
-    private fun decodeZip(bytes: ByteArray): ByteArray {
+    private fun decodeZip(bytes: ByteArray, sourceName: String? = null): ByteArray {
         return try {
             ZipInputStream(ByteArrayInputStream(bytes)).use { zip ->
                 var entry = zip.nextEntry
                 while (entry != null) {
                     if (!entry.isDirectory) {
-                        val name = entry.name.lowercase()
-                        if (name.endsWith(".json") || name.endsWith(".txt")) {
-                            return zip.readAllBytes()
+                        val entryName = entry.name ?: "unnamed"
+                        val entryBytes = zip.readEntryBytes()
+                        val combinedName = listOfNotNull(sourceName, entryName).joinToString("_")
+                        if (entryBytes.isNotEmpty()) {
+                            dumpAttachment("${combinedName}_entry", entryBytes)
+                        }
+
+                        val candidate = decodeNestedContainers(entryBytes, entryName)
+                        val text = sanitizeEmbeddedText(candidate.toString(UTF_8))
+                        if (isValidJson(text)) {
+                            Log.i(TAG, "Decoded JSON from zip entry $entryName")
+                            return candidate
                         }
                     }
                     entry = zip.nextEntry
                 }
             }
             bytes
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to decode zip payload ${sourceName ?: ""}", e)
             bytes
         }
+    }
+
+    private fun decodeNestedContainers(bytes: ByteArray, sourceName: String): ByteArray {
+        var current = bytes
+        var iteration = 0
+
+        while (iteration < 3) {
+            iteration += 1
+            when {
+                isZipPayload("", current) -> {
+                    val decoded = decodeZip(current, sourceName)
+                    if (!decoded.contentEquals(current)) {
+                        current = decoded
+                        continue
+                    }
+                }
+                isGzipPayload("", current) -> {
+                    val decoded = decodeGzip(current)
+                    if (!decoded.contentEquals(current)) {
+                        current = decoded
+                        continue
+                    }
+                }
+                else -> {
+                    val decoded = tryDecodeBase64(current)
+                    if (decoded != null && !decoded.contentEquals(current)) {
+                        current = decoded
+                        continue
+                    }
+                }
+            }
+            break
+        }
+
+        return current
+    }
+
+    private fun tryDecodeBase64(bytes: ByteArray): ByteArray? {
+        val text = bytes.toString(UTF_8).trim()
+        if (text.length < 16) {
+            return null
+        }
+
+        val normalized = text
+            .replace("\n", "")
+            .replace("\r", "")
+            .trim()
+
+        if (normalized.length % 4 != 0) {
+            return null
+        }
+
+        if (normalized.any { !isBase64Character(it) }) {
+            return null
+        }
+
+        return try {
+            Base64.decode(normalized, Base64.DEFAULT)
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+    }
+
+    private fun isBase64Character(char: Char): Boolean {
+        return char.isLetterOrDigit() || char == '+' || char == '/' || char == '='
     }
 
     private fun decodeGzip(bytes: ByteArray): ByteArray {
@@ -288,6 +595,50 @@ class MainActivity : FlutterActivity() {
         } catch (_: Exception) {
             bytes
         }
+    }
+
+    private fun dumpAttachment(rawName: String, bytes: ByteArray) {
+        if (bytes.isEmpty()) {
+            return
+        }
+
+        try {
+            val directory = File(cacheDir, "embedded-dumps")
+            if (!directory.exists()) {
+                directory.mkdirs()
+            }
+
+            val sanitized = rawName.ifEmpty { "payload" }
+                .lowercase(Locale.ROOT)
+                .replace(Regex("[^a-z0-9._-]"), "_")
+            val clipped = sanitized.take(40).ifEmpty { "payload" }
+            val fileName = "${System.currentTimeMillis()}_${clipped}.bin"
+            val target = File(directory, fileName)
+            val limit = min(bytes.size, 512 * 1024)
+
+            FileOutputStream(target).use { output ->
+                output.write(bytes, 0, limit)
+            }
+
+            Log.d(TAG, "Dumped embedded payload to ${target.absolutePath}")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to dump embedded payload $rawName", e)
+        }
+    }
+
+    private fun ZipInputStream.readEntryBytes(): ByteArray {
+        val buffer = ByteArrayOutputStream()
+        val chunk = ByteArray(8192)
+
+        while (true) {
+            val read = read(chunk)
+            if (read <= 0) {
+                break
+            }
+            buffer.write(chunk, 0, read)
+        }
+
+        return buffer.toByteArray()
     }
 
     private fun sanitizeEmbeddedText(text: String): String {
@@ -320,6 +671,26 @@ class MainActivity : FlutterActivity() {
         } catch (_: JSONException) {
             false
         }
+    }
+
+    private enum class StageStatus(val value: String, val priority: Int) {
+        SUCCESS("success", 4),
+        ERROR("error", 3),
+        INVALID("invalid", 2),
+        EMPTY("empty", 1),
+        ABSENT("absent", 0);
+    }
+
+    private data class StageResult<T>(val value: T?, val status: StageStatus)
+
+    private class EmptyPdfTextException(
+        val stages: Map<String, String>,
+    ) : IllegalStateException(
+        "PDF does not contain any machine-readable text or embedded receipt data.",
+    )
+
+    private fun dominantStatus(first: StageStatus, second: StageStatus): StageStatus {
+        return if (first.priority >= second.priority) first else second
     }
 
     private fun InputStream.readAllBytes(): ByteArray {

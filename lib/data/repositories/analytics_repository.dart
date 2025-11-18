@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +23,24 @@ class AnalyticsRepository {
   final DatabaseUpdateBus _updateBus;
 
   Stream<void> get updates => _updateBus.stream;
+
+  void recordImportTelemetry({
+    required String sourceUri,
+    required String stage,
+    Map<String, dynamic> details = const {},
+  }) {
+    final payload = <String, dynamic>{
+      'source': sourceUri,
+      'stage': stage,
+      if (details.isNotEmpty) 'details': details,
+    };
+
+    developer.log(
+      'import_telemetry',
+      name: 'ImportTelemetry',
+      error: jsonEncode(payload),
+    );
+  }
 
   Stream<List<MonthlyTotal>> watchLast12MonthsTotals() {
     return Stream.multi((controller) async {
@@ -177,7 +197,6 @@ class AnalyticsRepository {
       for (final definition in categoryDefinitions)
         CategoryBreakdown(
           categoryId: definition.id,
-          categoryName: definition.label,
           amount: totalsByCategory[definition.id] ?? 0.0,
         ),
     ];

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../l10n/app_localizations.dart';
+
 class MainScaffold extends StatelessWidget {
   final Widget child;
 
@@ -14,30 +16,36 @@ class MainScaffold extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
         currentIndex: _getCurrentIndex(context),
         onTap: (index) => _onTap(context, index),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home, key: ValueKey('nav_home')),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.upload_file, key: ValueKey('nav_import')),
-            label: 'Import',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart, key: ValueKey('nav_stats')),
-            label: 'Stats',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long, key: ValueKey('nav_receipts')),
-            label: 'Receipts',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings, key: ValueKey('nav_settings')),
-            label: 'Settings',
-          ),
-        ],
+        items: _buildItems(context),
       ),
     );
+  }
+
+  List<BottomNavigationBarItem> _buildItems(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+
+    return [
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.home, key: ValueKey('nav_home')),
+        label: localizations.navHome,
+      ),
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.upload_file, key: ValueKey('nav_import')),
+        label: localizations.navImport,
+      ),
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.bar_chart, key: ValueKey('nav_stats')),
+        label: localizations.navStats,
+      ),
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.receipt_long, key: ValueKey('nav_receipts')),
+        label: localizations.navReceipts,
+      ),
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.settings, key: ValueKey('nav_settings')),
+        label: localizations.navSettings,
+      ),
+    ];
   }
 
   int _getCurrentIndex(BuildContext context) {
