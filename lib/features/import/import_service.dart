@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
 
+import 'package:receipts/core/logging/error_log_service.dart';
 import 'package:receipts/data/repositories/analytics_repository.dart';
 import 'package:receipts/data/repositories/receipt_repository.dart';
 import 'package:receipts/domain/models/import_result.dart';
@@ -14,12 +15,14 @@ class ImportService {
     required this.parser,
     required this.receipts,
     required this.analytics,
+    required this.errorLogger,
   });
 
   final PdfTextExtractor pdf;
   final ReceiptParser parser;
   final ReceiptRepository receipts;
   final AnalyticsRepository analytics;
+  final ErrorLogService errorLogger;
 
   Future<ImportResult> importOne(String safUri) async {
     try {
@@ -58,16 +61,25 @@ class ImportService {
         receiptId: savedId,
       );
     } catch (error, stackTrace) {
+      final mappedMessage = _mapImportError(error);
+      final logDetails = _extractLogDetails(error);
       developer.log(
         'Failed to import receipt',
         name: 'ImportService',
         error: error,
         stackTrace: stackTrace,
       );
+      await errorLogger.logImportFailure(
+        safUri: safUri,
+        message: mappedMessage,
+        error: error,
+        stackTrace: stackTrace,
+        details: logDetails,
+      );
       return ImportResult(
         sourceUri: safUri,
         status: ImportStatus.error,
-        message: _mapImportError(error),
+        message: mappedMessage,
       );
     }
   }
@@ -104,7 +116,7 @@ class ImportService {
           outcome: 'normalized_text_empty',
           details: {'message': error.message},
         );
-        return _parseTextFile(safUri);
+        return _parseTextFileOrRethrow(safUri, error);
       }
       rethrow;
     } on PdfTextExtractionException catch (error) {
@@ -114,7 +126,34 @@ class ImportService {
         outcome: 'empty_pdf_text',
         details: stageDetails ?? {'message': error.message},
       );
-      return _parseTextFile(safUri);
+      return _parseTextFileOrRethrow(
+        safUri,
+        error,
+        stageDetails: stageDetails,
+      );
+    }
+  }
+
+  Future<Receipt> _parseTextFileOrRethrow(
+    String safUri,
+    Object extractionError, {
+    Map<String, dynamic>? stageDetails,
+  }) async {
+    try {
+      return await _parseTextFile(safUri);
+    } on FormatException catch (_) {
+      if (extractionError is PdfTextExtractionException) {
+        throw PdfTextExtractionException(
+          extractionError.message,
+          extractionError.details ?? jsonEncode(stageDetails ?? {}),
+        );
+      }
+
+      if (extractionError is FormatException) {
+        throw extractionError;
+      }
+
+      throw FormatException(extractionError.toString());
     }
   }
 
@@ -172,6 +211,18 @@ class ImportService {
       stage: outcome,
       details: details ?? const {},
     );
+  }
+
+  Map<String, dynamic>? _extractLogDetails(Object error) {
+    if (error is PdfTextExtractionException) {
+      return _decodeStageDetails(error.details);
+    }
+
+    if (error is FormatException && _isEmptyPdfFormatError(error)) {
+      return {'stage': 'normalized_text_empty'};
+    }
+
+    return null;
   }
 
   Map<String, dynamic>? _decodeStageDetails(String? raw) {

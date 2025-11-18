@@ -298,6 +298,30 @@ abstract class AppLocalizations {
   /// **'Debug'**
   String get debugSectionTitle;
 
+  /// No description provided for @enableErrorLogging.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable import error logging'**
+  String get enableErrorLogging;
+
+  /// No description provided for @errorLoggingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Write detailed import errors to a local log file (development only).'**
+  String get errorLoggingDescription;
+
+  /// No description provided for @errorLogPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Log file: {path}'**
+  String errorLogPath(String path);
+
+  /// No description provided for @errorLogEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Error logging enabled. File: {path}'**
+  String errorLogEnabled(String path);
+
   /// No description provided for @clearAllData.
   ///
   /// In en, this message translates to:

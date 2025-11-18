@@ -112,6 +112,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get debugSectionTitle => 'Debug';
 
   @override
+  String get enableErrorLogging => 'Enable import error logging';
+
+  @override
+  String get errorLoggingDescription =>
+      'Write detailed import errors to a local log file (development only).';
+
+  @override
+  String errorLogPath(String path) {
+    return 'Log file: $path';
+  }
+
+  @override
+  String errorLogEnabled(String path) {
+    return 'Error logging enabled. File: $path';
+  }
+
+  @override
   String get clearAllData => 'Clear all data';
 
   @override
