@@ -33,6 +33,20 @@
   "privacyFirstTitle": "Приватность прежде всего",
   "privacyFirstDescription": "Ваши чеки обрабатываются полностью на вашем устройстве. Данные не отправляются на внешние серверы, кроме необязательных отчётов об ошибках.",
   "debugSectionTitle": "Отладка",
+  "enableErrorLogging": "Включить логирование ошибок импорта",
+  "errorLoggingDescription": "Записывать подробные ошибки импорта в локальный файл (только для разработки).",
+  "errorLogPath": "Файл логов: {path}",
+  "@errorLogPath": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "errorLogEnabled": "Логирование включено. Файл: {path}",
+  "@errorLogEnabled": {
+    "placeholders": {
+      "path": {}
+    }
+  },
   "clearAllData": "Удалить все данные",
   "clearAllDataDescription": "Удалить все чеки и сбросить приложение",
   "clearAllDataDialogTitle": "Удалить все данные?",

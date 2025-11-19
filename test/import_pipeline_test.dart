@@ -5,6 +5,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:receipts/core/logging/error_log_service.dart';
 import 'package:receipts/data/database.dart';
 import 'package:receipts/data/repositories/analytics_repository.dart';
 import 'package:receipts/data/repositories/receipt_repository.dart';
@@ -39,6 +40,7 @@ void main() {
       parser: ReceiptParser(),
       receipts: receiptRepository,
       analytics: analyticsRepository,
+      errorLogger: ErrorLogService(enabled: false),
     );
 
     final dbPath = await getDatabasesPath();

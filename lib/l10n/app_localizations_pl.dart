@@ -112,6 +112,23 @@ class AppLocalizationsPl extends AppLocalizations {
   String get debugSectionTitle => 'Debugowanie';
 
   @override
+  String get enableErrorLogging => 'Włącz logowanie błędów importu';
+
+  @override
+  String get errorLoggingDescription =>
+      'Zapisuj szczegółowe błędy importu do lokalnego pliku (tylko w wersji deweloperskiej).';
+
+  @override
+  String errorLogPath(String path) {
+    return 'Plik logu: $path';
+  }
+
+  @override
+  String errorLogEnabled(String path) {
+    return 'Logowanie włączone. Plik: $path';
+  }
+
+  @override
   String get clearAllData => 'Wyczyść wszystkie dane';
 
   @override

@@ -113,6 +113,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get debugSectionTitle => 'Отладка';
 
   @override
+  String get enableErrorLogging => 'Включить логирование ошибок импорта';
+
+  @override
+  String get errorLoggingDescription =>
+      'Записывать подробные ошибки импорта в локальный файл (только для разработки).';
+
+  @override
+  String errorLogPath(String path) {
+    return 'Файл логов: $path';
+  }
+
+  @override
+  String errorLogEnabled(String path) {
+    return 'Логирование включено. Файл: $path';
+  }
+
+  @override
   String get clearAllData => 'Удалить все данные';
 
   @override

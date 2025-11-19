@@ -33,6 +33,20 @@
   "privacyFirstTitle": "Privacy First",
   "privacyFirstDescription": "Your receipts are processed entirely on your device. No data is sent to external servers except for optional crash reports.",
   "debugSectionTitle": "Debug",
+  "enableErrorLogging": "Enable import error logging",
+  "errorLoggingDescription": "Write detailed import errors to a local log file (development only).",
+  "errorLogPath": "Log file: {path}",
+  "@errorLogPath": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "errorLogEnabled": "Error logging enabled. File: {path}",
+  "@errorLogEnabled": {
+    "placeholders": {
+      "path": {}
+    }
+  },
   "clearAllData": "Clear all data",
   "clearAllDataDescription": "Remove all receipts and reset the app",
   "clearAllDataDialogTitle": "Clear all data?",

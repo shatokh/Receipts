@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:receipts/core/logging/error_log_service.dart';
 import 'package:receipts/data/repositories/analytics_repository.dart';
 import 'package:receipts/data/repositories/category_repository.dart';
 import 'package:receipts/data/repositories/receipt_repository.dart';
@@ -53,6 +54,7 @@ final importServiceProvider = Provider<ImportService>((ref) {
     parser: ref.read(receiptParserProvider),
     receipts: ref.read(receiptRepositoryProvider),
     analytics: ref.read(analyticsRepositoryProvider),
+    errorLogger: ref.watch(errorLogServiceProvider),
   );
 });
 
@@ -150,4 +152,35 @@ final sentryEnabledProvider =
     StateNotifierProvider<SentryEnabledNotifier, bool>((ref) {
   final repository = ref.watch(settingsRepositoryProvider);
   return SentryEnabledNotifier(repository, false);
+});
+
+class DevLoggingEnabledNotifier extends StateNotifier<bool> {
+  DevLoggingEnabledNotifier(this._repository, bool initialState)
+      : super(initialState);
+
+  final SettingsRepository _repository;
+
+  Future<void> setEnabled(bool value) async {
+    if (state == value) {
+      return;
+    }
+    state = value;
+    await _repository.setDevLoggingEnabled(value);
+  }
+}
+
+final devLoggingEnabledProvider =
+    StateNotifierProvider<DevLoggingEnabledNotifier, bool>((ref) {
+  final repository = ref.watch(settingsRepositoryProvider);
+  return DevLoggingEnabledNotifier(repository, false);
+});
+
+final errorLogServiceProvider = Provider<ErrorLogService>((ref) {
+  final devLoggingEnabled = ref.watch(devLoggingEnabledProvider);
+  return ErrorLogService(enabled: devLoggingEnabled);
+});
+
+final errorLogPathProvider = FutureProvider<String>((ref) async {
+  final logger = ref.watch(errorLogServiceProvider);
+  return logger.logFilePath();
 });

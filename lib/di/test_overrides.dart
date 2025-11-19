@@ -24,6 +24,9 @@ Future<List<Override>> createIntegrationTestOverrides({
     sentryEnabledProvider.overrideWith((ref) {
       return SentryEnabledNotifier(resolvedSettingsRepository, false);
     }),
+    devLoggingEnabledProvider.overrideWith((ref) {
+      return DevLoggingEnabledNotifier(resolvedSettingsRepository, false);
+    }),
     ...additionalOverrides,
   ];
 }
