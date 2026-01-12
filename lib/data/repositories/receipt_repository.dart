@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:receipts/data/database.dart';
+import 'package:receipts/data/month_date_range.dart';
 import 'package:receipts/data/database_update_bus.dart';
 import 'package:receipts/data/database_update_bus_provider.dart';
 import 'package:receipts/domain/models/line_item.dart';
@@ -28,13 +29,12 @@ class ReceiptRepository {
 
   Future<List<Receipt>> getReceiptsByMonth(int year, int month) async {
     final db = await DatabaseHelper.database;
-    final startOfMonth = DateTime(year, month).millisecondsSinceEpoch;
-    final startOfNextMonth = DateTime(year, month + 1).millisecondsSinceEpoch;
+    final monthRange = MonthDateRange.forYearMonth(year, month);
 
     final maps = await db.query(
       'receipts',
       where: 'purchase_ts >= ? AND purchase_ts < ?',
-      whereArgs: [startOfMonth, startOfNextMonth],
+      whereArgs: [monthRange.startMs, monthRange.endMs],
       orderBy: 'purchase_ts DESC',
     );
 
@@ -102,7 +102,7 @@ class ReceiptRepository {
   }
 
   Stream<List<ReceiptRow>> watchReceiptsByMonth(DateTime month) {
-    final normalized = DateTime(month.year, month.month);
+    final normalized = MonthDateRange.forDate(month).start;
     return _watchList(() => _fetchReceiptRowsByMonth(normalized));
   }
 
