@@ -13,6 +13,8 @@ class SettingsView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sentryEnabled = ref.watch(sentryEnabledProvider);
+    final devLoggingEnabled = ref.watch(devLoggingEnabledProvider);
+    final logPathAsync = ref.watch(errorLogPathProvider);
     final t = AppLocalizations.of(context)!;
     final locale = ref.watch(localeProvider);
 
@@ -180,6 +182,54 @@ class SettingsView extends ConsumerWidget {
           _SettingsSection(
             title: t.debugSectionTitle,
             children: [
+              SwitchListTile(
+                title: Text(
+                  t.enableErrorLogging,
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.errorLoggingDescription,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    logPathAsync.when(
+                      data: (path) => Text(
+                        t.errorLogPath(path),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+                value: devLoggingEnabled,
+                onChanged: (value) async {
+                  await ref
+                      .read(devLoggingEnabledProvider.notifier)
+                      .setEnabled(value);
+
+                  if (context.mounted && value) {
+                    try {
+                      final path = await ref.read(errorLogPathProvider.future);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(t.errorLogEnabled(path))),
+                      );
+                    } catch (_) {
+                      // Ignore path resolution errors in the dev-only logging toggle.
+                    }
+                  }
+                },
+                contentPadding: EdgeInsets.zero,
+              ),
               ListTile(
                 title: Text(
                   t.clearAllData,

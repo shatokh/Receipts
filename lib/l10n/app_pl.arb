@@ -33,6 +33,20 @@
   "privacyFirstTitle": "Prywatność na pierwszym miejscu",
   "privacyFirstDescription": "Twoje paragony są przetwarzane wyłącznie na Twoim urządzeniu. Żadne dane nie są wysyłane na zewnętrzne serwery, poza opcjonalnymi raportami o awariach.",
   "debugSectionTitle": "Debugowanie",
+  "enableErrorLogging": "Włącz logowanie błędów importu",
+  "errorLoggingDescription": "Zapisuj szczegółowe błędy importu do lokalnego pliku (tylko w wersji deweloperskiej).",
+  "errorLogPath": "Plik logu: {path}",
+  "@errorLogPath": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "errorLogEnabled": "Logowanie włączone. Plik: {path}",
+  "@errorLogEnabled": {
+    "placeholders": {
+      "path": {}
+    }
+  },
   "clearAllData": "Wyczyść wszystkie dane",
   "clearAllDataDescription": "Usuń wszystkie paragony i zresetuj aplikację",
   "clearAllDataDialogTitle": "Wyczyścić wszystkie dane?",

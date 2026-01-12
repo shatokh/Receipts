@@ -40,11 +40,18 @@ void main() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   final settingsRepository = SettingsRepository(sharedPreferences);
   final sentryEnabled = settingsRepository.isSentryEnabled();
+  final devLoggingEnabled = settingsRepository.isDevLoggingEnabled();
 
   final baseOverrides = <Override>[
     settingsRepositoryProvider.overrideWithValue(settingsRepository),
     sentryEnabledProvider.overrideWith((ref) {
       return SentryEnabledNotifier(settingsRepository, sentryEnabled);
+    }),
+    devLoggingEnabledProvider.overrideWith((ref) {
+      return DevLoggingEnabledNotifier(
+        settingsRepository,
+        devLoggingEnabled,
+      );
     }),
   ];
 
