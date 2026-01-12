@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:receipts/data/database.dart';
+import 'package:receipts/data/month_date_range.dart';
 import 'package:receipts/data/database_update_bus.dart';
 import 'package:receipts/data/database_update_bus_provider.dart';
 import 'package:receipts/domain/category_definitions.dart';
@@ -65,10 +66,10 @@ class AnalyticsRepository {
 
   Future<void> updateAggregatesForMonth(DateTime monthStart) async {
     final db = await DatabaseHelper.database;
-    final normalized = DateTime(monthStart.year, monthStart.month);
-    final month = DateTime(normalized.year, normalized.month);
-    final start = month.millisecondsSinceEpoch;
-    final end = DateTime(month.year, month.month + 1).millisecondsSinceEpoch;
+    final monthRange = MonthDateRange.forDate(monthStart);
+    final month = monthRange.start;
+    final start = monthRange.startMs;
+    final end = monthRange.endMs;
 
     await db.transaction((txn) async {
       final totalResult = await txn.rawQuery(
@@ -137,11 +138,10 @@ class AnalyticsRepository {
 
   Future<MonthOverview> getMonthOverview(DateTime month) async {
     final db = await DatabaseHelper.database;
-    final normalized = DateTime(month.year, month.month);
-    final startOfMonth =
-        DateTime(normalized.year, normalized.month).millisecondsSinceEpoch;
-    final startOfNextMonth =
-        DateTime(normalized.year, normalized.month + 1).millisecondsSinceEpoch;
+    final monthRange = MonthDateRange.forDate(month);
+    final normalized = monthRange.start;
+    final startOfMonth = monthRange.startMs;
+    final startOfNextMonth = monthRange.endMs;
 
     final totalsResult = await db.rawQuery(
       'SELECT COUNT(*) as count, SUM(total_gross) as total FROM receipts WHERE purchase_ts >= ? AND purchase_ts < ?',

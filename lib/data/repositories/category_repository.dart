@@ -1,4 +1,5 @@
 import 'package:receipts/data/database.dart';
+import 'package:receipts/data/month_date_range.dart';
 import 'package:receipts/domain/category_definitions.dart';
 import 'package:receipts/domain/models/category.dart';
 import 'package:receipts/domain/models/monthly_total.dart';
@@ -45,14 +46,13 @@ class CategoryRepository {
 
   Future<int> getReceiptCountForMonth(int year, int month) async {
     final db = await DatabaseHelper.database;
-    final startOfMonth = DateTime(year, month).millisecondsSinceEpoch;
-    final startOfNextMonth = DateTime(year, month + 1).millisecondsSinceEpoch;
+    final monthRange = MonthDateRange.forYearMonth(year, month);
 
     final result = await db.query(
       'receipts',
       columns: ['COUNT(*) as count'],
       where: 'purchase_ts >= ? AND purchase_ts < ?',
-      whereArgs: [startOfMonth, startOfNextMonth],
+      whereArgs: [monthRange.startMs, monthRange.endMs],
     );
 
     return result.first['count'] as int;
