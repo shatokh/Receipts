@@ -123,7 +123,7 @@ void main() {
     await tester.tap(find.byKey(TestKeys.importButton));
     await pumpAndSettleSafe(tester, timeout: const Duration(seconds: 20));
 
-    expect(find.textContaining('Success'), findsWidgets);
+    expect(find.byKey(TestKeys.importStatusSuccess), findsWidgets);
 
     await tester.tap(find.byKey(TestKeys.navReceipts));
     await pumpAndSettleSafe(tester, timeout: const Duration(seconds: 10));
@@ -159,6 +159,6 @@ void main() {
     await tester.tap(find.byKey(TestKeys.importButton));
     await pumpAndSettleSafe(tester);
 
-    expect(find.textContaining('Error'), findsWidgets);
+    expect(find.byKey(TestKeys.importStatusError), findsWidgets);
   });
 }

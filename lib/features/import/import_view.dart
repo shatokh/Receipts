@@ -202,6 +202,7 @@ class _ImportHistoryItem extends StatelessWidget {
     final fileName = _resolveFileName(t, result.sourceUri);
     final subtitle = _buildSubtitle(t, entry.timestamp, result.message);
     final badgeStyle = _badgeStyle(result.status, t);
+    final badgeKey = _statusBadgeKey(result.status);
     final retryButton = result.status == ImportStatus.error
         ? TextButton(
             onPressed: () => onRetry(result.sourceUri),
@@ -230,6 +231,7 @@ class _ImportHistoryItem extends StatelessWidget {
           ],
         ),
         trailing: _StatusBadge(
+          key: badgeKey,
           label: badgeStyle.label,
           color: badgeStyle.color,
           outlined: badgeStyle.outlined,
@@ -300,10 +302,22 @@ class _ImportHistoryItem extends StatelessWidget {
       return t.daysAgo(days);
     }
   }
+
+  Key _statusBadgeKey(ImportStatus status) {
+    switch (status) {
+      case ImportStatus.success:
+        return const ValueKey('import_status_success');
+      case ImportStatus.duplicate:
+        return const ValueKey('import_status_duplicate');
+      case ImportStatus.error:
+        return const ValueKey('import_status_error');
+    }
+  }
 }
 
 class _StatusBadge extends StatelessWidget {
   const _StatusBadge({
+    super.key,
     required this.label,
     required this.color,
     this.outlined = false,
