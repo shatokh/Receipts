@@ -7,6 +7,8 @@ class TestKeys {
   static const navReceipts = ValueKey('nav_receipts');
   static const navSettings = ValueKey('nav_settings');
   static const importButton = ValueKey('import_button');
+  static const importStatusSuccess = ValueKey('import_status_success');
+  static const importStatusError = ValueKey('import_status_error');
   static const receiptList = ValueKey('receipt_list');
   static const chartView = ValueKey('chart_view');
   static const onboardingGetStarted = ValueKey('onboarding_get_started');
