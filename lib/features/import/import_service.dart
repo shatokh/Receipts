@@ -51,10 +51,6 @@ class ImportService {
         items: receipt.items,
       );
 
-      final monthStart =
-          DateTime(receipt.purchaseTs.year, receipt.purchaseTs.month, 1);
-      await analytics.updateAggregatesForMonth(monthStart);
-
       return ImportResult(
         sourceUri: safUri,
         status: ImportStatus.success,
