@@ -64,7 +64,10 @@ class MonthView extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            _CategoryBreakdown(overview: monthOverviewAsync),
+            _CategoryBreakdown(
+              key: const ValueKey('chart_view'),
+              overview: monthOverviewAsync,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Row(
               children: [
@@ -249,7 +252,7 @@ class _MonthPicker extends ConsumerWidget {
 }
 
 class _CategoryBreakdown extends StatelessWidget {
-  const _CategoryBreakdown({required this.overview});
+  const _CategoryBreakdown({super.key, required this.overview});
 
   final AsyncValue<MonthOverview> overview;
 
