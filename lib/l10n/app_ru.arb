@@ -38,13 +38,17 @@
   "errorLogPath": "Файл логов: {path}",
   "@errorLogPath": {
     "placeholders": {
-      "path": {}
+      "path": {
+        "type": "Object"
+      }
     }
   },
   "errorLogEnabled": "Логирование включено. Файл: {path}",
   "@errorLogEnabled": {
     "placeholders": {
-      "path": {}
+      "path": {
+        "type": "Object"
+      }
     }
   },
   "clearAllData": "Удалить все данные",
