@@ -1,5 +1,5 @@
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -119,12 +119,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Write detailed import errors to a local log file (development only).';
 
   @override
-  String errorLogPath(String path) {
+  String errorLogPath(Object path) {
     return 'Log file: $path';
   }
 
   @override
-  String errorLogEnabled(String path) {
+  String errorLogEnabled(Object path) {
     return 'Error logging enabled. File: $path';
   }
 

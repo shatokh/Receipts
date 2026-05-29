@@ -314,13 +314,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Log file: {path}'**
-  String errorLogPath(String path);
+  String errorLogPath(Object path);
 
   /// No description provided for @errorLogEnabled.
   ///
   /// In en, this message translates to:
   /// **'Error logging enabled. File: {path}'**
-  String errorLogEnabled(String path);
+  String errorLogEnabled(Object path);
 
   /// No description provided for @clearAllData.
   ///

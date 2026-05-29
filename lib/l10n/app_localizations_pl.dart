@@ -1,5 +1,5 @@
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -119,12 +119,12 @@ class AppLocalizationsPl extends AppLocalizations {
       'Zapisuj szczegółowe błędy importu do lokalnego pliku (tylko w wersji deweloperskiej).';
 
   @override
-  String errorLogPath(String path) {
+  String errorLogPath(Object path) {
     return 'Plik logu: $path';
   }
 
   @override
-  String errorLogEnabled(String path) {
+  String errorLogEnabled(Object path) {
     return 'Logowanie włączone. Plik: $path';
   }
 
@@ -289,10 +289,10 @@ class AppLocalizationsPl extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      one: '$count min temu',
-      few: '$count min temu',
-      many: '$count min temu',
       other: '$count min temu',
+      many: '$count min temu',
+      few: '$count min temu',
+      one: '$count min temu',
     );
     return '$_temp0';
   }
@@ -302,10 +302,10 @@ class AppLocalizationsPl extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      one: '$count godz. temu',
-      few: '$count godz. temu',
-      many: '$count godz. temu',
       other: '$count godz. temu',
+      many: '$count godz. temu',
+      few: '$count godz. temu',
+      one: '$count godz. temu',
     );
     return '$_temp0';
   }
@@ -315,10 +315,10 @@ class AppLocalizationsPl extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      one: '$count dzień temu',
-      few: '$count dni temu',
-      many: '$count dni temu',
       other: '$count dni temu',
+      many: '$count dni temu',
+      few: '$count dni temu',
+      one: '$count dzień temu',
     );
     return '$_temp0';
   }
@@ -416,10 +416,10 @@ class AppLocalizationsPl extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      one: '$count paragon',
-      few: '$count paragony',
-      many: '$count paragonów',
       other: '$count paragonu',
+      many: '$count paragonów',
+      few: '$count paragony',
+      one: '$count paragon',
     );
     return '$_temp0';
   }
