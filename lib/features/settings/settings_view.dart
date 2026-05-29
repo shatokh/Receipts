@@ -202,7 +202,7 @@ class SettingsView extends ConsumerWidget {
                     logPathAsync.when(
                       data: (path) => Text(
                         t.errorLogPath(path),
-                        style: AppTextStyles.bodySmall.copyWith(
+                        style: AppTextStyles.labelSmall.copyWith(
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -220,9 +220,11 @@ class SettingsView extends ConsumerWidget {
                   if (context.mounted && value) {
                     try {
                       final path = await ref.read(errorLogPathProvider.future);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(t.errorLogEnabled(path))),
-                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(t.errorLogEnabled(path))),
+                        );
+                      }
                     } catch (_) {
                       // Ignore path resolution errors in the dev-only logging toggle.
                     }

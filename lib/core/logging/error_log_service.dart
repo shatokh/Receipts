@@ -37,8 +37,10 @@ class ErrorLogService {
         if (details != null && details.isNotEmpty) 'details': details,
       };
 
-      await file.writeAsString(jsonEncode(payload) + '\n',
-          mode: FileMode.append);
+      await file.writeAsString(
+        '${jsonEncode(payload)}\n',
+        mode: FileMode.append,
+      );
     } catch (_) {
       // Ignore logging failures to avoid interfering with the user flow.
     }
