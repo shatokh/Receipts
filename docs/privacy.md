@@ -31,10 +31,12 @@ This Policy explains what data the app “Receipts” processes, why, and how yo
 **Optional diagnostics (EN, if enabled):**
 - Crash reports and basic device info (OS, app version, stack traces).  
 - No precise location or contact list is collected by default.
+- Optional local developer import logs may be written on your device only when developer logging is enabled. These logs use redacted source markers and technical status fields, not raw receipt text, file paths, NIP values, line items, totals, or PDF payloads.
 
 **Опциональная диагностика (RU, если включено):**
 - Отчёты о сбоях и базовая информация об устройстве (ОС, версия приложения, стектрейсы).  
 - Точная геолокация и контакты по умолчанию **не** собираются.
+- Опциональные локальные developer-логи импорта могут записываться на устройстве только при включённом developer logging. Эти логи используют скрытые идентификаторы источника и технические статусы, а не исходный текст чеков, пути к файлам, NIP, позиции, суммы или PDF payloads.
 
 ## 3. Processing Purposes & Legal Bases (GDPR) / Цели и основания (GDPR)
 - **Provide and improve the app** — legitimate interests (Art. 6(1)(f)).  
@@ -48,9 +50,11 @@ This Policy explains what data the app “Receipts” processes, why, and how yo
 ## 4. Storage & Retention / Хранение и сроки
 - On-device data stays on your device until you delete it or uninstall the app.  
 - Optional diagnostics, if enabled, are retained by our providers for a limited period (e.g., up to **90** days).
+- Optional local developer import logs stay on your device and can be removed by deleting app data or uninstalling the app.
 
 - Данные на устройстве остаются у вас до удаления или деинсталляции.  
-- Опциональная диагностика, если включена, хранится у провайдеров ограниченное время (например, до **90** дней.
+- Опциональная диагностика, если включена, хранится у провайдеров ограниченное время (например, до **90** дней).
+- Опциональные локальные developer-логи импорта остаются на устройстве и могут быть удалены через удаление данных приложения или деинсталляцию.
 
 ## 5. Sharing & Transfers / Передача и трансграничность
 We do **not** sell your data. We may use service providers (e.g., crash reporting) acting under our instructions. Some providers may be located outside your country; when applicable, we rely on appropriate safeguards.  

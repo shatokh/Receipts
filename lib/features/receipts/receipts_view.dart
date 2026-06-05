@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:receipts/l10n/app_localizations.dart';
-import 'package:receipts/l10n/app_localizations_extensions.dart';
 
 import 'package:receipts/app/providers.dart';
-import 'package:receipts/domain/models/monthly_total.dart';
-import 'package:receipts/domain/models/receipt_row.dart';
+import 'package:receipts/application/receipts/receipts_filter_state.dart';
+import 'package:receipts/features/receipts/widgets/receipts_empty_state.dart';
+import 'package:receipts/features/receipts/widgets/receipts_list.dart';
+import 'package:receipts/features/receipts/widgets/search_and_filters.dart';
 import 'package:receipts/theme.dart';
 
 class ReceiptsView extends ConsumerWidget {
@@ -23,7 +22,7 @@ class ReceiptsView extends ConsumerWidget {
     final monthlyTotalsAsync = ref.watch(monthlyTotalsProvider);
 
     final monthOptions = monthlyTotalsAsync.maybeWhen(
-      data: (totals) => _buildFilterMonths(totals),
+      data: ReceiptsFilterState.buildFilterMonths,
       orElse: () => <DateTime>[],
     );
 
@@ -33,7 +32,7 @@ class ReceiptsView extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          _SearchAndFilters(
+          SearchAndFilters(
             searchQuery: searchQuery,
             selectedMonth: selectedMonth,
             amountRange: amountRange,
@@ -48,8 +47,8 @@ class ReceiptsView extends ConsumerWidget {
           Expanded(
             child: filteredReceiptsAsync.when(
               data: (receipts) => receipts.isEmpty
-                  ? const _EmptyState()
-                  : _ReceiptsList(receipts: receipts),
+                  ? const ReceiptsEmptyState()
+                  : ReceiptsList(receipts: receipts),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
                 child: Text(
@@ -63,273 +62,6 @@ class ReceiptsView extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  List<DateTime> _buildFilterMonths(List<MonthlyTotal> totals) {
-    final months = <DateTime>{};
-    for (final total in totals) {
-      if (total.total > 0) {
-        months.add(DateTime(total.year, total.month));
-      }
-    }
-    if (months.isEmpty) {
-      months.addAll(totals.map((total) => DateTime(total.year, total.month)));
-    }
-    final list = months.toList()..sort((a, b) => b.compareTo(a));
-    return list;
-  }
-}
-
-class _SearchAndFilters extends ConsumerStatefulWidget {
-  const _SearchAndFilters({
-    required this.searchQuery,
-    required this.selectedMonth,
-    required this.amountRange,
-    required this.monthOptions,
-    required this.onSearchChanged,
-    required this.onMonthChanged,
-    required this.onAmountChanged,
-  });
-
-  final String searchQuery;
-  final DateTime? selectedMonth;
-  final RangeValues amountRange;
-  final List<DateTime> monthOptions;
-  final ValueChanged<String> onSearchChanged;
-  final ValueChanged<DateTime?> onMonthChanged;
-  final ValueChanged<RangeValues> onAmountChanged;
-
-  @override
-  ConsumerState<_SearchAndFilters> createState() => _SearchAndFiltersState();
-}
-
-class _SearchAndFiltersState extends ConsumerState<_SearchAndFilters> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.searchQuery);
-  }
-
-  @override
-  void didUpdateWidget(covariant _SearchAndFilters oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.searchQuery != _controller.text) {
-      _controller.value = TextEditingValue(
-        text: widget.searchQuery,
-        selection: TextSelection.collapsed(offset: widget.searchQuery.length),
-      );
-    }
-
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        children: [
-          TextField(
-            controller: _controller,
-            decoration: InputDecoration(
-              hintText: t.searchHint,
-              prefixIcon: const Icon(Icons.search),
-              border: const OutlineInputBorder(),
-            ),
-            onChanged: widget.onSearchChanged,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isNarrow = constraints.maxWidth < 600;
-
-              Widget buildMonthDropdown({bool expandWidth = false}) {
-                final dropdown = DropdownButtonFormField<DateTime?>(
-                  initialValue: widget.selectedMonth,
-                  decoration: InputDecoration(
-                    labelText: t.monthFilterLabel,
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: [
-                    DropdownMenuItem(
-                      value: null,
-                      child: Text(t.allMonths),
-                    ),
-                    ...widget.monthOptions.map(
-                      (month) => DropdownMenuItem(
-                        value: month,
-                        child: Text(t.formatMonthYear(month)),
-                      ),
-                    ),
-                  ],
-                  onChanged: widget.onMonthChanged,
-                );
-
-                if (expandWidth) {
-                  return SizedBox(width: double.infinity, child: dropdown);
-                }
-
-                return dropdown;
-              }
-
-              Widget buildAmountFilter() {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t.totalRangeLabel(
-                        widget.amountRange.start.round(),
-                        widget.amountRange.end.round(),
-                      ),
-                      style: AppTextStyles.labelSmall,
-                    ),
-                    RangeSlider(
-                      values: widget.amountRange,
-                      min: 0,
-                      max: 1000,
-                      divisions: 20,
-                      onChanged: widget.onAmountChanged,
-                    ),
-                  ],
-                );
-              }
-
-              if (isNarrow) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    buildMonthDropdown(expandWidth: true),
-                    const SizedBox(height: AppSpacing.md),
-                    buildAmountFilter(),
-                  ],
-                );
-              }
-
-              return Row(
-                children: [
-                  Expanded(child: buildMonthDropdown()),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(child: buildAmountFilter()),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.search_off,
-            size: 64,
-            color: AppColors.textSecondary,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            t.noReceiptsFound,
-            style: AppTextStyles.titleMedium.copyWith(
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            t.adjustSearchFilters,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ReceiptsList extends StatelessWidget {
-  const _ReceiptsList({required this.receipts});
-
-  final List<ReceiptRow> receipts;
-
-  @override
-  Widget build(BuildContext context) {
-    final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
-    final currencyFormat = NumberFormat.currency(
-      locale: 'en_US',
-      symbol: 'PLN ',
-      decimalDigits: 2,
-    );
-
-    return ListView.separated(
-      key: const ValueKey('receipt_list'),
-      itemCount: receipts.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-      itemBuilder: (context, index) {
-        final receipt = receipts[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-          ),
-          child: ListTile(
-            leading: const CircleAvatar(
-              backgroundColor: AppColors.primary,
-              child: Icon(
-                Icons.receipt,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            title: Text(
-              receipt.merchantName,
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
-            subtitle: Text(
-              dateFormat.format(receipt.purchaseTimestamp),
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  currencyFormat.format(receipt.totalGross),
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                const Icon(
-                  Icons.chevron_right,
-                  color: AppColors.textSecondary,
-                ),
-              ],
-            ),
-            onTap: () => context.go('/receipt/${receipt.id}'),
-          ),
-        );
-      },
     );
   }
 }

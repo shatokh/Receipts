@@ -28,9 +28,24 @@ lib/
 ## Core Invariants
 - Keep receipt processing local. Do not add network calls to core import, parsing, storage, or analytics flows unless the user explicitly asks for a sync/backup feature.
 - Do not log raw receipt text, line items, totals, NIP values, file paths/URIs, or PDF payloads. This applies to `developer.log`, Sentry, test output, and debug UI.
-- User-facing text belongs in `lib/l10n/app_en.arb` and `lib/l10n/app_ru.arb`; do not hardcode visible strings in widgets.
+- User-facing text belongs in `lib/l10n/app_en.arb`, `lib/l10n/app_ru.arb`, and `lib/l10n/app_pl.arb`; do not hardcode visible strings in widgets.
 - Platform integrations must stay behind interfaces/providers so tests can override them.
 - Money and date logic must be deterministic. Normalize Polish decimal commas, avoid direct `double` equality in tests, and filter months with `[monthStart, nextMonthStart)` ranges.
+
+## Epic Planning Rule
+When working on a multi-phase epic such as `docs/framework_refactoring_plan.md`, do not implement a phase directly from the master plan alone.
+
+For every phase or major section:
+- Create or update a dedicated sub-plan under `docs/refactoring_subplans/`.
+- The sub-plan must include scope, non-goals, implementation steps, affected files, risks, tests/checks, and phase-specific Definition of Done.
+- Keep the sub-plan small enough to map to one PR or one clearly reviewable work package. Split it further if it grows too broad.
+- Before starting implementation, verify the sub-plan still matches the current repository state.
+- During implementation, update the sub-plan when scope, risks, or acceptance criteria change.
+- After finishing the sub-plan, update both the sub-plan and the master plan tracker in `docs/framework_refactoring_plan.md`.
+- Mark the master plan phase status accurately: not started, planned, in progress, blocked, complete, or superseded.
+- Record completion evidence: tests run, docs updated, important decisions made, and remaining follow-up work.
+
+The master plan is a coordination artifact, not a stale checklist. If code or project direction diverges from it, update the tracker before continuing the next phase.
 
 ## Navigation
 - Routes are defined in `lib/app/router.dart`.
@@ -82,7 +97,7 @@ When editing this pipeline:
 - Use query arguments (`whereArgs`, raw query parameters), not interpolated SQL values.
 
 ## Localization
-- Edit ARB files first: `lib/l10n/app_en.arb` and `lib/l10n/app_ru.arb`.
+- Edit ARB files first: `lib/l10n/app_en.arb`, `lib/l10n/app_ru.arb`, and `lib/l10n/app_pl.arb`.
 - Include placeholder metadata for interpolated strings and plurals.
 - Do not manually edit generated `app_localizations*.dart` unless the project generation step is unavailable and the user accepts that tradeoff.
 - Format dates/currency with `intl` and the active locale where UI-facing.

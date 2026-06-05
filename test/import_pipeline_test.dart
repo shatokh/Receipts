@@ -134,4 +134,23 @@ void main() {
     expect(result.status, ImportStatus.success);
     expect(result.receiptId, isNotEmpty);
   });
+
+  test('unexpected import errors return a generic safe message', () async {
+    when(() => pdf.fileHash('content://provider/private/receipt.pdf'))
+        .thenThrow(StateError('NIP 1234567890 at /Users/me/receipt.pdf'));
+
+    final result = await importService.importOne(
+      'content://provider/private/receipt.pdf',
+    );
+
+    expect(result.status, ImportStatus.error);
+    expect(
+      result.message,
+      'Unexpected error while importing the receipt. Please try again.',
+    );
+    expect(result.message, isNot(contains('StateError')));
+    expect(result.message, isNot(contains('content://')));
+    expect(result.message, isNot(contains('/Users/me')));
+    expect(result.message, isNot(contains('1234567890')));
+  });
 }

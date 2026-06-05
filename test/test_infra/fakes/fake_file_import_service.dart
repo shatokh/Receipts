@@ -93,7 +93,8 @@ class FakePdfTextExtractor implements PdfTextExtractor {
   FakeImportFixture _resolveFixture(String safUri) {
     final fixture = _fileImportService.fixtureForUri(safUri);
     if (fixture == null) {
-      throw PdfTextExtractionException('No fixture registered for $safUri');
+      throw PdfTextExtractionException(
+          'No fixture registered for redacted source');
     }
     return fixture;
   }
@@ -106,7 +107,7 @@ class FakePdfTextExtractor implements PdfTextExtractor {
       if (error is PdfTextExtractionException) {
         throw error;
       }
-      throw PdfTextExtractionException(error.toString());
+      throw PdfTextExtractionException('Fixture extraction failed');
     }
     return fixture.textPages;
   }

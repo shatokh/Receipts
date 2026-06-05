@@ -35,7 +35,8 @@ Receipts уже имеет рабочую feature-based структуру:
 - Import pipeline держит orchestration внутри feature service.
 - UI файлы местами крупные и совмещают layout, formatting, state mapping и actions.
 - Generated l10n файлы лежат рядом с ARB, что требует чётких правил генерации.
-- Error logging может случайно нарушить privacy-инварианты, если не формализовать sanitization.
+- Error logging и import telemetry уже принимают `safUri`, `error`, `stackTrace` и `details`; privacy/logging hardening нужно делать до крупных переносов import/use-case кода.
+- В проекте фактически есть EN/RU/PL локализация, поэтому любые l10n правила должны учитывать все три ARB/generated locale файла.
 
 ## 3. Цели рефакторинга
 
@@ -120,6 +121,12 @@ lib/
 - `application` -> concrete UI
 - `platform` -> feature-specific UI state
 
+Переходное правило:
+
+- Сейчас repository interfaces/ports не выделены: providers создают concrete repositories напрямую. Перед этапом `application/` нужно явно выбрать один из двух вариантов:
+  - временно разрешить `application` зависеть от concrete `data` repositories и зафиксировать это как переходный компромисс;
+  - сначала выделить repository contracts/ports, а уже потом переносить use cases.
+
 ### 6.2. Provider ownership
 
 `lib/app/providers.dart` нужно разделить:
@@ -131,12 +138,20 @@ lib/
 
 Feature-local state должен жить рядом с feature, если он не используется несколькими разделами.
 
+Provider split должен быть механическим PR без изменения behavior:
+
+- public provider names сохраняются;
+- `lib/app/providers.dart` остаётся backward-compatible barrel/facade;
+- shared runtime providers выносятся в `lib/app/providers/*`;
+- feature-local UI state постепенно переносится ближе к feature, например receipt filters в receipts feature;
+- Flutter-only UI types вроде `RangeValues` не должны становиться частью application/domain contracts.
+
 ### 6.3. Application/use-case layer
 
 Слой `application/` должен принять orchestration:
 
 - import receipt(s)
-- delete/clear receipt data
+- delete/clear receipt data только если это уже реализуемая feature, а не часть чистого refactor PR
 - update category
 - rebuild aggregates
 - load dashboard/month view models
@@ -144,30 +159,44 @@ Feature-local state должен жить рядом с feature, если он �
 
 Repositories должны отвечать за persistence operations, но не за сценарии приложения.
 
+Aggregate ownership нужно решить до переноса import orchestration:
+
+- либо repositories временно продолжают обновлять `monthly_totals`, `category_month_totals` и слать `DatabaseUpdateBus`;
+- либо use cases становятся единственным владельцем aggregate rebuild/update и update bus notification.
+
+Нельзя оставлять смешанную модель, где одни write paths обновляют aggregates в repositories, а другие в use cases: это создаст риск двойных пересчётов или пропущенных уведомлений.
+
 ## 7. План по этапам
 
-## Этап -1. Pre-refactor coverage ramp-up
+## Этап 0. Baseline, guardrails и минимальное покрытие
 
-Цель: перед структурным рефакторингом нарастить тестовое покрытие вокруг поведения, которое нельзя сломать незаметно.
+Цель: зафиксировать текущее состояние, закрыть самые опасные privacy/logging риски и добавить минимальное поведенческое покрытие вокруг behavior, которое нельзя сломать незаметно.
 
 Почему это нужно:
 
 - Сейчас тесты покрывают import pipeline, несколько parser cases и часть l10n.
 - Почти нет прямого покрытия repositories, aggregate updater, database watchers, settings/logging, provider composition и UI state filters.
 - Рефакторинг будет переносить код между слоями; без behavioral tests легко получить "зелёную компиляцию", но сломать агрегаты, watch updates, duplicate detection или privacy-инварианты.
+- Privacy/logging риск уже существует в текущем коде, поэтому sanitization нельзя откладывать до поздних этапов.
 
 Базовый порядок:
 
 1. Снять текущий baseline:
+   - `flutter analyze`
    - `flutter test`
    - `dart run tool/test_with_coverage.dart --min-coverage=0`
    - сохранить процент coverage и список файлов с низким покрытием из `coverage/lcov.info`
-2. Добавить тесты на самые рискованные behavior contracts.
-3. Поднять coverage gate постепенно:
+   - зафиксировать известные failing tests/analyzer warnings, если они есть
+2. Добавить privacy/logging guardrails:
+   - убрать raw `safUri` из local logs/import telemetry
+   - не писать raw parser payload, receipt content, file paths, NIP, line items, totals
+   - ограничить `error`, `stackTrace` и `details` allowlist/sanitizer-слоем
+3. Добавить тесты на самые рискованные behavior contracts.
+4. Поднять coverage gate постепенно:
    - сначала зафиксировать текущий baseline
    - затем поднять минимум на 5-10 процентных пунктов
    - не гнаться за 100%, а покрывать критичные сценарии
-4. Только после этого начинать этапы provider/database/use-case refactor.
+5. Только после этого начинать этапы provider/database/use-case refactor.
 
 Приоритеты покрытия:
 
@@ -245,7 +274,7 @@ Repositories должны отвечать за persistence operations, но н�
 
 - `test/domain/receipt_parser_test.dart` или расширить текущий `test/receipt_parser_new_format_test.dart`
 
-### P1. Settings and logging tests
+### P0. Privacy, settings and logging tests
 
 Добавить тесты:
 
@@ -254,6 +283,8 @@ Repositories должны отвечать за persistence operations, но н�
 - `setDevLoggingEnabled` persists.
 - `ErrorLogService(enabled: false)` no-op.
 - `ErrorLogService(enabled: true)` writes JSONL with allowed fields only.
+- Import telemetry/logging не пишет raw `safUri`, raw payload, receipt text, file paths, NIP, line items, totals.
+- Unexpected errors возвращают user-safe message без `error.toString()` с потенциально чувствительными деталями.
 
 Для `ErrorLogService` желательно сначала ввести injectable log directory/file resolver, чтобы тест не зависел от real app documents directory.
 
@@ -307,11 +338,12 @@ Repositories должны отвечать за persistence operations, но н�
 
 Не добавлять много flaky UI integration tests до стабилизации harness.
 
-Coverage acceptance before refactor:
+Coverage acceptance before structural refactor:
 
-- Минимум: все P0 тесты добавлены и проходят.
+- Минимум перед provider split: baseline снят, privacy/logging guardrails добавлены, самые рискованные P0 import/privacy tests проходят.
+- Минимум перед database/use-case refactor: P0 repository/aggregate/month helper tests добавлены и проходят.
 - Желательно: coverage gate поднят до уровня, который реально проходит в CI.
-- Практичная цель перед этапом 1: 70-75% line coverage, если текущий baseline ниже.
+- Практичная долгосрочная цель: 70-75% line coverage, если текущий baseline ниже. Это ориентир, а не блокер первого механического provider split PR.
 - Практичная цель перед UI split: хотя бы smoke widget tests для экранов, которые будут дробиться.
 
 Команды:
@@ -325,32 +357,20 @@ dart run tool/test_with_coverage.dart --min-coverage=75
 Критерии готовности:
 
 - Есть coverage baseline.
+- Privacy/logging guardrails не допускают raw receipt/file/user data в developer logs, local logs и telemetry.
 - P0 behavior tests проходят.
 - Coverage gate настроен на достижимый минимум.
 - Known gaps перечислены явно, а не скрыты за общим процентом.
 
-## Этап 0. Baseline и guardrails
+Дополнительные guardrails:
 
-Цель: зафиксировать текущее состояние перед рефакторингом.
-
-Задачи:
-
-- Запустить `flutter test`.
-- Запустить `dart run tool/test_with_coverage.dart`, если окружение позволяет.
-- Проверить `flutter analyze`.
-- Зафиксировать список известных failing tests, если они есть.
 - Проверить, что `AGENTS.md` и `.codex/skills` актуальны.
 - Добавить checklist для PR с рефакторингом:
-  - no PII logging
+  - no raw receipt/file/user data logging
   - tests updated
-  - l10n updated
+  - EN/RU/PL l10n updated when visible text changes
   - database migration considered
   - import pipeline behavior preserved
-
-Критерии готовности:
-
-- Есть понятный baseline.
-- Любой следующий этап можно сравнивать с baseline.
 
 Риск:
 
@@ -410,18 +430,27 @@ lib/data/database/
 - Вынести category/merchant seed data в отдельный модуль.
 - Добавить явное описание db versions и migration history.
 - Проверить, что test harness использует новый helper без изменения поведения.
+- Сохранить поведение static singleton/configuration:
+  - `DatabaseHelper.close`
+  - `configureForTesting`
+  - `databaseFactory`/FFI setup
+  - `_databaseNameOverride`
+  - legacy database name fallback from `biedronka_expenses.db`
 
 Критерии готовности:
 
 - Fresh database создаётся с той же схемой.
 - Existing migrations продолжают работать.
 - Repositories не знают деталей seed/migration.
+- Test isolation не сломан: каждый test harness получает отдельную БД.
+- Legacy database fallback всё ещё открывает старую БД, если новой ещё нет.
 
 Тесты:
 
 - Repository tests.
 - Import pipeline tests.
 - Новый migration smoke test: create old-ish schema or use existing version path, then open upgraded DB.
+- Fresh schema equivalence smoke: таблицы/индексы/seed data соответствуют текущему поведению.
 
 ## Этап 3. Выделить application/use-case слой
 
@@ -465,7 +494,7 @@ lib/data/database/
 
 ## Этап 4. Укрепить privacy/logging framework
 
-Цель: исключить случайные утечки данных чеков в logs, Sentry и debug files.
+Цель: завершить формализацию privacy/logging framework после ранних guardrails из этапа 0.
 
 Задачи:
 
@@ -616,6 +645,11 @@ lib/features/dashboard/
 
 - Зафиксировать команду генерации localizations.
 - Решить, являются ли `app_localizations*.dart` source-controlled generated files или build artifacts.
+- Зафиксировать, что рабочие locales сейчас EN/RU/PL:
+  - `lib/l10n/app_en.arb`
+  - `lib/l10n/app_ru.arb`
+  - `lib/l10n/app_pl.arb`
+  - generated `app_localizations_en/ru/pl.dart`
 - Если generated files остаются в git:
   - добавить правило: ARB -> generate -> commit all generated changes together
   - добавить тест/CI check на синхронность ARB и generated output
@@ -634,14 +668,22 @@ lib/features/dashboard/
 
 Задачи:
 
+- Сначала сделать inventory текущих workflows:
+  - Android debug build/analyze/unit tests
+  - Sonar coverage job
+  - manual Android integration tests
 - Проверить GitHub Actions:
   - analyze
   - unit tests
   - coverage gate
   - Android integration tests
   - Sonar scan, если используется
+- Унифицировать Flutter SDK version между workflows, если нет причины держать разные версии.
+- Решить, где реально живёт coverage gate:
+  - `flutter test --coverage` только генерирует отчёт
+  - `dart run tool/test_with_coverage.dart --min-coverage=...` проверяет минимум
 - Разделить slow/fast jobs.
-- Добавить workflow_dispatch для дорогих integration suites.
+- Сохранить `workflow_dispatch` для дорогих integration suites, если они не должны блокировать каждый PR.
 - Убедиться, что PR status ясно показывает failing layer.
 
 Критерии готовности:
@@ -653,16 +695,25 @@ lib/features/dashboard/
 
 Рекомендуется делать маленькие PR, каждый с понятным behavioral surface.
 
-1. Provider split без изменения поведения.
-2. Database package split с compatibility exports.
-3. Use-case layer для import pipeline.
-4. Privacy/logging sanitization.
-5. Test harness helpers and factories.
-6. Dashboard UI split.
-7. Month/receipts UI split.
-8. View models для analytics screens.
-9. L10n workflow decision and cleanup.
-10. CI quality gate cleanup.
+1. Baseline + privacy/logging guardrails + минимальные P0 tests.
+2. L10n workflow decision для EN/RU/PL, если ближайшие PR будут трогать UI text/generated localization files.
+3. Provider split без изменения поведения.
+4. Database package split с compatibility exports и migration/test-isolation smoke tests.
+5. Use-case layer для import pipeline с заранее выбранной стратегией repository dependencies и aggregate ownership.
+6. Privacy/logging framework completion, если на PR 1 были только минимальные guardrails.
+7. Test harness helpers and factories.
+8. Dashboard UI split.
+9. Month/receipts UI split.
+10. View models для analytics screens.
+11. CI quality gate cleanup.
+
+Feature work отдельно от refactor PR:
+
+- clear all data
+- delete receipt
+- recategorization
+- open PDF/source file
+- bulk import UX changes
 
 ## 9. Definition of Done для каждого этапа
 
@@ -672,11 +723,73 @@ lib/features/dashboard/
 - `flutter analyze` проходит или известные warnings зафиксированы.
 - Релевантные `flutter test ...` проходят.
 - Нет новых privacy risks.
-- Нет raw receipt data в logs/tests.
+- Нет raw receipt/file/user data в developer logs, local logs, telemetry, Sentry payloads или test output.
 - Документация обновлена, если изменился workflow.
 - PR достаточно мал, чтобы его можно было ревьюить по смыслу.
 
-## 10. Риски и mitigation
+## 10. Правило саб-планов и трекер мастер-плана
+
+Мастер-план описывает направление эпика, но не должен быть единственным источником задач для конкретного PR. Перед началом каждой фазы или крупного раздела нужно создать или обновить отдельный саб-план в `docs/refactoring_subplans/`.
+
+Саб-план обязателен для:
+
+- каждой фазы из раздела 7;
+- каждого PR из раздела 8, если PR не является чисто документационным;
+- любого work package, который меняет import pipeline, database, providers, logging/privacy, l10n workflow, CI или test harness.
+
+Минимальное содержание саб-плана:
+
+- ссылка на фазу мастер-плана;
+- статус;
+- scope и non-goals;
+- current state check по фактическому коду;
+- implementation steps;
+- affected files;
+- risks and mitigations;
+- tests/checks;
+- phase-specific Definition of Done;
+- completion notes и follow-ups.
+
+После завершения саб-плана нужно:
+
+- отметить его статус и completion notes;
+- обновить этот мастер-план, если изменился порядок, scope, риски или DoD;
+- обновить master tracker ниже;
+- записать, какие проверки были запущены и какие follow-ups остались.
+
+### Master Plan Tracker
+
+| Phase / Work Package | Status | Sub-plan | Last Updated | Notes |
+| --- | --- | --- | --- | --- |
+| Phase 0: baseline + privacy/logging guardrails | complete | `docs/refactoring_subplans/phase_0_privacy_logging_guardrails.md` | 2026-06-02 | Guardrails implemented; analyze/tests passed; coverage baseline 35.35%. |
+| Phase 0b: repository/aggregate/month helper P0 tests | complete | `docs/refactoring_subplans/phase_0b_repository_aggregate_tests.md` | 2026-06-02 | P0 data tests added; rebuildAll legacy category normalization fixed; coverage baseline 45.56%. |
+| L10n workflow decision for EN/RU/PL | complete | `docs/refactoring_subplans/l10n_workflow_decision.md` | 2026-06-02 | Generated files stay source-controlled; workflow documented in `docs/l10n_workflow.md`. |
+| Phase 1: provider split | complete | `docs/refactoring_subplans/phase_1_provider_split.md` | 2026-06-02 | `lib/app/providers.dart` is now a compatibility barrel; provider groups split mechanically. |
+| Phase 2: database package split | complete | `docs/refactoring_subplans/phase_2_database_package_split.md` | 2026-06-02 | Database package split complete; schema/migration/legacy fallback smoke tests added; coverage baseline 47.78%. |
+| Phase 3: import use-case layer | complete | `docs/refactoring_subplans/phase_3_import_use_case_layer.md` | 2026-06-02 | Import orchestration moved to `application/import`; `ImportService` remains a compatibility wrapper. |
+| Phase 4: privacy/logging framework completion | complete | `docs/refactoring_subplans/phase_4_privacy_logging_completion.md` | 2026-06-02 | Audit complete; privacy docs updated; Android embedded payload dumping disabled. |
+| Phase 8: test harness helpers and factories | complete | `docs/refactoring_subplans/phase_8_test_harness_helpers.md` | 2026-06-02 | Shared domain factories added; duplicated data-test builders removed. |
+| Phase 6: Dashboard UI split | complete | `docs/refactoring_subplans/phase_6_dashboard_ui_split.md` | 2026-06-04 | Dashboard widget extraction complete; focused Dashboard test, analyzer, and full test suite passed. |
+| Phase 6: Month UI split | complete | `docs/refactoring_subplans/phase_6_month_ui_split.md` | 2026-06-04 | Month widget extraction complete; focused Month test, analyzer, and full test suite passed. |
+| Phase 6: Receipts UI split | complete | `docs/refactoring_subplans/phase_6_receipts_ui_split.md` | 2026-06-04 | Receipts smoke coverage and widget extraction complete; focused test, analyzer, and full test suite passed. |
+| Phase 6: Receipt Details UI split | complete | `docs/refactoring_subplans/phase_6_receipt_details_ui_split.md` | 2026-06-04 | Receipt Details smoke coverage and widget extraction complete; focused test, analyzer, and full test suite passed. |
+| Phase 6: Settings UI split | complete | `docs/refactoring_subplans/phase_6_settings_ui_split.md` | 2026-06-05 | Settings smoke coverage and section extraction complete; focused test, analyzer, and full test suite passed. |
+| Phase 7: Dashboard view model | complete | `docs/refactoring_subplans/phase_7_dashboard_view_model.md` | 2026-06-05 | Dashboard month-selection mapping extracted and tested; focused tests, analyzer, and full test suite passed. |
+| Phase 7: Month view model | complete | `docs/refactoring_subplans/phase_7_month_view_model.md` | 2026-06-05 | Month month-selection and overview metric mapping extracted and tested; focused tests, analyzer, and full test suite passed. |
+| Phase 7: Receipts filter state | complete | `docs/refactoring_subplans/phase_7_receipts_filter_state.md` | 2026-06-05 | Receipts filtering and filter-month option mapping extracted and tested; focused tests, analyzer, and full test suite passed. |
+| Phase 7: remaining analytics view models | not started | TBD | 2026-06-05 | Create separate sub-plans before Receipt Details or other view model extraction. |
+| Phase 10: CI quality gates | not started | TBD | 2026-05-30 | Include Flutter version inventory and coverage gate decision. |
+
+Tracker status values:
+
+- `not started`
+- `planned`
+- `in progress`
+- `blocked`
+- `complete`
+- `superseded`
+
+## 11. Риски и mitigation
 
 | Риск | Почему важно | Mitigation |
 | --- | --- | --- |
@@ -687,7 +800,7 @@ lib/features/dashboard/
 | UI split меняет UX случайно | Большие виджеты легко сломать | Один PR на экран, screenshots/manual smoke |
 | Repositories становятся thin but fragmented | Слишком много абстракций | Выделять use cases только вокруг реальных сценариев |
 
-## 11. Метрики успеха
+## 12. Метрики успеха
 
 После рефакторинга должно быть заметно:
 
@@ -699,24 +812,29 @@ lib/features/dashboard/
 - Privacy rules применяются не только в документах, но и в коде logging.
 - Тестовый harness уменьшает boilerplate для новых тестов.
 
-## 12. Открытые решения
+## 13. Открытые решения
 
 Перед началом этапов нужно отдельно решить:
 
-- Оставляем ли generated `app_localizations*.dart` в репозитории.
+- Оставляем ли generated `app_localizations*.dart` в репозитории и как проверяем синхронность EN/RU/PL ARB с generated output.
 - Вводим ли Riverpod code generation или остаёмся на ручных providers.
 - Нужен ли формальный `application/` layer сразу или сначала достаточно `features/*/services`.
-- Храним ли local debug import logs вообще, и какие поля допустимы.
+- Если вводим `application/`, зависит ли он временно от concrete repositories или сначала вводятся repository interfaces/ports.
+- Кто владеет aggregate updates и `DatabaseUpdateBus` после use-case refactor: repositories или use cases.
+- Храним ли local debug import logs вообще, какие поля допустимы, и нужен ли stack trace в локальном файле.
 - Нужны ли golden tests для dashboard/month screens перед UI split.
+- Считаем ли clear data/delete receipt/recategorization частью отдельной feature work, а не framework refactor.
 
-## 13. Первые рекомендуемые действия
+## 14. Первые рекомендуемые действия
 
 Минимальный стартовый набор:
 
-1. Запустить baseline: `flutter analyze`, `flutter test`.
-2. Сделать pre-refactor coverage PR: P0 tests для import/repositories/aggregates/month helpers.
-3. Сделать PR 1: split `lib/app/providers.dart` на provider groups с backward-compatible export.
-4. Сделать PR 2: вынести `lib/data/database.dart` в `lib/data/database/` с compatibility export.
-5. Сделать PR 3: перенести import orchestration в `application/import`.
+1. Запустить baseline: `flutter analyze`, `flutter test`, `dart run tool/test_with_coverage.dart --min-coverage=0`.
+2. Сделать PR 1: privacy/logging guardrails + минимальные P0 tests для import errors/logging.
+3. Сделать PR 2: P0 tests для repositories/aggregates/month helpers, достаточные перед database/use-case переносами.
+4. Зафиксировать l10n workflow для EN/RU/PL generated files, если ближайшие PR затрагивают UI text.
+5. Сделать PR 3: split `lib/app/providers.dart` на provider groups с backward-compatible export.
+6. Сделать PR 4: вынести `lib/data/database.dart` в `lib/data/database/` с compatibility export, legacy fallback и migration/test-isolation smoke tests.
+7. Сделать PR 5: перенести import orchestration в `application/import`, заранее выбрав repository dependency и aggregate ownership strategy.
 
 Эти шаги создадут основу для дальнейшего рефакторинга без изменения пользовательского поведения.

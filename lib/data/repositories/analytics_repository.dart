@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:receipts/core/privacy/sanitizer.dart';
 import 'package:receipts/data/aggregates_updater.dart';
 import 'package:receipts/data/database.dart';
 import 'package:receipts/data/database_update_bus.dart';
@@ -33,10 +34,11 @@ class AnalyticsRepository {
     required String stage,
     Map<String, dynamic> details = const {},
   }) {
+    final safeDetails = PrivacySanitizer.sanitizeDetails(details);
     final payload = <String, dynamic>{
-      'source': sourceUri,
+      'source': PrivacySanitizer.sourceMarker(sourceUri),
       'stage': stage,
-      if (details.isNotEmpty) 'details': details,
+      if (safeDetails.isNotEmpty) 'details': safeDetails,
     };
 
     developer.log(

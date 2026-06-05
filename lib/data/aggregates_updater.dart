@@ -46,10 +46,10 @@ class AggregatesUpdater {
 
   Future<void> _rebuildCategoryTotals(Transaction txn) async {
     await txn.execute('DELETE FROM category_month_totals');
-    await txn.execute('''
-      INSERT INTO category_month_totals (category_id, year, month, total)
+
+    final rows = await txn.rawQuery('''
       SELECT
-        li.category_id,
+        li.category_id as category_id,
         CAST(strftime('%Y', r.purchase_ts/1000, 'unixepoch') AS INTEGER) as year,
         CAST(strftime('%m', r.purchase_ts/1000, 'unixepoch') AS INTEGER) as month,
         SUM(li.total) as total
@@ -57,6 +57,31 @@ class AggregatesUpdater {
       JOIN receipts r ON li.receipt_id = r.id
       GROUP BY li.category_id, year, month
     ''');
+
+    final totals = <String, _CategoryMonthTotal>{};
+    for (final row in rows) {
+      final categoryId = normalizeCategoryId(row['category_id'] as String?);
+      final year = row['year'] as int;
+      final month = row['month'] as int;
+      final total = (row['total'] as num?)?.toDouble() ?? 0.0;
+      final key = '$categoryId-$year-$month';
+      final current = totals[key];
+      totals[key] = _CategoryMonthTotal(
+        categoryId: categoryId,
+        year: year,
+        month: month,
+        total: (current?.total ?? 0.0) + total,
+      );
+    }
+
+    for (final total in totals.values) {
+      await txn.insert('category_month_totals', {
+        'category_id': total.categoryId,
+        'year': total.year,
+        'month': total.month,
+        'total': total.total,
+      });
+    }
   }
 
   Future<void> _updateForMonth(Database db, DateTime monthStart) async {
@@ -137,4 +162,18 @@ class AggregatesUpdater {
     final result = normalized.values.toList()..sort();
     return result;
   }
+}
+
+class _CategoryMonthTotal {
+  const _CategoryMonthTotal({
+    required this.categoryId,
+    required this.year,
+    required this.month,
+    required this.total,
+  });
+
+  final String categoryId;
+  final int year;
+  final int month;
+  final double total;
 }

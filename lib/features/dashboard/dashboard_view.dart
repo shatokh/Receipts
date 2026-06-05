@@ -1,18 +1,17 @@
-import 'dart:math';
-
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 import 'package:receipts/l10n/app_localizations_extensions.dart';
 
 import 'package:receipts/app/providers.dart';
-import 'package:receipts/domain/models/dashboard_kpis.dart';
-import 'package:receipts/domain/models/month_overview.dart';
-import 'package:receipts/domain/models/monthly_total.dart';
-import 'package:receipts/domain/models/receipt_row.dart';
+import 'package:receipts/features/dashboard/dashboard_view_model.dart';
+import 'package:receipts/features/dashboard/widgets/dashboard_states.dart';
+import 'package:receipts/features/dashboard/widgets/kpi_cards.dart';
+import 'package:receipts/features/dashboard/widgets/month_dropdown.dart';
+import 'package:receipts/features/dashboard/widgets/monthly_chart.dart';
+import 'package:receipts/features/dashboard/widgets/quick_insights.dart';
+import 'package:receipts/features/dashboard/widgets/top_categories_section.dart';
 import 'package:receipts/theme.dart';
 
 class DashboardView extends ConsumerStatefulWidget {
@@ -30,7 +29,17 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     final monthlyTotalsAsync = ref.watch(monthlyTotalsProvider);
     final monthOverviewAsync = ref.watch(monthOverviewProvider(selectedMonth));
     final kpisAsync = ref.watch(dashboardKpisProvider);
-    monthlyTotalsAsync.whenData(_ensureSelectedMonthIsAvailable);
+    monthlyTotalsAsync.whenData((totals) {
+      final viewModel = DashboardViewModel.fromMonthlyTotals(
+        totals: totals,
+        selectedMonth: selectedMonth,
+      );
+      final replacementSelectedMonth = viewModel.replacementSelectedMonth;
+      if (replacementSelectedMonth != null) {
+        ref.read(selectedMonthProvider.notifier).state =
+            replacementSelectedMonth;
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -46,22 +55,25 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
       ),
       body: monthlyTotalsAsync.when(
         data: (totals) {
-          if (totals.isEmpty) {
-            return _DashboardEmptyState(
+          final viewModel = DashboardViewModel.fromMonthlyTotals(
+            totals: totals,
+            selectedMonth: selectedMonth,
+          );
+
+          if (!viewModel.hasMonthlyTotals) {
+            return DashboardEmptyState(
               onImport: () => context.go('/import'),
             );
           }
-
-          final dropdownMonths = _buildDropdownMonths(totals, selectedMonth);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _KPICards(kpis: kpisAsync),
+                DashboardKpiCards(kpis: kpisAsync),
                 const SizedBox(height: AppSpacing.lg),
-                _MonthlyChart(totals: totals),
+                MonthlyChart(totals: totals),
                 const SizedBox(height: AppSpacing.lg),
                 Row(
                   children: [
@@ -73,10 +85,9 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                         ),
                       ),
                     ),
-                    _MonthDropdown(
-                      months: dropdownMonths,
-                      selectedMonth:
-                          DateTime(selectedMonth.year, selectedMonth.month),
+                    MonthDropdown(
+                      months: viewModel.dropdownMonths,
+                      selectedMonth: viewModel.normalizedSelectedMonth,
                     ),
                   ],
                 ),
@@ -107,9 +118,9 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                _TopCategoriesSection(overview: monthOverviewAsync),
+                TopCategoriesSection(overview: monthOverviewAsync),
                 const SizedBox(height: AppSpacing.lg),
-                _QuickInsights(
+                QuickInsights(
                   overview: monthOverviewAsync,
                 ),
               ],
@@ -117,670 +128,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _DashboardErrorState(error: error),
-      ),
-    );
-  }
-
-  void _ensureSelectedMonthIsAvailable(List<MonthlyTotal> totals) {
-    if (totals.isEmpty) {
-      return;
-    }
-
-    final current = ref.read(selectedMonthProvider);
-    final normalizedCurrent = DateTime(current.year, current.month);
-    final monthsWithData = totals
-        .where((total) => total.total > 0)
-        .map((total) => DateTime(total.year, total.month))
-        .toList();
-
-    if (monthsWithData.isEmpty) {
-      return;
-    }
-
-    final hasCurrent =
-        monthsWithData.any((month) => _isSameMonth(month, normalizedCurrent));
-    if (!hasCurrent) {
-      ref.read(selectedMonthProvider.notifier).state = monthsWithData.last;
-    }
-  }
-
-  List<DateTime> _buildDropdownMonths(
-      List<MonthlyTotal> totals, DateTime selectedMonth) {
-    final normalizedSelected =
-        DateTime(selectedMonth.year, selectedMonth.month);
-    final uniqueMonths = <DateTime>{};
-
-    for (final total in totals) {
-      if (total.total > 0) {
-        uniqueMonths.add(DateTime(total.year, total.month));
-      }
-    }
-
-    if (uniqueMonths.isEmpty) {
-      uniqueMonths
-          .addAll(totals.map((total) => DateTime(total.year, total.month)));
-    }
-
-    uniqueMonths.add(normalizedSelected);
-
-    final months = uniqueMonths.toList()..sort((a, b) => a.compareTo(b));
-    return months;
-  }
-
-  bool _isSameMonth(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month;
-}
-
-class _KPICards extends StatelessWidget {
-  const _KPICards({required this.kpis});
-
-  final AsyncValue<DashboardKpis> kpis;
-
-  @override
-  Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-      locale: 'en_US',
-      symbol: 'PLN ',
-      decimalDigits: 2,
-    );
-    final t = AppLocalizations.of(context)!;
-    final data = kpis.asData?.value;
-    final isLoading = kpis.isLoading;
-
-    final totalValue =
-        data != null ? currencyFormat.format(data.totalLast30Days) : '—';
-    final averageValue =
-        data != null ? currencyFormat.format(data.averageReceipt) : '—';
-    final receiptsValue = data != null ? '${data.receiptsCount}' : '—';
-
-    return Row(
-      children: [
-        Expanded(
-          child: _KPICard(
-            title: t.totalLast30Days,
-            value: totalValue,
-            isLoading: isLoading && data == null,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: _KPICard(
-            title: t.averageReceipt,
-            value: averageValue,
-            isLoading: isLoading && data == null,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: _KPICard(
-            title: t.receiptsMetricLabel,
-            value: receiptsValue,
-            isLoading: isLoading && data == null,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _KPICard extends StatelessWidget {
-  const _KPICard({
-    required this.title,
-    required this.value,
-    required this.isLoading,
-  });
-
-  final String title;
-  final String value;
-  final bool isLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            if (isLoading)
-              const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              Text(
-                value,
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: AppColors.textPrimary,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MonthlyChart extends StatelessWidget {
-  const _MonthlyChart({required this.totals});
-
-  final List<MonthlyTotal> totals;
-
-  @override
-  Widget build(BuildContext context) {
-    const chartHeight = 200.0;
-    final values = totals.map((total) => total.total).toList();
-    final maxTotal = values.isEmpty
-        ? 0.0
-        : values.reduce((value, element) => max(value, element));
-    final maxY = maxTotal <= 0 ? 1.0 : maxTotal * 1.1;
-    final labelThreshold = maxY * (18 / chartHeight);
-    final currencyFormat = NumberFormat.currency(
-      locale: 'en_US',
-      symbol: 'PLN ',
-      decimalDigits: 2,
-    );
-    final t = AppLocalizations.of(context)!;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              t.monthlySpend,
-              style: AppTextStyles.titleMedium.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            SizedBox(
-              height: chartHeight,
-              child: BarChart(
-                key: const ValueKey('chart_view'),
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: maxY,
-                  barTouchData: BarTouchData(
-                    touchTooltipData: BarTouchTooltipData(
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        final month = totals[groupIndex];
-                        final monthName = t.formatMonthYearShort(
-                          DateTime(month.year, month.month),
-                        );
-                        return BarTooltipItem(
-                          '$monthName\n${currencyFormat.format(month.total)}',
-                          const TextStyle(color: Colors.white),
-                        );
-                      },
-                    ),
-                  ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          final index = value.toInt();
-                          if (index >= 0 && index < totals.length) {
-                            final month = totals[index];
-                            return Text(
-                              t.formatMonthAbbreviated(
-                                DateTime(month.year, month.month),
-                              ),
-                              style: const TextStyle(fontSize: 10),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 28,
-                        getTitlesWidget: (value, meta) {
-                          final index = value.toInt();
-                          if (index < 0 || index >= totals.length) {
-                            return const SizedBox.shrink();
-                          }
-                          final amount = totals[index].total;
-                          if (amount <= 0 || amount < labelThreshold) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(
-                              currencyFormat.format(amount),
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  gridData: const FlGridData(show: false),
-                  barGroups: totals.asMap().entries.map((entry) {
-                    return BarChartGroupData(
-                      x: entry.key,
-                      barRods: [
-                        BarChartRodData(
-                          toY: entry.value.total,
-                          color: AppColors.primary,
-                          width: 16,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MonthDropdown extends ConsumerWidget {
-  const _MonthDropdown({
-    required this.months,
-    required this.selectedMonth,
-  });
-
-  final List<DateTime> months;
-  final DateTime selectedMonth;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final t = AppLocalizations.of(context)!;
-    final normalizedSelected =
-        DateTime(selectedMonth.year, selectedMonth.month);
-
-    final value = months.firstWhere(
-      (month) =>
-          month.year == normalizedSelected.year &&
-          month.month == normalizedSelected.month,
-      orElse: () => normalizedSelected,
-    );
-
-    return DropdownButton<DateTime>(
-      value: value,
-      items: months
-          .map(
-            (month) => DropdownMenuItem(
-              value: month,
-              child: Text(t.formatMonthYear(month)),
-            ),
-          )
-          .toList(),
-      onChanged: (month) {
-        if (month != null) {
-          ref.read(selectedMonthProvider.notifier).state = month;
-        }
-      },
-    );
-  }
-}
-
-class _TopCategoriesSection extends StatelessWidget {
-  const _TopCategoriesSection({required this.overview});
-
-  final AsyncValue<MonthOverview> overview;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    return overview.when(
-      data: (data) {
-        final hasSpending =
-            data.topCategories.any((category) => category.amount > 0);
-
-        if (!hasSpending) {
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Text(
-                t.noCategorizedSpending,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-          );
-        }
-
-        final maxAmount = data.maxCategoryAmount;
-        final currencyFormat = NumberFormat.currency(
-          locale: 'en_US',
-          symbol: 'PLN ',
-          decimalDigits: 2,
-        );
-
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              children: [
-                ...data.topCategories.map(
-                  (category) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _CategoryBar(
-                      name: t.categoryLabel(category.categoryId),
-                      amount: category.amount,
-                      maxAmount: maxAmount,
-                      formattedAmount: currencyFormat.format(category.amount),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  t.totalWithAmount(
-                    currencyFormat.format(data.total),
-                  ),
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Text(
-            t.unableToLoadCategories,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.error,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryBar extends StatelessWidget {
-  const _CategoryBar({
-    required this.name,
-    required this.amount,
-    required this.maxAmount,
-    required this.formattedAmount,
-  });
-
-  final String name;
-  final double amount;
-  final double maxAmount;
-  final String formattedAmount;
-
-  @override
-  Widget build(BuildContext context) {
-    final percentage = maxAmount <= 0 ? 0.0 : amount / maxAmount;
-
-    return Row(
-      children: [
-        Expanded(
-          flex: 2,
-          child: Text(
-            name,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Container(
-            height: 8,
-            margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-            child: LinearProgressIndicator(
-              value: percentage,
-              backgroundColor: AppColors.divider,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-            ),
-          ),
-        ),
-        Text(
-          formattedAmount,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _QuickInsights extends StatelessWidget {
-  const _QuickInsights({
-    required this.overview,
-  });
-
-  final AsyncValue<MonthOverview> overview;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    return overview.when(
-      data: (data) {
-        final currencyFormat = NumberFormat.currency(
-          locale: 'en_US',
-          symbol: 'PLN ',
-          decimalDigits: 2,
-        );
-
-        final ReceiptRow? maxReceipt = data.maxReceipt;
-        final maxReceiptSubtitle = maxReceipt == null
-            ? t.noReceiptsThisMonth
-            : t.receiptMerchantAndDate(
-                maxReceipt.merchantName,
-                DateFormat('yyyy-MM-dd HH:mm')
-                    .format(maxReceipt.purchaseTimestamp),
-              );
-
-        final receiptsLabel = t.receiptCount(data.receiptsCount);
-
-        return Row(
-          children: [
-            Expanded(
-              child: _InsightCard(
-                title: t.maxReceiptForMonth(
-                  t.formatMonthYear(data.month),
-                ),
-                value: maxReceipt == null
-                    ? '—'
-                    : currencyFormat.format(maxReceipt.totalGross),
-                subtitle: maxReceiptSubtitle,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _InsightCard(
-                title: t.totalForMonth(
-                  t.formatMonthYear(data.month),
-                ),
-                value: currencyFormat.format(data.total),
-                subtitle: receiptsLabel,
-              ),
-            ),
-          ],
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Row(
-        children: [
-          Expanded(
-            child: _InsightCard(
-              title: t.maxReceipt,
-              value: '—',
-              subtitle: t.unableToLoadData,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: _InsightCard(
-              title: t.totalLabel,
-              value: '—',
-              subtitle: t.unableToLoadData,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InsightCard extends StatelessWidget {
-  const _InsightCard({
-    required this.title,
-    required this.value,
-    required this.subtitle,
-  });
-
-  final String title;
-  final String value;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              value,
-              style: AppTextStyles.titleMedium.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              subtitle,
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DashboardEmptyState extends StatelessWidget {
-  const _DashboardEmptyState({required this.onImport});
-
-  final VoidCallback onImport;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.bar_chart,
-              size: 64,
-              color: AppColors.textSecondary,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              t.dashboardEmptyTitle,
-              style: AppTextStyles.titleMedium.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              t.dashboardEmptyMessage,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            ElevatedButton(
-              onPressed: onImport,
-              child: Text(t.importPdf),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DashboardErrorState extends StatelessWidget {
-  const _DashboardErrorState({required this.error});
-
-  final Object error;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              t.dashboardErrorMessage,
-              style: AppTextStyles.titleMedium.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              '$error',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
+        error: (error, _) => DashboardErrorState(error: error),
       ),
     );
   }

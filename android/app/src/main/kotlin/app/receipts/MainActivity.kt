@@ -28,8 +28,6 @@ import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
 import java.io.InputStream
 import java.security.MessageDigest
 import java.text.Normalizer
@@ -37,7 +35,6 @@ import java.util.Locale
 import java.util.zip.GZIPInputStream
 import java.util.zip.ZipInputStream
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.text.Charsets.UTF_8
 import org.json.JSONArray
 import org.json.JSONException
@@ -64,7 +61,7 @@ class MainActivity : FlutterActivity() {
                             val pages = extractTextPages(safUri)
                             mainHandler.post { result.success(pages) }
                         } catch (e: Exception) {
-                            Log.e(TAG, "extractTextPages failed for $safUri", e)
+                            Log.e(TAG, "extractTextPages failed for redacted source", e)
                             mainHandler.post {
                                 if (e is EmptyPdfTextException) {
                                     result.error(
@@ -86,7 +83,7 @@ class MainActivity : FlutterActivity() {
                             val count = getPageCount(safUri)
                             mainHandler.post { result.success(count) }
                         } catch (e: Exception) {
-                            Log.e(TAG, "pageCount failed for $safUri", e)
+                            Log.e(TAG, "pageCount failed for redacted source", e)
                             mainHandler.post {
                                 result.error("PAGE_COUNT_ERROR", e.message, e.toString())
                             }
@@ -100,7 +97,7 @@ class MainActivity : FlutterActivity() {
                             val hash = getFileHash(safUri)
                             mainHandler.post { result.success(hash) }
                         } catch (e: Exception) {
-                            Log.e(TAG, "fileHash failed for $safUri", e)
+                            Log.e(TAG, "fileHash failed for redacted source", e)
                             mainHandler.post {
                                 result.error("HASH_ERROR", e.message, e.toString())
                             }
@@ -114,7 +111,7 @@ class MainActivity : FlutterActivity() {
                             val text = readTextFile(safUri)
                             mainHandler.post { result.success(text) }
                         } catch (e: Exception) {
-                            Log.e(TAG, "readTextFile failed for $safUri", e)
+                            Log.e(TAG, "readTextFile failed for redacted source", e)
                             mainHandler.post {
                                 result.error("READ_TEXT_ERROR", e.message, e.toString())
                             }
@@ -169,7 +166,7 @@ class MainActivity : FlutterActivity() {
                 val ocrResult = extractTextWithOcr(uri)
                 logExtractionStage(safUri, "ocr", ocrResult.status)
                 if (hasMeaningfulText(ocrResult.value ?: emptyList())) {
-                    Log.i(TAG, "Falling back to OCR text extraction for $safUri")
+                    Log.i(TAG, "Falling back to OCR text extraction for redacted source")
                     return ocrResult.value ?: pages
                 }
 
@@ -296,7 +293,7 @@ class MainActivity : FlutterActivity() {
                 }
             } ?: StageResult(emptyList(), StageStatus.EMPTY)
         } catch (e: Exception) {
-            Log.e(TAG, "OCR fallback failed for $uri", e)
+            Log.e(TAG, "OCR fallback failed for redacted source", e)
             StageResult(emptyList(), StageStatus.ERROR)
         }
     }
@@ -367,7 +364,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun logExtractionStage(safUri: String, stage: String, status: StageStatus) {
-        Log.d(TAG, "Extraction stage $stage=${status.value} for $safUri")
+        Log.d(TAG, "Extraction stage $stage=${status.value} for redacted source")
     }
 
     private fun extractFromEmbeddedTree(
@@ -435,7 +432,7 @@ class MainActivity : FlutterActivity() {
             val cleanedText = sanitizeEmbeddedText(text)
 
             if (cleanedText.isEmpty()) {
-                Log.w(TAG, "Embedded receipt payload was empty (${attachmentName.ifEmpty { "unnamed" }})")
+                Log.w(TAG, "Embedded receipt payload was empty")
                 return@use StageResult(null, StageStatus.EMPTY)
             }
 
@@ -443,10 +440,10 @@ class MainActivity : FlutterActivity() {
             val isJsonPayload = isJsonMimeType(mimeType) || isValidJson(cleanedText)
 
             if (isJsonPayload) {
-                Log.i(TAG, "Embedded receipt payload decoded from ${attachmentName.ifEmpty { "unnamed attachment" }}")
+                Log.i(TAG, "Embedded receipt payload decoded from redacted attachment")
                 StageResult(cleanedText, StageStatus.SUCCESS)
             } else {
-                Log.w(TAG, "Embedded receipt payload ${attachmentName.ifEmpty { "unnamed" }} was not JSON")
+                Log.w(TAG, "Embedded receipt payload was not JSON")
                 StageResult(null, StageStatus.INVALID)
             }
         }
@@ -510,7 +507,7 @@ class MainActivity : FlutterActivity() {
                         val candidate = decodeNestedContainers(entryBytes, entryName)
                         val text = sanitizeEmbeddedText(candidate.toString(UTF_8))
                         if (isValidJson(text)) {
-                            Log.i(TAG, "Decoded JSON from zip entry $entryName")
+                            Log.i(TAG, "Decoded JSON from zip entry with redacted name")
                             return candidate
                         }
                     }
@@ -519,7 +516,7 @@ class MainActivity : FlutterActivity() {
             }
             bytes
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to decode zip payload ${sourceName ?: ""}", e)
+            Log.w(TAG, "Failed to decode zip payload with redacted name", e)
             bytes
         }
     }
@@ -598,32 +595,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun dumpAttachment(rawName: String, bytes: ByteArray) {
-        if (bytes.isEmpty()) {
-            return
-        }
-
-        try {
-            val directory = File(cacheDir, "embedded-dumps")
-            if (!directory.exists()) {
-                directory.mkdirs()
-            }
-
-            val sanitized = rawName.ifEmpty { "payload" }
-                .lowercase(Locale.ROOT)
-                .replace(Regex("[^a-z0-9._-]"), "_")
-            val clipped = sanitized.take(40).ifEmpty { "payload" }
-            val fileName = "${System.currentTimeMillis()}_${clipped}.bin"
-            val target = File(directory, fileName)
-            val limit = min(bytes.size, 512 * 1024)
-
-            FileOutputStream(target).use { output ->
-                output.write(bytes, 0, limit)
-            }
-
-            Log.d(TAG, "Dumped embedded payload to ${target.absolutePath}")
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to dump embedded payload $rawName", e)
-        }
+        // Intentionally disabled: embedded payloads may contain raw receipt data.
     }
 
     private fun ZipInputStream.readEntryBytes(): ByteArray {
