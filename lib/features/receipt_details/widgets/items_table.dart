@@ -1,23 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 
-import 'package:receipts/domain/models/line_item.dart';
+import 'package:receipts/features/receipt_details/receipt_details_view_model.dart';
 import 'package:receipts/theme.dart';
 
 class ItemsTable extends StatelessWidget {
   const ItemsTable({super.key, required this.items});
 
-  final List<LineItem> items;
+  final List<ReceiptLineItemViewModel> items;
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-      locale: 'en_US',
-      symbol: 'PLN ',
-      decimalDigits: 2,
-    );
-
     if (items.isEmpty) {
       return Card(
         child: Padding(
@@ -42,7 +35,6 @@ class ItemsTable extends StatelessWidget {
             ...items.map(
               (item) => _ItemRow(
                 item: item,
-                currencyFormat: currencyFormat,
               ),
             ),
           ],
@@ -107,22 +99,12 @@ class _TableHeader extends StatelessWidget {
 class _ItemRow extends StatelessWidget {
   const _ItemRow({
     required this.item,
-    required this.currencyFormat,
   });
 
-  final LineItem item;
-  final NumberFormat currencyFormat;
+  final ReceiptLineItemViewModel item;
 
   @override
   Widget build(BuildContext context) {
-    final isDiscount = item.discount > 0 || item.total < 0;
-    final quantityText = isDiscount
-        ? '—'
-        : '${_formatQuantity(item.quantity)} × ${currencyFormat.format(item.unitPrice)}';
-    final vatText =
-        isDiscount ? '—' : '${(item.vatRate * 100).toStringAsFixed(0)}%';
-    final totalText = currencyFormat.format(item.total);
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
@@ -132,14 +114,15 @@ class _ItemRow extends StatelessWidget {
             child: Text(
               item.name,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: isDiscount ? AppColors.success : AppColors.textPrimary,
+                color:
+                    item.isDiscount ? AppColors.success : AppColors.textPrimary,
               ),
             ),
           ),
           Expanded(
             flex: 2,
             child: Text(
-              quantityText,
+              item.quantityPriceText,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -148,7 +131,7 @@ class _ItemRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              vatText,
+              item.vatText,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -157,9 +140,10 @@ class _ItemRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              totalText,
+              item.totalText,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: isDiscount ? AppColors.success : AppColors.textPrimary,
+                color:
+                    item.isDiscount ? AppColors.success : AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.right,
@@ -168,12 +152,5 @@ class _ItemRow extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatQuantity(double quantity) {
-    if (quantity == quantity.roundToDouble()) {
-      return quantity.toStringAsFixed(0);
-    }
-    return quantity.toStringAsFixed(2);
   }
 }

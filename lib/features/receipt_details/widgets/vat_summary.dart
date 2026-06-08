@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 
 import 'package:receipts/theme.dart';
 
 class VatSummary extends StatelessWidget {
-  const VatSummary({super.key, required this.totalVat});
+  const VatSummary({super.key, required this.totalVatText});
 
-  final double totalVat;
+  final String totalVatText;
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-      locale: 'en_US',
-      symbol: 'PLN ',
-      decimalDigits: 2,
-    );
-
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -30,7 +23,7 @@ class VatSummary extends StatelessWidget {
               ),
             ),
             Text(
-              currencyFormat.format(totalVat),
+              totalVatText,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
