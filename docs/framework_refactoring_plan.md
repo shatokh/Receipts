@@ -779,7 +779,7 @@ Feature work отдельно от refactor PR:
 | Phase 7: Receipts filter state | complete | `docs/refactoring_subplans/phase_7_receipts_filter_state.md` | 2026-06-05 | Receipts filtering and filter-month option mapping extracted and tested; focused tests, analyzer, and full test suite passed. |
 | Phase 7: Receipt Details view model | complete | `docs/refactoring_subplans/phase_7_receipt_details_view_model.md` | 2026-06-05 | Receipt details presentation mapping extracted and tested; focused tests, analyzer, and full test suite passed. |
 | Phase 7: remaining analytics view models | not started | TBD | 2026-06-05 | Create separate sub-plans before any additional view model extraction. |
-| Phase 10: CI quality gates | not started | TBD | 2026-05-30 | Include Flutter version inventory and coverage gate decision. |
+| Phase 10: CI quality gates | complete | `docs/refactoring_subplans/phase_10_ci_quality_gates.md` | 2026-06-08 | Flutter workflow versions aligned, Sonar uses coverage helper with conservative threshold, integration docs updated. |
 
 Tracker status values:
 

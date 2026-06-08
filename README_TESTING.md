@@ -1,6 +1,6 @@
 # Integration Testing Guide
 
-This document describes how to run the Flutter integration tests that exercise the end-to-end receipt import flow on an Android emulator and in CI.
+This document describes how to run the Flutter integration tests that exercise the end-to-end receipt import flow on an Android emulator and in GitHub Actions.
 
 ## Prerequisites
 
@@ -35,15 +35,17 @@ Both scripts will create the AVD if missing, boot a headless emulator, and execu
 
 ## GitHub Actions workflow
 
-The workflow `.github/workflows/integration_test.yml` provisions a headless API 34 emulator using `reactivecircus/android-emulator-runner@v2`. On every push to `main` and pull request the workflow:
+The workflow `.github/workflows/integration_test.yml` provisions a headless API 34 emulator using `reactivecircus/android-emulator-runner@v2`. It is intentionally manual-only and runs through `workflow_dispatch` so emulator tests do not block every PR.
+
+When triggered manually, the workflow:
 
 1. Checks out the repository.
-2. Installs Java 17 and Flutter (stable channel).
+2. Installs Java 17 and Flutter 3.35.3 on the stable channel.
 3. Restores pub dependencies from cache and runs `flutter pub get`.
 4. Boots a headless emulator (API 34, Google APIs, x86_64) with animations disabled.
 5. Executes `flutter test integration_test -d emulator-5554`.
 
-The workflow is tuned to keep total duration within ~3–5 minutes.
+The workflow is tuned to keep total duration within ~3–5 minutes once the emulator is available. Fast PR feedback remains in the analyze/unit/build workflows.
 
 ## Debugging tips
 
