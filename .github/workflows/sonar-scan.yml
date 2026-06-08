@@ -44,7 +44,7 @@ jobs:
 
       - name: Flutter test with coverage
         working-directory: ${{ env.PROJECT_DIR }}
-        run: dart run tool/test_with_coverage.dart --min-coverage=0
+        run: dart run tool/test_with_coverage.dart --min-coverage=50
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6

@@ -781,6 +781,7 @@ Feature work отдельно от refactor PR:
 | Phase 7: Receipt Details view model | complete | `docs/refactoring_subplans/phase_7_receipt_details_view_model.md` | 2026-06-05 | Receipt details presentation mapping extracted and tested; focused tests, analyzer, and full test suite passed. |
 | Phase 7: remaining analytics view models | superseded | `docs/refactoring_subplans/phase_7_closeout.md` | 2026-06-08 | Concrete Phase 7 candidates are covered by completed sub-plans; future formatter cleanup should be a separate package. |
 | Phase 10: CI quality gates | complete | `docs/refactoring_subplans/phase_10_ci_quality_gates.md` | 2026-06-08 | Flutter workflow versions aligned, Sonar uses coverage helper with conservative threshold, integration docs updated. |
+| Phase 10: coverage threshold decision | complete | `docs/refactoring_subplans/phase_10_coverage_threshold.md` | 2026-06-08 | Coverage baseline measured at 51.05%; Sonar coverage helper now enforces conservative `--min-coverage=50`. |
 
 Tracker status values:
 
