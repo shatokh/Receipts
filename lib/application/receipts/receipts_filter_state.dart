@@ -1,5 +1,4 @@
-import 'package:intl/intl.dart';
-
+import 'package:receipts/core/formatting/app_formatters.dart';
 import 'package:receipts/domain/models/monthly_total.dart';
 import 'package:receipts/domain/models/receipt_row.dart';
 import 'package:receipts/domain/value_objects/receipt_month.dart';
@@ -19,7 +18,7 @@ class ReceiptsFilterState {
 
   List<ReceiptRow> apply(List<ReceiptRow> receipts) {
     final normalizedQuery = query.trim().toLowerCase();
-    final dateFormat = DateFormat('yyyy-MM-dd');
+    final dateFormat = AppFormatters.receiptSearchDate();
 
     return receipts.where((receipt) {
       final matchesQuery = normalizedQuery.isEmpty ||

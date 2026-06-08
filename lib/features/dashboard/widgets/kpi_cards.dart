@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:receipts/core/formatting/app_formatters.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 
 import 'package:receipts/domain/models/dashboard_kpis.dart';
@@ -13,11 +13,7 @@ class DashboardKpiCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-      locale: 'en_US',
-      symbol: 'PLN ',
-      decimalDigits: 2,
-    );
+    final currencyFormat = AppFormatters.receiptCurrency();
     final t = AppLocalizations.of(context)!;
     final data = kpis.asData?.value;
     final isLoading = kpis.isLoading;

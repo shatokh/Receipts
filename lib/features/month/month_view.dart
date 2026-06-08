@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+import 'package:receipts/core/formatting/app_formatters.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 import 'package:receipts/l10n/app_localizations_extensions.dart';
 
@@ -23,11 +23,7 @@ class MonthView extends ConsumerWidget {
     final monthlyTotalsAsync = ref.watch(monthlyTotalsProvider);
     final monthOverviewAsync = ref.watch(monthOverviewProvider(selectedMonth));
     final receiptsAsync = ref.watch(receiptsByMonthProvider(selectedMonth));
-    final currencyFormat = NumberFormat.currency(
-      locale: 'en_US',
-      symbol: 'PLN ',
-      decimalDigits: 2,
-    );
+    final currencyFormat = AppFormatters.receiptCurrency();
 
     final viewModel = MonthViewModel.fromData(
       totals: monthlyTotalsAsync.asData?.value,

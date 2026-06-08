@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:receipts/core/formatting/app_formatters.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 import 'package:receipts/l10n/app_localizations_extensions.dart';
 
@@ -35,11 +35,7 @@ class CategoryBreakdown extends StatelessWidget {
         }
 
         final maxAmount = data.maxCategoryAmount;
-        final currencyFormat = NumberFormat.currency(
-          locale: 'en_US',
-          symbol: 'PLN ',
-          decimalDigits: 2,
-        );
+        final currencyFormat = AppFormatters.receiptCurrency();
 
         return Card(
           child: Padding(

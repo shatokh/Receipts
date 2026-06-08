@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:receipts/core/formatting/app_formatters.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 
 import 'package:receipts/domain/models/receipt_row.dart';
@@ -73,7 +74,7 @@ class _ReceiptTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
+    final dateFormat = AppFormatters.receiptDateTime();
 
     return Card(
       child: ListTile(

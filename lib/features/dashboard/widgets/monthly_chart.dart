@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:receipts/core/formatting/app_formatters.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 import 'package:receipts/l10n/app_localizations_extensions.dart';
 
@@ -23,11 +23,7 @@ class MonthlyChart extends StatelessWidget {
         : values.reduce((value, element) => max(value, element));
     final maxY = maxTotal <= 0 ? 1.0 : maxTotal * 1.1;
     final labelThreshold = maxY * (18 / chartHeight);
-    final currencyFormat = NumberFormat.currency(
-      locale: 'en_US',
-      symbol: 'PLN ',
-      decimalDigits: 2,
-    );
+    final currencyFormat = AppFormatters.receiptCurrency();
     final t = AppLocalizations.of(context)!;
 
     return Card(

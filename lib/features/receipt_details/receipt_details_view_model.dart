@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 
+import 'package:receipts/core/formatting/app_formatters.dart';
 import 'package:receipts/domain/models/line_item.dart';
 import 'package:receipts/domain/models/receipt_details.dart';
 
@@ -25,13 +26,9 @@ class ReceiptDetailsViewModel {
     DateFormat? dateFormat,
     NumberFormat? currencyFormat,
   }) {
-    final resolvedDateFormat = dateFormat ?? DateFormat('yyyy-MM-dd HH:mm');
-    final resolvedCurrencyFormat = currencyFormat ??
-        NumberFormat.currency(
-          locale: 'en_US',
-          symbol: 'PLN ',
-          decimalDigits: 2,
-        );
+    final resolvedDateFormat = dateFormat ?? AppFormatters.receiptDateTime();
+    final resolvedCurrencyFormat =
+        currencyFormat ?? AppFormatters.receiptCurrency();
 
     return ReceiptDetailsViewModel(
       merchantName: details.merchantName,

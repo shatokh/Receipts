@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+import 'package:receipts/core/formatting/app_formatters.dart';
 
 import 'package:receipts/domain/models/receipt_row.dart';
 import 'package:receipts/theme.dart';
@@ -12,12 +12,8 @@ class ReceiptsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
-    final currencyFormat = NumberFormat.currency(
-      locale: 'en_US',
-      symbol: 'PLN ',
-      decimalDigits: 2,
-    );
+    final dateFormat = AppFormatters.receiptDateTime();
+    final currencyFormat = AppFormatters.receiptCurrency();
 
     return ListView.separated(
       key: const ValueKey('receipt_list'),
