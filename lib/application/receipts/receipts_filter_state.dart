@@ -2,6 +2,7 @@ import 'package:intl/intl.dart';
 
 import 'package:receipts/domain/models/monthly_total.dart';
 import 'package:receipts/domain/models/receipt_row.dart';
+import 'package:receipts/domain/value_objects/receipt_month.dart';
 
 class ReceiptsFilterState {
   const ReceiptsFilterState({
@@ -40,16 +41,15 @@ class ReceiptsFilterState {
   }
 
   static List<DateTime> buildFilterMonths(List<MonthlyTotal> totals) {
-    final months = <DateTime>{};
+    final months = <ReceiptMonth>{};
     for (final total in totals) {
       if (total.total > 0) {
-        months.add(DateTime(total.year, total.month));
+        months.add(ReceiptMonth.fromMonthlyTotal(total));
       }
     }
     if (months.isEmpty) {
-      months.addAll(totals.map((total) => DateTime(total.year, total.month)));
+      months.addAll(totals.map(ReceiptMonth.fromMonthlyTotal));
     }
-    final list = months.toList()..sort((a, b) => b.compareTo(a));
-    return list;
+    return ReceiptMonth.sortedStartsDescending(months);
   }
 }

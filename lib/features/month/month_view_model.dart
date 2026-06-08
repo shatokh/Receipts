@@ -1,5 +1,6 @@
 import 'package:receipts/domain/models/month_overview.dart';
 import 'package:receipts/domain/models/monthly_total.dart';
+import 'package:receipts/domain/value_objects/receipt_month.dart';
 
 class MonthViewModel {
   const MonthViewModel({
@@ -21,34 +22,33 @@ class MonthViewModel {
     required DateTime selectedMonth,
     required MonthOverview? overview,
   }) {
-    final normalizedSelected =
-        DateTime(selectedMonth.year, selectedMonth.month);
+    final selectedReceiptMonth = ReceiptMonth.fromDate(selectedMonth);
+    final normalizedSelected = selectedReceiptMonth.start;
     final monthlyTotals = totals ?? const <MonthlyTotal>[];
     final monthsWithData = monthlyTotals
         .where((total) => total.total > 0)
-        .map((total) => DateTime(total.year, total.month))
+        .map(ReceiptMonth.fromMonthlyTotal)
         .toList();
 
-    final uniqueMonths = <DateTime>{};
+    final uniqueMonths = <ReceiptMonth>{};
     if (monthsWithData.isEmpty) {
       uniqueMonths.addAll(
-        monthlyTotals.map((total) => DateTime(total.year, total.month)),
+        monthlyTotals.map(ReceiptMonth.fromMonthlyTotal),
       );
     } else {
       uniqueMonths.addAll(monthsWithData);
     }
-    uniqueMonths.add(normalizedSelected);
+    uniqueMonths.add(selectedReceiptMonth);
 
-    final dropdownMonths = uniqueMonths.toList()
-      ..sort((a, b) => a.compareTo(b));
+    final dropdownMonths = ReceiptMonth.sortedStarts(uniqueMonths);
 
     final replacementSelectedMonth = monthlyTotals.isEmpty ||
             monthsWithData.isEmpty ||
             monthsWithData.any(
-              (month) => _isSameMonth(month, normalizedSelected),
+              (month) => month == selectedReceiptMonth,
             )
         ? null
-        : monthsWithData.last;
+        : monthsWithData.last.start;
 
     return MonthViewModel(
       normalizedSelectedMonth: normalizedSelected,
@@ -58,7 +58,4 @@ class MonthViewModel {
       receiptsCount: overview?.receiptsCount ?? 0,
     );
   }
-
-  static bool _isSameMonth(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month;
 }

@@ -1,4 +1,5 @@
 import 'package:receipts/domain/models/monthly_total.dart';
+import 'package:receipts/domain/value_objects/receipt_month.dart';
 
 class DashboardViewModel {
   const DashboardViewModel({
@@ -17,31 +18,29 @@ class DashboardViewModel {
     required List<MonthlyTotal> totals,
     required DateTime selectedMonth,
   }) {
-    final normalizedSelected =
-        DateTime(selectedMonth.year, selectedMonth.month);
+    final selectedReceiptMonth = ReceiptMonth.fromDate(selectedMonth);
+    final normalizedSelected = selectedReceiptMonth.start;
     final monthsWithData = totals
         .where((total) => total.total > 0)
-        .map((total) => DateTime(total.year, total.month))
+        .map(ReceiptMonth.fromMonthlyTotal)
         .toList();
 
-    final uniqueMonths = <DateTime>{};
+    final uniqueMonths = <ReceiptMonth>{};
     if (monthsWithData.isEmpty) {
-      uniqueMonths
-          .addAll(totals.map((total) => DateTime(total.year, total.month)));
+      uniqueMonths.addAll(totals.map(ReceiptMonth.fromMonthlyTotal));
     } else {
       uniqueMonths.addAll(monthsWithData);
     }
-    uniqueMonths.add(normalizedSelected);
+    uniqueMonths.add(selectedReceiptMonth);
 
-    final dropdownMonths = uniqueMonths.toList()
-      ..sort((a, b) => a.compareTo(b));
+    final dropdownMonths = ReceiptMonth.sortedStarts(uniqueMonths);
 
     final replacementSelectedMonth = monthsWithData.isEmpty ||
             monthsWithData.any(
-              (month) => _isSameMonth(month, normalizedSelected),
+              (month) => month == selectedReceiptMonth,
             )
         ? null
-        : monthsWithData.last;
+        : monthsWithData.last.start;
 
     return DashboardViewModel(
       hasMonthlyTotals: totals.isNotEmpty,
@@ -50,7 +49,4 @@ class DashboardViewModel {
       replacementSelectedMonth: replacementSelectedMonth,
     );
   }
-
-  static bool _isSameMonth(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month;
 }
