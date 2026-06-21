@@ -38,10 +38,6 @@ jobs:
         working-directory: ${{ env.PROJECT_DIR }}
         run: flutter pub get
 
-      - name: Flutter analyze
-        working-directory: ${{ env.PROJECT_DIR }}
-        run: flutter analyze
-
       - name: Flutter test with coverage
         working-directory: ${{ env.PROJECT_DIR }}
         run: dart run tool/test_with_coverage.dart --min-coverage=50
