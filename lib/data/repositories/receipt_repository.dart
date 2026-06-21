@@ -14,6 +14,7 @@ import 'package:receipts/domain/models/merchant.dart';
 import 'package:receipts/domain/models/receipt.dart';
 import 'package:receipts/domain/models/receipt_details.dart';
 import 'package:receipts/domain/models/receipt_row.dart';
+import 'package:receipts/domain/value_objects/receipt_month.dart';
 
 typedef Reader = T Function<T>(ProviderListenable<T> provider);
 
@@ -156,7 +157,7 @@ class ReceiptRepository {
   }
 
   Stream<List<ReceiptRow>> watchReceiptsByMonth(DateTime month) {
-    final normalized = DateTime(month.year, month.month);
+    final normalized = ReceiptMonth.fromDate(month).start;
     return watchDatabase(
       updateBus: _updateBus,
       loader: () => _fetchReceiptRowsByMonth(normalized),
@@ -315,8 +316,7 @@ class ReceiptRepository {
 
   Future<List<ReceiptRow>> _fetchReceiptRowsByMonth(DateTime month) async {
     final db = await DatabaseHelper.database;
-    final start = DateTime(month.year, month.month).millisecondsSinceEpoch;
-    final end = DateTime(month.year, month.month + 1).millisecondsSinceEpoch;
+    final monthRange = MonthDateRange.forDate(month);
 
     try {
       final result = await db.rawQuery(
@@ -325,7 +325,7 @@ class ReceiptRepository {
         'LEFT JOIN merchants m ON m.id = r.merchant_id '
         'WHERE r.purchase_ts >= ? AND r.purchase_ts < ? '
         'ORDER BY r.purchase_ts DESC',
-        [start, end],
+        [monthRange.startMs, monthRange.endMs],
       );
 
       return result.map(ReceiptRow.fromMap).toList();
@@ -380,7 +380,7 @@ class ReceiptRepository {
           continue;
         }
         final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-        months.add(DateTime(date.year, date.month));
+        months.add(ReceiptMonth.fromDate(date).start);
       }
       return months;
     } catch (error) {

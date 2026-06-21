@@ -17,6 +17,7 @@ import 'package:receipts/domain/models/dashboard_kpis.dart';
 import 'package:receipts/domain/models/month_overview.dart';
 import 'package:receipts/domain/models/monthly_total.dart';
 import 'package:receipts/domain/models/receipt_row.dart';
+import 'package:receipts/domain/value_objects/receipt_month.dart';
 
 typedef Reader = T Function<T>(ProviderListenable<T> provider);
 
@@ -187,16 +188,18 @@ class AnalyticsRepository {
 
       final totalsDesc = maps.map(MonthlyTotal.fromMap).toList();
       final latest = totalsDesc.first;
-      final latestDate = DateTime(latest.year, latest.month);
+      final latestMonth = ReceiptMonth.fromMonthlyTotal(latest);
       final earliest = totalsDesc.last;
-      final earliestDate = DateTime(earliest.year, earliest.month);
-      final span = (latestDate.year - earliestDate.year) * 12 +
-          latestDate.month -
-          earliestDate.month +
+      final earliestMonth = ReceiptMonth.fromMonthlyTotal(earliest);
+      final span = (latestMonth.year - earliestMonth.year) * 12 +
+          latestMonth.month -
+          earliestMonth.month +
           1;
       final monthsToInclude = max(1, min(12, span));
-      final startDate =
-          DateTime(latestDate.year, latestDate.month - (monthsToInclude - 1));
+      final startDate = DateTime(
+        latestMonth.year,
+        latestMonth.month - (monthsToInclude - 1),
+      );
 
       final totalsMap = <String, double>{
         for (final total in totalsDesc)
@@ -205,7 +208,9 @@ class AnalyticsRepository {
 
       final result = <MonthlyTotal>[];
       for (int i = 0; i < monthsToInclude; i++) {
-        final date = DateTime(startDate.year, startDate.month + i);
+        final date = ReceiptMonth.fromDate(
+          DateTime(startDate.year, startDate.month + i),
+        );
         final key = _monthKey(date.year, date.month);
         final amount = totalsMap[key] ?? 0.0;
         result.add(

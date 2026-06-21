@@ -1,5 +1,6 @@
 import 'package:receipts/data/month_date_range.dart';
 import 'package:receipts/domain/category_definitions.dart';
+import 'package:receipts/domain/value_objects/receipt_month.dart';
 import 'package:sqflite/sqflite.dart';
 
 class AggregatesUpdater {
@@ -154,13 +155,7 @@ class AggregatesUpdater {
   }
 
   List<DateTime> _normalizeMonths(Iterable<DateTime> months) {
-    final normalized = <String, DateTime>{};
-    for (final month in months) {
-      final monthStart = DateTime(month.year, month.month);
-      normalized['${monthStart.year}-${monthStart.month}'] = monthStart;
-    }
-    final result = normalized.values.toList()..sort();
-    return result;
+    return ReceiptMonth.sortedStarts(months.map(ReceiptMonth.fromDate));
   }
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:receipts/data/month_date_range.dart';
+import 'package:receipts/domain/value_objects/receipt_month.dart';
 
 void main() {
   test('forDate normalizes a date inside a month', () {
@@ -32,5 +33,14 @@ void main() {
     expect(range.end, DateTime(2025, 9));
     expect(range.startMs, DateTime(2025, 8).millisecondsSinceEpoch);
     expect(range.endMs, DateTime(2025, 9).millisecondsSinceEpoch);
+  });
+
+  test('forReceiptMonth uses receipt month boundaries', () {
+    final range = MonthDateRange.forReceiptMonth(
+      const ReceiptMonth(year: 2025, month: 12),
+    );
+
+    expect(range.start, DateTime(2025, 12));
+    expect(range.end, DateTime(2026, 1));
   });
 }

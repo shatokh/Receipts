@@ -783,6 +783,7 @@ Feature work отдельно от refactor PR:
 | Phase 10: CI quality gates | complete | `docs/refactoring_subplans/phase_10_ci_quality_gates.md` | 2026-06-08 | Flutter workflow versions aligned, Sonar uses coverage helper with conservative threshold, integration docs updated. |
 | Phase 10: coverage threshold decision | complete | `docs/refactoring_subplans/phase_10_coverage_threshold.md` | 2026-06-08 | Coverage baseline measured at 51.05%; Sonar coverage helper now enforces conservative `--min-coverage=50`. |
 | Formatter ownership cleanup | complete | `docs/refactoring_subplans/formatter_ownership_cleanup.md` | 2026-06-08 | Shared `AppFormatters` added for receipt currency/date output; focused formatter test, analyzer, and full test suite passed. |
+| ReceiptMonth data range cleanup | complete | `docs/refactoring_subplans/receipt_month_data_range_cleanup.md` | 2026-06-08 | `MonthDateRange` now derives boundaries from `ReceiptMonth`; focused data tests, analyzer, and full test suite passed. |
 
 Tracker status values:
 

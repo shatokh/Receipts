@@ -1,3 +1,5 @@
+import 'package:receipts/domain/value_objects/receipt_month.dart';
+
 class MonthDateRange {
   const MonthDateRange({
     required this.start,
@@ -11,15 +13,14 @@ class MonthDateRange {
   int get endMs => end.millisecondsSinceEpoch;
 
   static MonthDateRange forDate(DateTime date) {
-    final normalized = DateTime(date.year, date.month);
-    return MonthDateRange(
-      start: normalized,
-      end: DateTime(normalized.year, normalized.month + 1),
-    );
+    return forReceiptMonth(ReceiptMonth.fromDate(date));
   }
 
   static MonthDateRange forYearMonth(int year, int month) {
-    final start = DateTime(year, month);
-    return MonthDateRange(start: start, end: DateTime(year, month + 1));
+    return forReceiptMonth(ReceiptMonth(year: year, month: month));
+  }
+
+  static MonthDateRange forReceiptMonth(ReceiptMonth month) {
+    return MonthDateRange(start: month.start, end: month.nextStart);
   }
 }
