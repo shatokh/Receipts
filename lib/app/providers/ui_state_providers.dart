@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:receipts/app/providers/repository_providers.dart';
 import 'package:receipts/application/receipts/receipts_filter_state.dart';
 import 'package:receipts/domain/models/receipt_row.dart';
+import 'package:receipts/domain/value_objects/amount_range.dart';
 
 final receiptsSearchQueryProvider = StateProvider<String>((ref) => '');
 final receiptsFilterMonthProvider = StateProvider<DateTime?>((ref) => null);
 final receiptsAmountRangeProvider =
-    StateProvider<RangeValues>((ref) => const RangeValues(0, 1000));
+    StateProvider<AmountRange>((ref) => AmountRange.receiptFilterDefault);
 
 final filteredReceiptsProvider =
     StreamProvider.autoDispose<List<ReceiptRow>>((ref) {
@@ -19,8 +19,7 @@ final filteredReceiptsProvider =
   final filter = ReceiptsFilterState(
     query: query,
     month: monthFilter,
-    minAmount: amountRange.start,
-    maxAmount: amountRange.end,
+    amountRange: amountRange,
   );
 
   return repo.watchAllReceipts().map((receipts) {

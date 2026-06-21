@@ -3,14 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:receipts/application/receipts/receipts_filter_state.dart';
 import 'package:receipts/domain/models/monthly_total.dart';
 import 'package:receipts/domain/models/receipt_row.dart';
+import 'package:receipts/domain/value_objects/amount_range.dart';
 
 void main() {
   test('filters receipts by merchant query', () {
     final filter = const ReceiptsFilterState(
       query: 'store',
       month: null,
-      minAmount: 0,
-      maxAmount: 1000,
+      amountRange: AmountRange.receiptFilterDefault,
     );
 
     expect(
@@ -26,8 +26,7 @@ void main() {
     final filter = const ReceiptsFilterState(
       query: '2025-08-12',
       month: null,
-      minAmount: 0,
-      maxAmount: 1000,
+      amountRange: AmountRange.receiptFilterDefault,
     );
 
     expect(
@@ -43,8 +42,7 @@ void main() {
     final filter = ReceiptsFilterState(
       query: '',
       month: DateTime(2025, 8),
-      minAmount: 0,
-      maxAmount: 1000,
+      amountRange: AmountRange.receiptFilterDefault,
     );
 
     expect(
@@ -60,8 +58,7 @@ void main() {
     final filter = const ReceiptsFilterState(
       query: '',
       month: null,
-      minAmount: 10,
-      maxAmount: 20,
+      amountRange: AmountRange(min: 10, max: 20),
     );
 
     expect(
@@ -79,8 +76,7 @@ void main() {
     final filter = ReceiptsFilterState(
       query: 'market',
       month: DateTime(2025, 8),
-      minAmount: 10,
-      maxAmount: 20,
+      amountRange: const AmountRange(min: 10, max: 20),
     );
 
     expect(

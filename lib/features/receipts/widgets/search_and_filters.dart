@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:receipts/domain/value_objects/amount_range.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 import 'package:receipts/l10n/app_localizations_extensions.dart';
 
@@ -19,11 +20,11 @@ class SearchAndFilters extends ConsumerStatefulWidget {
 
   final String searchQuery;
   final DateTime? selectedMonth;
-  final RangeValues amountRange;
+  final AmountRange amountRange;
   final List<DateTime> monthOptions;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<DateTime?> onMonthChanged;
-  final ValueChanged<RangeValues> onAmountChanged;
+  final ValueChanged<AmountRange> onAmountChanged;
 
   @override
   ConsumerState<SearchAndFilters> createState() => _SearchAndFiltersState();
@@ -106,22 +107,28 @@ class _SearchAndFiltersState extends ConsumerState<SearchAndFilters> {
               }
 
               Widget buildAmountFilter() {
+                final sliderValues = RangeValues(
+                  widget.amountRange.min,
+                  widget.amountRange.max,
+                );
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       t.totalRangeLabel(
-                        widget.amountRange.start.round(),
-                        widget.amountRange.end.round(),
+                        widget.amountRange.min.round(),
+                        widget.amountRange.max.round(),
                       ),
                       style: AppTextStyles.labelSmall,
                     ),
                     RangeSlider(
-                      values: widget.amountRange,
+                      values: sliderValues,
                       min: 0,
                       max: 1000,
                       divisions: 20,
-                      onChanged: widget.onAmountChanged,
+                      onChanged: (values) => widget.onAmountChanged(
+                        AmountRange(min: values.start, max: values.end),
+                      ),
                     ),
                   ],
                 );

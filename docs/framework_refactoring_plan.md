@@ -784,6 +784,7 @@ Feature work отдельно от refactor PR:
 | Phase 10: coverage threshold decision | complete | `docs/refactoring_subplans/phase_10_coverage_threshold.md` | 2026-06-08 | Coverage baseline measured at 51.05%; Sonar coverage helper now enforces conservative `--min-coverage=50`. |
 | Formatter ownership cleanup | complete | `docs/refactoring_subplans/formatter_ownership_cleanup.md` | 2026-06-08 | Shared `AppFormatters` added for receipt currency/date output; focused formatter test, analyzer, and full test suite passed. |
 | ReceiptMonth data range cleanup | complete | `docs/refactoring_subplans/receipt_month_data_range_cleanup.md` | 2026-06-08 | `MonthDateRange` now derives boundaries from `ReceiptMonth`; focused data tests, analyzer, and full test suite passed. |
+| AmountRange value object | complete | `docs/refactoring_subplans/amount_range_value_object.md` | 2026-06-21 | Receipts amount filter now uses pure `AmountRange`; `RangeValues` remains only at the slider adapter; focused tests, analyzer, and full suite passed. |
 
 Tracker status values:
 

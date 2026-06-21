@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:receipts/app/providers.dart';
+import 'package:receipts/domain/value_objects/amount_range.dart';
 import 'package:receipts/features/receipts/receipts_view.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 
@@ -17,7 +18,7 @@ void main() {
           receiptsSearchQueryProvider.overrideWith((ref) => ''),
           receiptsFilterMonthProvider.overrideWith((ref) => null),
           receiptsAmountRangeProvider.overrideWith(
-            (ref) => const RangeValues(0, 1000),
+            (ref) => AmountRange.receiptFilterDefault,
           ),
         ],
         child: const ReceiptsView(),

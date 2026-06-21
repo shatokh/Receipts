@@ -1,20 +1,19 @@
 import 'package:receipts/core/formatting/app_formatters.dart';
 import 'package:receipts/domain/models/monthly_total.dart';
 import 'package:receipts/domain/models/receipt_row.dart';
+import 'package:receipts/domain/value_objects/amount_range.dart';
 import 'package:receipts/domain/value_objects/receipt_month.dart';
 
 class ReceiptsFilterState {
   const ReceiptsFilterState({
     required this.query,
     required this.month,
-    required this.minAmount,
-    required this.maxAmount,
+    required this.amountRange,
   });
 
   final String query;
   final DateTime? month;
-  final double minAmount;
-  final double maxAmount;
+  final AmountRange amountRange;
 
   List<ReceiptRow> apply(List<ReceiptRow> receipts) {
     final normalizedQuery = query.trim().toLowerCase();
@@ -32,8 +31,7 @@ class ReceiptsFilterState {
           : receipt.purchaseTimestamp.year == month!.year &&
               receipt.purchaseTimestamp.month == month!.month;
 
-      final total = receipt.totalGross;
-      final matchesAmount = total >= minAmount && total <= maxAmount;
+      final matchesAmount = amountRange.contains(receipt.totalGross);
 
       return matchesQuery && matchesMonth && matchesAmount;
     }).toList();
