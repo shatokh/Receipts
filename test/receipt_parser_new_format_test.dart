@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:receipts/domain/parsing/receipt_parser.dart';
@@ -50,8 +51,7 @@ void main() {
   test('accepts e-receipt header as supported source', () async {
     final parser = ReceiptParser();
     final original = await File('assets/sample_receipt.txt').readAsString();
-    final eReceipt =
-        original.replaceFirst('Paragon fiskalny', 'E-Receipt');
+    final eReceipt = original.replaceFirst('Paragon fiskalny', 'E-Receipt');
 
     final receipt = parser.parse(eReceipt);
 
@@ -81,5 +81,38 @@ void main() {
     final discount =
         receipt.items.firstWhere((item) => item.name.toLowerCase() == 'rabat');
     expect(discount.total, closeTo(-1.20, 0.01));
+  });
+
+  test('parses compact JPK data when legacy JSON sections are incomplete',
+      () async {
+    final parser = ReceiptParser();
+    final text = await File('assets/2510079156114553 (2).json').readAsString();
+    final payload = jsonDecode(text) as Map<String, dynamic>;
+
+    final receipt = parser.parse(jsonEncode({
+      'protoVersion': payload['protoVersion'],
+      'data': payload['data'],
+    }));
+
+    expect(receipt.merchantId, 'biedronka');
+    expect(
+      receipt.purchaseTimestamp,
+      DateTime.parse('2025-10-07T07:44:25.000Z').toLocal(),
+    );
+    expect(receipt.totalGross, closeTo(73.27, 0.01));
+    expect(receipt.totalVat, closeTo(3.49, 0.01));
+    expect(receipt.items, isNotEmpty);
+
+    expect(
+      receipt.items
+          .where((item) => item.unit == 'kg')
+          .any((item) => (item.quantity - 0.79).abs() < 0.001),
+      isTrue,
+    );
+
+    expect(
+      receipt.items.any((item) => (item.total + 1.20).abs() < 0.01),
+      isTrue,
+    );
   });
 }

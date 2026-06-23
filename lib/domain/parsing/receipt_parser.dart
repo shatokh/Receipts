@@ -72,6 +72,10 @@ class ReceiptParser {
     final dateString =
         (headerData?['date'] as String?) ?? (fiscalFooter?['date'] as String?);
     if (dateString == null) {
+      final jpkReceipt = _tryParseJpkReceipt(payload);
+      if (jpkReceipt != null) {
+        return jpkReceipt;
+      }
       throw const FormatException('Missing purchase date');
     }
 
@@ -80,6 +84,10 @@ class ReceiptParser {
     final totalMinor = _asInt(sumInCurrency?['fiscalTotal']) ??
         _asInt(sumInCurrency?['totalWithPacks']);
     if (totalMinor == null) {
+      final jpkReceipt = _tryParseJpkReceipt(payload);
+      if (jpkReceipt != null) {
+        return jpkReceipt;
+      }
       throw const FormatException('Missing total amount');
     }
 
@@ -100,6 +108,176 @@ class ReceiptParser {
       totalVat: totalVat,
       items: items,
     );
+  }
+
+  Receipt? _tryParseJpkReceipt(Map<String, dynamic> payload) {
+    final jpkPayload = _decodeCompactDataPayload(payload);
+    if (jpkPayload == null) {
+      return null;
+    }
+
+    final document = jpkPayload['dokument'];
+    if (document is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final paragon = document['paragon'];
+    if (paragon is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final dateString = paragon['zakSprzed'] as String?;
+    final purchaseDate = dateString != null
+        ? DateTime.parse(dateString).toLocal()
+        : _parseJpkHeaderDate(document);
+    if (purchaseDate == null) {
+      throw const FormatException('Missing purchase date');
+    }
+
+    final podsum = paragon['podsum'];
+    final total = paragon['total'];
+    final totalMinor = (podsum is Map<String, dynamic>
+            ? _asInt(podsum['sumaBrutto'])
+            : null) ??
+        (total is Map<String, dynamic> ? _asInt(total['zaplZwrot']) : null);
+    if (totalMinor == null) {
+      throw const FormatException('Missing total amount');
+    }
+
+    final receiptId = _generateId();
+    final items = _parseJpkItems(paragon['pozycja'], receiptId);
+    final currency = podsum is Map<String, dynamic>
+        ? (podsum['waluta'] as String?) ?? 'PLN'
+        : 'PLN';
+
+    return Receipt(
+      id: receiptId,
+      merchantId: _detectMerchantIdFromJpk(document),
+      purchaseTimestamp: purchaseDate,
+      currency: currency,
+      totalGross: _fromMinorUnits(totalMinor),
+      totalVat: _parseJpkVat(podsum),
+      items: items,
+    );
+  }
+
+  Map<String, dynamic>? _decodeCompactDataPayload(
+    Map<String, dynamic> payload,
+  ) {
+    final data = payload['data'];
+    if (data is! String) {
+      return null;
+    }
+
+    final parts = data.split('.');
+    if (parts.length < 2 || parts[1].isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = utf8.decode(
+        base64Url.decode(base64Url.normalize(parts[1])),
+      );
+      final json = jsonDecode(decoded);
+      return json is Map<String, dynamic> ? json : null;
+    } on FormatException {
+      return null;
+    }
+  }
+
+  DateTime? _parseJpkHeaderDate(Map<String, dynamic> document) {
+    final header = document['naglowek'];
+    if (header is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final dateString = header['dataJPK'] as String?;
+    return dateString != null ? DateTime.parse(dateString).toLocal() : null;
+  }
+
+  List<LineItem> _parseJpkItems(dynamic source, String receiptId) {
+    if (source is! List) {
+      return const [];
+    }
+
+    final items = <LineItem>[];
+
+    for (final entry in source) {
+      if (entry is! Map<String, dynamic>) {
+        continue;
+      }
+
+      final product = entry['towar'];
+      if (product is! Map<String, dynamic> || product['oper'] == true) {
+        continue;
+      }
+
+      final name = (product['nazwa'] as String?)?.trim();
+      if (name == null || name.isEmpty) {
+        continue;
+      }
+
+      final quantityRaw = product['ilosc']?.toString();
+      final quantity = quantityRaw != null ? _parseAmount(quantityRaw) : 1.0;
+      final unit = _inferUnit(quantityRaw);
+      final unitPrice = _fromMinorUnits(_asInt(product['cena']));
+      final total = _fromMinorUnits(_asInt(product['brutto']));
+      final vatRate = _vatRateFromCode(product['idStPTU'] as String?);
+
+      items.add(
+        LineItem(
+          id: _generateId(),
+          receiptId: receiptId,
+          name: name,
+          quantity: quantity,
+          unit: unit,
+          unitPrice: unitPrice,
+          discount: 0,
+          vatRate: vatRate,
+          total: total,
+          categoryId: _categorize(name),
+        ),
+      );
+
+      final discount = product['rabat'];
+      if (discount is Map<String, dynamic>) {
+        final amountMinor = _asInt(discount['wart']);
+        if (amountMinor == null || amountMinor == 0) {
+          continue;
+        }
+
+        final label = (discount['opis'] as String?)?.trim();
+        final discountName = (label == null || label.isEmpty) ? 'Rabat' : label;
+        final amount = _fromMinorUnits(
+          amountMinor > 0 ? -amountMinor : amountMinor,
+        );
+
+        items.add(
+          LineItem(
+            id: _generateId(),
+            receiptId: receiptId,
+            name: discountName,
+            quantity: 1,
+            unit: 'szt',
+            unitPrice: amount,
+            discount: 0,
+            vatRate: vatRate,
+            total: amount,
+            categoryId: _categorize(discountName),
+          ),
+        );
+      }
+    }
+
+    return items;
+  }
+
+  double _parseJpkVat(dynamic podsum) {
+    if (podsum is! Map<String, dynamic>) {
+      return 0;
+    }
+
+    return _fromMinorUnits(_asInt(podsum['sumaPod']));
   }
 
   ReceiptTotals _parseTotals(String text) {
@@ -492,6 +670,33 @@ class ReceiptParser {
         _looksLikeBiedronka(
           combinedText,
           combinedText.replaceAll(RegExp(r'[\s-]'), ''),
+        )) {
+      return 'biedronka';
+    }
+
+    return 'receipts';
+  }
+
+  String _detectMerchantIdFromJpk(Map<String, dynamic> document) {
+    final seller = document['podmiot1'];
+    if (seller is! Map<String, dynamic>) {
+      return 'receipts';
+    }
+
+    final tin = seller['NIP']?.toString();
+    final normalizedTin = tin?.replaceAll(RegExp(r'[^0-9]'), '');
+    if (normalizedTin == '5261040567' || normalizedTin == '7791011327') {
+      return 'biedronka';
+    }
+
+    final sellerText = seller.values
+        .whereType<String>()
+        .map((value) => value.toLowerCase())
+        .join(' ');
+    if (sellerText.isNotEmpty &&
+        _looksLikeBiedronka(
+          sellerText,
+          sellerText.replaceAll(RegExp(r'[\s-]'), ''),
         )) {
       return 'biedronka';
     }

@@ -17,20 +17,22 @@ class ImportView extends ConsumerWidget {
     final controller = ref.watch(importControllerProvider.notifier);
     final entries = controller.historyEntries;
 
-    final historyContent = importState.maybeWhen(
-      data: (results) => results.isEmpty
-          ? const _EmptyState()
-          : _ImportHistoryList(
-              entries: entries,
-              onRetry: (uri) => controller.importUris([uri]),
-            ),
-      orElse: () => entries.isEmpty
-          ? const _EmptyState()
-          : _ImportHistoryList(
-              entries: entries,
-              onRetry: (uri) => controller.importUris([uri]),
-            ),
-    );
+    final bodyContent = importState.isLoading
+        ? const _LoadingState()
+        : importState.maybeWhen(
+            data: (results) => results.isEmpty
+                ? const _EmptyState()
+                : _ImportHistoryList(
+                    entries: entries,
+                    onRetry: (uri) => controller.importUris([uri]),
+                  ),
+            orElse: () => entries.isEmpty
+                ? const _EmptyState()
+                : _ImportHistoryList(
+                    entries: entries,
+                    onRetry: (uri) => controller.importUris([uri]),
+                  ),
+          );
 
     return Scaffold(
       appBar: AppBar(
@@ -52,15 +54,7 @@ class ImportView extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Expanded(
-              child: Stack(
-                children: [
-                  historyContent,
-                  if (importState.isLoading)
-                    const Positioned.fill(
-                      child: _LoadingOverlay(),
-                    ),
-                ],
-              ),
+              child: bodyContent,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
@@ -96,32 +90,29 @@ class ImportView extends ConsumerWidget {
   }
 }
 
-class _LoadingOverlay extends StatelessWidget {
-  const _LoadingOverlay();
+class _LoadingState extends StatelessWidget {
+  const _LoadingState();
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
-    return ColoredBox(
-      color: Colors.black.withValues(alpha: 0.05),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: AppSpacing.md),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-              child: Text(
-                t.ocrInProgressMessage,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: AppSpacing.md),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+            child: Text(
+              t.ocrInProgressMessage,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textPrimary,
               ),
+              textAlign: TextAlign.center,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
