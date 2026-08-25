@@ -59,6 +59,40 @@ void main() {
     expect(receipt.items, isNotEmpty);
   });
 
+  test('parses OCR text with ISO-like purchase date', () {
+    final parser = ReceiptParser();
+    const text = '''
+BIEDRONKA CODZIENNIE NISKIE CENY
+JERONIMO MARTINS POLSKA S.A.
+NIP 7791011327
+Paragon fiskalny
+2025-09-27 12:34:56
+SUMA PLN 42,10
+''';
+
+    final receipt = parser.parse(text);
+
+    expect(receipt.merchantId, 'biedronka');
+    expect(receipt.purchaseTimestamp, DateTime(2025, 9, 27, 12, 34));
+    expect(receipt.totalGross, closeTo(42.10, 0.01));
+  });
+
+  test('parses OCR text when date separators are dashes', () {
+    final parser = ReceiptParser();
+    const text = '''
+BIEDRONKA CODZIENNIE NISKIE CENY
+JERONIMO MARTINS POLSKA S.A.
+Paragon fiskalny
+27-09-2025 12:34
+SUMA PLN 42,10
+''';
+
+    final receipt = parser.parse(text);
+
+    expect(receipt.purchaseTimestamp, DateTime(2025, 9, 27, 12, 34));
+    expect(receipt.totalGross, closeTo(42.10, 0.01));
+  });
+
   test('parses JSON receipt export', () async {
     final parser = ReceiptParser();
     final text = await File('assets/sample_receipt.json').readAsString();
@@ -113,6 +147,66 @@ void main() {
     expect(
       receipt.items.any((item) => (item.total + 1.20).abs() < 0.01),
       isTrue,
+    );
+  });
+
+  test('rejects unsupported text without false-positive import', () {
+    final parser = ReceiptParser();
+
+    expect(
+      () => parser.parse('Shopping note without fiscal markers'),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
+  test('rejects supported text when purchase date is missing', () {
+    final parser = ReceiptParser();
+    const text = '''
+BIEDRONKA CODZIENNIE NISKIE CENY
+JERONIMO MARTINS POLSKA S.A.
+Paragon fiskalny
+SUMA PLN 42,10
+''';
+
+    expect(
+      () => parser.parse(text),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          'Missing purchase date',
+        ),
+      ),
+    );
+  });
+
+  test('rejects supported text when total is missing', () {
+    final parser = ReceiptParser();
+    const text = '''
+BIEDRONKA CODZIENNIE NISKIE CENY
+JERONIMO MARTINS POLSKA S.A.
+Paragon fiskalny
+27.09.2025 12:34
+''';
+
+    expect(
+      () => parser.parse(text),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          'Missing total amount',
+        ),
+      ),
+    );
+  });
+
+  test('rejects malformed JSON payload', () {
+    final parser = ReceiptParser();
+
+    expect(
+      () => parser.parse('{"header":'),
+      throwsA(isA<FormatException>()),
     );
   });
 }

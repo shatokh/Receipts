@@ -7,7 +7,11 @@ import 'package:receipts/domain/models/receipt.dart';
 
 class ReceiptParser {
   static final RegExp _dateRegex =
-      RegExp(r'(\d{1,2})\.(\d{1,2})\.(\d{4})\s+(\d{1,2}):(\d{2})');
+      RegExp(r'(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})\s+(\d{1,2}):(\d{2})');
+  static final RegExp _isoLikeDateRegex = RegExp(
+    r'(\d{4})[-./](\d{1,2})[-./](\d{1,2})[T\s]+'
+    r'(\d{1,2}):(\d{2})(?::\d{2})?(?:\.\d+)?Z?',
+  );
   static final RegExp _itemLineRegex =
       RegExp(r'^(.+?)\s{2,}(-?\d+(?:[,.]\d+)?)\s*(\S+)$');
   static final RegExp _singleLineItemRegex = RegExp(
@@ -441,7 +445,7 @@ class ReceiptParser {
       }
 
       if (!inItemsSection) {
-        if (_dateRegex.hasMatch(line)) {
+        if (_containsPurchaseDate(line)) {
           inItemsSection = true;
         }
         continue;
@@ -601,17 +605,32 @@ class ReceiptParser {
 
   DateTime? _parsePurchaseDate(String text) {
     final match = _dateRegex.firstMatch(text);
-    if (match == null) {
-      return null;
+    if (match != null) {
+      final day = int.parse(match.group(1)!);
+      final month = int.parse(match.group(2)!);
+      final year = int.parse(match.group(3)!);
+      final hour = int.parse(match.group(4)!);
+      final minute = int.parse(match.group(5)!);
+
+      return DateTime(year, month, day, hour, minute);
     }
 
-    final day = int.parse(match.group(1)!);
-    final month = int.parse(match.group(2)!);
-    final year = int.parse(match.group(3)!);
-    final hour = int.parse(match.group(4)!);
-    final minute = int.parse(match.group(5)!);
+    final isoLikeMatch = _isoLikeDateRegex.firstMatch(text);
+    if (isoLikeMatch != null) {
+      final year = int.parse(isoLikeMatch.group(1)!);
+      final month = int.parse(isoLikeMatch.group(2)!);
+      final day = int.parse(isoLikeMatch.group(3)!);
+      final hour = int.parse(isoLikeMatch.group(4)!);
+      final minute = int.parse(isoLikeMatch.group(5)!);
 
-    return DateTime(year, month, day, hour, minute);
+      return DateTime(year, month, day, hour, minute);
+    }
+
+    return null;
+  }
+
+  bool _containsPurchaseDate(String text) {
+    return _dateRegex.hasMatch(text) || _isoLikeDateRegex.hasMatch(text);
   }
 
   String _normalizeText(String text) {

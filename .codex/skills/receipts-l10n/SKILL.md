@@ -9,16 +9,32 @@ Use this skill for user-facing text in widgets, snackbars, dialogs, labels, empt
 
 ## Rules
 
-- Put visible strings in both `lib/l10n/app_en.arb` and `lib/l10n/app_ru.arb`.
+- Put visible strings in all supported ARB files:
+  - `lib/l10n/app_en.arb`
+  - `lib/l10n/app_ru.arb`
+  - `lib/l10n/app_pl.arb`
 - Include ARB metadata for placeholders and plurals.
-- Do not hardcode visible English/Russian strings directly in widgets.
+- Do not hardcode visible English/Russian/Polish strings directly in widgets.
 - Use `AppLocalizations.of(context)!` in UI code.
 - Use helpers in `lib/l10n/app_localizations_extensions.dart` for month labels when they fit the use case.
 - Use `intl` with the current locale for dates and currency.
 
 ## Generated Files
 
-Prefer regenerating localizations through Flutter tooling when possible. Do not manually edit `lib/l10n/app_localizations*.dart` unless generation is unavailable and the user accepts the tradeoff.
+Regenerate localizations through Flutter tooling after ARB changes:
+
+```powershell
+flutter gen-l10n
+```
+
+Commit ARB and generated files together:
+
+- `lib/l10n/app_localizations.dart`
+- `lib/l10n/app_localizations_en.dart`
+- `lib/l10n/app_localizations_ru.dart`
+- `lib/l10n/app_localizations_pl.dart`
+
+Do not manually edit generated localization files unless generation is unavailable and the tradeoff is documented in the sub-plan or PR notes.
 
 ## Validation
 

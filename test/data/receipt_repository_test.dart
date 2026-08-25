@@ -63,6 +63,120 @@ void main() {
     );
   });
 
+  test('insertReceiptWithItems rolls back receipt when item insert fails',
+      () async {
+    await expectLater(
+      repository.insertReceiptWithItems(
+        receipt: buildReceipt(
+          id: 'receipt-rollback',
+          date: DateTime(2025, 8, 14),
+          total: 20,
+        ),
+        items: [
+          buildLineItem(
+            id: 'duplicate-item',
+            receiptId: 'receipt-rollback',
+            total: 10,
+            categoryId: CategoryIds.dairyEggsBakery,
+          ),
+          buildLineItem(
+            id: 'duplicate-item',
+            receiptId: 'receipt-rollback',
+            total: 10,
+            categoryId: CategoryIds.packagedPantry,
+          ),
+        ],
+      ),
+      throwsA(anything),
+    );
+
+    final db = await DatabaseHelper.database;
+    expect(
+      await db.query(
+        'receipts',
+        where: 'id = ?',
+        whereArgs: ['receipt-rollback'],
+      ),
+      isEmpty,
+    );
+    expect(
+      await db.query(
+        'line_items',
+        where: 'receipt_id = ?',
+        whereArgs: ['receipt-rollback'],
+      ),
+      isEmpty,
+    );
+    expect(await _monthlyTotal(2025, 8), isNull);
+    expect(await _categoryTotal(CategoryIds.dairyEggsBakery, 2025, 8), isNull);
+    expect(await _categoryTotal(CategoryIds.packagedPantry, 2025, 8), isNull);
+  });
+
+  test('insertReceiptWithItems keeps aggregates isolated by month and category',
+      () async {
+    await repository.insertReceiptWithItems(
+      receipt: buildReceipt(
+        id: 'receipt-aug-dairy',
+        date: DateTime(2025, 8, 14),
+        total: 10,
+      ),
+      items: [
+        buildLineItem(
+          id: 'item-aug-dairy',
+          receiptId: 'receipt-aug-dairy',
+          total: 10,
+          categoryId: CategoryIds.dairyEggsBakery,
+        ),
+      ],
+    );
+    await repository.insertReceiptWithItems(
+      receipt: buildReceipt(
+        id: 'receipt-aug-pantry',
+        date: DateTime(2025, 8, 20),
+        total: 15,
+      ),
+      items: [
+        buildLineItem(
+          id: 'item-aug-pantry',
+          receiptId: 'receipt-aug-pantry',
+          total: 15,
+          categoryId: CategoryIds.packagedPantry,
+        ),
+      ],
+    );
+    await repository.insertReceiptWithItems(
+      receipt: buildReceipt(
+        id: 'receipt-sept-dairy',
+        date: DateTime(2025, 9, 1),
+        total: 7,
+      ),
+      items: [
+        buildLineItem(
+          id: 'item-sept-dairy',
+          receiptId: 'receipt-sept-dairy',
+          total: 7,
+          categoryId: CategoryIds.dairyEggsBakery,
+        ),
+      ],
+    );
+
+    expect(await _monthlyTotal(2025, 8), closeTo(25, 0.01));
+    expect(await _monthlyTotal(2025, 9), closeTo(7, 0.01));
+    expect(
+      await _categoryTotal(CategoryIds.dairyEggsBakery, 2025, 8),
+      closeTo(10, 0.01),
+    );
+    expect(
+      await _categoryTotal(CategoryIds.packagedPantry, 2025, 8),
+      closeTo(15, 0.01),
+    );
+    expect(
+      await _categoryTotal(CategoryIds.dairyEggsBakery, 2025, 9),
+      closeTo(7, 0.01),
+    );
+    expect(await _categoryTotal(CategoryIds.packagedPantry, 2025, 9), isNull);
+  });
+
   test('updateReceipt recalculates old and new months', () async {
     await repository.insertReceiptWithItems(
       receipt: buildReceipt(

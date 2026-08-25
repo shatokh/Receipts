@@ -685,6 +685,11 @@ lib/features/dashboard/
 - Разделить slow/fast jobs.
 - Сохранить `workflow_dispatch` для дорогих integration suites, если они не должны блокировать каждый PR.
 - Убедиться, что PR status ясно показывает failing layer.
+- Зафиксировать E2E UI automation strategy:
+  - fast PR gate: unit/repository/use-case/widget tests;
+  - default E2E app-flow harness: Flutter `integration_test` with provider overrides and synthetic fixtures;
+  - Patrol: optional Android-first spike only for real native surfaces such as permissions, SAF/file picker, system dialogs, or native PDF/OCR paths;
+  - no full Patrol migration until the native spike proves enough value.
 
 Критерии готовности:
 
@@ -782,6 +787,7 @@ Feature work отдельно от refactor PR:
 | Phase 7: remaining analytics view models | superseded | `docs/refactoring_subplans/phase_7_closeout.md` | 2026-06-08 | Concrete Phase 7 candidates are covered by completed sub-plans; future formatter cleanup should be a separate package. |
 | Phase 10: CI quality gates | complete | `docs/refactoring_subplans/phase_10_ci_quality_gates.md` | 2026-06-08 | Flutter workflow versions aligned, Sonar uses coverage helper with conservative threshold, integration docs updated. |
 | Phase 10: coverage threshold decision | complete | `docs/refactoring_subplans/phase_10_coverage_threshold.md` | 2026-06-08 | Coverage baseline measured at 51.05%; Sonar coverage helper now enforces conservative `--min-coverage=50`. |
+| Phase 10: E2E UI automation strategy | planned | `docs/refactoring_subplans/phase_10_e2e_ui_automation_strategy.md` | 2026-06-23 | Layered strategy proposed: widget tests for UI states, Flutter `integration_test` for deterministic app flows, Patrol only as optional Android native-surface spike. |
 | Formatter ownership cleanup | complete | `docs/refactoring_subplans/formatter_ownership_cleanup.md` | 2026-06-08 | Shared `AppFormatters` added for receipt currency/date output; focused formatter test, analyzer, and full test suite passed. |
 | ReceiptMonth data range cleanup | complete | `docs/refactoring_subplans/receipt_month_data_range_cleanup.md` | 2026-06-08 | `MonthDateRange` now derives boundaries from `ReceiptMonth`; focused data tests, analyzer, and full test suite passed. |
 | AmountRange value object | complete | `docs/refactoring_subplans/amount_range_value_object.md` | 2026-06-21 | Receipts amount filter now uses pure `AmountRange`; `RangeValues` remains only at the slider adapter; focused tests, analyzer, and full suite passed. |
