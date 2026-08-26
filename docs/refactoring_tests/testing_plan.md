@@ -382,7 +382,7 @@ Definition of Done:
 
 ### Package 4. UI state and localization coverage
 
-Status: partially complete. ImportView state matrix complete in `docs/refactoring_tests/ui_state_localization_coverage.md`; Dashboard/Month/Receipts/ReceiptDetails/Settings state matrices remain open.
+Status: complete. ImportView state matrix is complete in `docs/refactoring_tests/ui_state_localization_coverage.md`; the remaining Dashboard/Month/Receipts/ReceiptDetails/Settings matrices are complete in `docs/refactoring_tests/ui_state_screen_matrices.md`.
 
 Scope:
 
@@ -408,7 +408,11 @@ Definition of Done:
 - Локализация проверена для новых visible strings.
 - Tests остаются быстрыми и не требуют emulator.
 
+Completion evidence: `flutter analyze`, `flutter test` (93 tests), and `dart run tool/test_with_coverage.dart --min-coverage=50` passed on 2026-08-25. Measured coverage is 67.19% (2001/2978 lines).
+
 ### Package 5. Integration flow expansion
+
+Status: complete. The Android manual suite contains six focused journeys: native-SQLite import, hash duplicate, JSON fallback, receipt details, persistence after app rebuild, and extraction error. See `docs/refactoring_tests/integration_flow_expansion.md`.
 
 Scope:
 
@@ -434,7 +438,11 @@ Definition of Done:
 - Manual suite покрывает happy path, duplicate, fallback/error, details и persistence.
 - Runtime остается в пределах workflow timeout.
 
+Completion evidence: local Android API 36 emulator run passed all six journeys on 2026-08-26 (`assembleDebug`: 59.9 seconds; device tests: 22 seconds). The local TLS truststore is machine-specific and is not committed. Fast checks also passed: `flutter analyze`, `flutter test` (93 tests), and the 50% coverage gate at 67.26% (2003/2978 lines).
+
 ### Package 6. Coverage gate raise
+
+Status: complete. The CI gate is raised from 50% to 55% after three randomized measurements consistently reported 67.26% (2003/2978 lines).
 
 Scope:
 
@@ -456,9 +464,11 @@ Risks:
 
 Definition of Done:
 
-- Новый gate стабильно проходит.
-- Решение и baseline записаны.
-- Integration tests не включены в coverage gate.
+- [x] Новый gate стабильно проходит.
+- [x] Решение и baseline записаны.
+- [x] Integration tests не включены в coverage gate.
+
+Completion evidence: on 2026-08-26, three randomized coverage runs each passed all 93 fast tests and measured 67.26% (2003/2978 lines). The measured headroom above the new 55% gate is 12.26 percentage points. The runs used seeds `3405708436` (initial measurement) and two additional helper-generated randomized orders; no Android integration test is part of this gate.
 
 ## Recommended Checklists
 

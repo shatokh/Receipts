@@ -7,9 +7,30 @@ import 'package:receipts/app/providers.dart';
 import 'package:receipts/core/localization/locale_controller.dart';
 import 'package:receipts/data/repositories/settings_repository.dart';
 import 'package:receipts/features/settings/settings_view.dart';
+import 'package:receipts/features/settings/language_page.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 
 void main() {
+  testWidgets('LanguagePage updates the selected locale', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final controller = LocaleController();
+
+    await tester.pumpWidget(
+      _testApp(
+        overrides: [
+          localeProvider.overrideWith((ref) => controller),
+        ],
+        child: const LanguagePage(),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.text('Polish'));
+    await tester.pump();
+
+    expect(controller.state, const Locale('pl'));
+  });
+
   testWidgets('SettingsView renders main settings sections', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final repository = SettingsRepository(

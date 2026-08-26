@@ -8,6 +8,7 @@ class TestKeys {
   static const navSettings = ValueKey('nav_settings');
   static const importButton = ValueKey('import_button');
   static const importStatusSuccess = ValueKey('import_status_success');
+  static const importStatusDuplicate = ValueKey('import_status_duplicate');
   static const importStatusError = ValueKey('import_status_error');
   static const receiptList = ValueKey('receipt_list');
   static const chartView = ValueKey('chart_view');

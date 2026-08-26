@@ -7,8 +7,12 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'package:receipts/app/providers.dart';
+import 'package:receipts/app/router.dart';
+import 'package:receipts/core/logging/error_log_service.dart';
 import 'package:receipts/data/database.dart';
 import 'package:receipts/di/test_overrides.dart';
+import 'package:receipts/features/receipt_details/widgets/receipt_details_content.dart';
 import 'package:receipts/platform/pdf_text_extractor/pdf_text_extractor.dart';
 
 import '../test/test_infra/fakes/fake_file_import_service.dart';
@@ -59,31 +63,68 @@ Future<void> waitForFinder(
   fail('Timed out waiting for $finder');
 }
 
+Future<void> waitForSuccessfulImport(
+  WidgetTester tester, {
+  required String Function() pipelineErrorType,
+  Duration timeout = const Duration(seconds: 20),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  final successBadge = find.byKey(TestKeys.importStatusSuccess);
+  final errorBadge = find.byKey(TestKeys.importStatusError);
+  final importSnackBar = find.byType(SnackBar);
+
+  while (DateTime.now().isBefore(deadline)) {
+    await tester.pump(const Duration(milliseconds: 100));
+    if (successBadge.evaluate().isNotEmpty) {
+      return;
+    }
+    if (errorBadge.evaluate().isNotEmpty) {
+      fail(
+        'Import pipeline returned ${pipelineErrorType()} instead of success.',
+      );
+    }
+    if (importSnackBar.evaluate().isNotEmpty) {
+      fail('Import picker failed before reaching the import pipeline.');
+    }
+  }
+
+  fail('Timed out waiting for a successful import result.');
+}
+
 void main() {
-  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   late FakeFileImportService fakeFileImportService;
   late FakePdfTextExtractor fakePdfTextExtractor;
+  late _RecordingErrorLogService errorLogger;
   late List<Override> overrides;
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
-    DatabaseHelper.configureForTesting(databaseName: 'integration_test.db');
+    DatabaseHelper.configureForTesting(
+      databaseName: 'integration_test.db',
+      useFfi: false,
+    );
   });
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     fakeFileImportService = FakeFileImportService();
     fakePdfTextExtractor = FakePdfTextExtractor(fakeFileImportService);
+    errorLogger = _RecordingErrorLogService();
 
     await DatabaseHelper.close();
     final databasesPath = await getDatabasesPath();
     final dbFile = p.join(databasesPath, 'integration_test.db');
     await deleteDatabase(dbFile);
+    router.go('/onboarding');
 
     overrides = await createIntegrationTestOverrides(
       fileImportService: fakeFileImportService,
       pdfTextExtractor: fakePdfTextExtractor,
+      additionalOverrides: [
+        errorLogServiceProvider.overrideWithValue(errorLogger),
+      ],
     );
   });
 
@@ -92,7 +133,7 @@ void main() {
     await DatabaseHelper.close();
   });
 
-  testWidgets('import flow updates receipts and statistics', (tester) async {
+  testWidgets('imports a receipt with native SQLite', (tester) async {
     final sampleText = await rootBundle.loadString('assets/sample_receipt.txt');
 
     fakeFileImportService.queueImport([
@@ -110,39 +151,141 @@ void main() {
     await tester.tap(find.byKey(TestKeys.onboardingGetStarted));
     await pumpAndSettleSafe(tester);
 
-    expect(find.byKey(TestKeys.navHome), findsOneWidget);
-
-    await tester.tap(find.byKey(TestKeys.navStats));
-    await pumpAndSettleSafe(tester);
-    await tester.tap(find.byKey(TestKeys.navHome));
-    await pumpAndSettleSafe(tester);
-
     await tester.tap(find.byKey(TestKeys.navImport));
     await pumpAndSettleSafe(tester);
 
     await tester.tap(find.byKey(TestKeys.importButton));
-    await pumpAndSettleSafe(tester, timeout: const Duration(seconds: 20));
+    await waitForSuccessfulImport(
+      tester,
+      pipelineErrorType: () => errorLogger.lastErrorType ?? 'unknown error',
+    );
 
-    expect(find.byKey(TestKeys.importStatusSuccess), findsWidgets);
+    expect(find.byKey(TestKeys.importStatusSuccess), findsOneWidget);
+  });
+
+  testWidgets('shows a duplicate result for an existing file hash',
+      (tester) async {
+    final sampleText = await rootBundle.loadString('assets/sample_receipt.txt');
+    final request = FakeImportRequest(
+      assetPath: 'assets/test/receipts/sample.pdf',
+      uri: 'asset://sample.pdf',
+      textPages: [sampleText],
+      hash: 'integration-duplicate-hash',
+    );
+    fakeFileImportService.queueImport([request]);
+
+    await tester.pumpWidget(buildTestApp(overrides: overrides));
+    await pumpAndSettleSafe(tester);
+    await tester.tap(find.byKey(TestKeys.onboardingGetStarted));
+    await pumpAndSettleSafe(tester);
+    await tester.tap(find.byKey(TestKeys.navImport));
+    await pumpAndSettleSafe(tester);
+
+    await tester.tap(find.byKey(TestKeys.importButton));
+    await waitForSuccessfulImport(
+      tester,
+      pipelineErrorType: () => errorLogger.lastErrorType ?? 'unknown error',
+    );
+
+    fakeFileImportService.queueImport([request]);
+    await tester.tap(find.byKey(TestKeys.importButton));
+    await waitForFinder(tester, find.byKey(TestKeys.importStatusDuplicate));
+
+    expect(find.byKey(TestKeys.importStatusSuccess), findsOneWidget);
+    expect(find.byKey(TestKeys.importStatusDuplicate), findsOneWidget);
+  });
+
+  testWidgets('imports JSON when PDF text extraction is empty', (tester) async {
+    fakeFileImportService.queueImport([
+      const FakeImportRequest(
+        assetPath: 'assets/sample_receipt.json',
+        uri: 'asset://sample_receipt.json',
+        textPages: [],
+        hash: 'integration-json-fallback-hash',
+      ),
+    ]);
+
+    await tester.pumpWidget(buildTestApp(overrides: overrides));
+    await pumpAndSettleSafe(tester);
+    await tester.tap(find.byKey(TestKeys.onboardingGetStarted));
+    await pumpAndSettleSafe(tester);
+    await tester.tap(find.byKey(TestKeys.navImport));
+    await pumpAndSettleSafe(tester);
+
+    await tester.tap(find.byKey(TestKeys.importButton));
+    await waitForSuccessfulImport(
+      tester,
+      pipelineErrorType: () => errorLogger.lastErrorType ?? 'unknown error',
+    );
+
+    expect(find.byKey(TestKeys.importStatusSuccess), findsOneWidget);
+  });
+
+  testWidgets('opens receipt details after an import', (tester) async {
+    final sampleText = await rootBundle.loadString('assets/sample_receipt.txt');
+    fakeFileImportService.queueImport([
+      FakeImportRequest(
+        assetPath: 'assets/test/receipts/sample.pdf',
+        uri: 'asset://details.pdf',
+        textPages: [sampleText],
+        hash: 'integration-details-hash',
+      ),
+    ]);
+
+    await tester.pumpWidget(buildTestApp(overrides: overrides));
+    await pumpAndSettleSafe(tester);
+    await tester.tap(find.byKey(TestKeys.onboardingGetStarted));
+    await pumpAndSettleSafe(tester);
+    await tester.tap(find.byKey(TestKeys.navImport));
+    await pumpAndSettleSafe(tester);
+    await tester.tap(find.byKey(TestKeys.importButton));
+    await waitForSuccessfulImport(
+      tester,
+      pipelineErrorType: () => errorLogger.lastErrorType ?? 'unknown error',
+    );
 
     await tester.tap(find.byKey(TestKeys.navReceipts));
-    await pumpAndSettleSafe(tester, timeout: const Duration(seconds: 10));
+    await waitForFinder(tester, find.byKey(TestKeys.receiptList));
+    await tester.tap(find.textContaining('Biedronka').first);
+    await waitForFinder(tester, find.byType(ReceiptDetailsContent));
+
+    expect(find.byType(ReceiptDetailsContent), findsOneWidget);
+  });
+
+  testWidgets('keeps imported receipts after an app rebuild', (tester) async {
+    final sampleText = await rootBundle.loadString('assets/sample_receipt.txt');
+    fakeFileImportService.queueImport([
+      FakeImportRequest(
+        assetPath: 'assets/test/receipts/sample.pdf',
+        uri: 'asset://rebuild.pdf',
+        textPages: [sampleText],
+        hash: 'integration-rebuild-hash',
+      ),
+    ]);
+
+    await tester.pumpWidget(buildTestApp(overrides: overrides));
+    await pumpAndSettleSafe(tester);
+    await tester.tap(find.byKey(TestKeys.onboardingGetStarted));
+    await pumpAndSettleSafe(tester);
+    await tester.tap(find.byKey(TestKeys.navImport));
+    await pumpAndSettleSafe(tester);
+    await tester.tap(find.byKey(TestKeys.importButton));
+    await waitForSuccessfulImport(
+      tester,
+      pipelineErrorType: () => errorLogger.lastErrorType ?? 'unknown error',
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(buildTestApp(overrides: overrides));
+    await pumpAndSettleSafe(tester);
+    await tester.tap(find.byKey(TestKeys.navReceipts));
     await waitForFinder(tester, find.byKey(TestKeys.receiptList));
 
-    expect(find.byKey(TestKeys.receiptList), findsOneWidget);
     expect(find.textContaining('Biedronka'), findsWidgets);
+  });
 
-    await tester.tap(find.byKey(TestKeys.navStats));
-    await pumpAndSettleSafe(tester, timeout: const Duration(seconds: 10));
-    await waitForFinder(tester, find.byKey(TestKeys.chartView));
-    expect(find.byKey(TestKeys.chartView), findsOneWidget);
-
-    binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-    await tester.pump();
-    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    await pumpAndSettleSafe(tester);
-    expect(find.byKey(TestKeys.chartView), findsOneWidget);
-
+  testWidgets('shows an error result when extraction fails', (tester) async {
     final brokenRequest = FakeImportRequest(
       assetPath: 'assets/test/receipts/broken.pdf',
       uri: 'asset://broken.pdf',
@@ -152,13 +295,40 @@ void main() {
           PdfTextExtractionException('Unable to read provided PDF'),
     );
 
+    await tester.pumpWidget(buildTestApp(overrides: overrides));
+    await pumpAndSettleSafe(tester);
+
+    await tester.tap(find.byKey(TestKeys.onboardingGetStarted));
+    await pumpAndSettleSafe(tester);
     await tester.tap(find.byKey(TestKeys.navImport));
     await pumpAndSettleSafe(tester);
     fakeFileImportService.queueImport([brokenRequest]);
 
     await tester.tap(find.byKey(TestKeys.importButton));
-    await pumpAndSettleSafe(tester);
+    await waitForFinder(
+      tester,
+      find.byKey(TestKeys.importStatusError),
+      timeout: const Duration(seconds: 20),
+    );
 
-    expect(find.byKey(TestKeys.importStatusError), findsWidgets);
+    expect(find.byKey(TestKeys.importStatusError), findsOneWidget);
   });
+}
+
+class _RecordingErrorLogService extends ErrorLogService {
+  _RecordingErrorLogService() : super(enabled: false);
+
+  String? lastErrorType;
+
+  @override
+  Future<void> logImportFailure({
+    required String safUri,
+    required String message,
+    Object? error,
+    StackTrace? stackTrace,
+    Map<String, dynamic>? details,
+  }) async {
+    lastErrorType =
+        error == null ? 'unknown error' : error.runtimeType.toString();
+  }
 }

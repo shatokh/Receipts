@@ -12,9 +12,17 @@ class DatabaseHelper {
   static const int dbVersion = 2;
   static String? _databaseNameOverride;
 
-  static void configureForTesting({String? databaseName}) {
+  /// Configures an isolated database name for a test run.
+  ///
+  /// Host-side tests use sqflite FFI by default. Device integration tests must
+  /// keep the platform sqflite implementation because FFI is not available on
+  /// Android or iOS.
+  static void configureForTesting({
+    String? databaseName,
+    bool useFfi = true,
+  }) {
     _databaseNameOverride = databaseName;
-    if (!kIsWeb) {
+    if (useFfi && !kIsWeb) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
