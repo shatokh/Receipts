@@ -1,5 +1,7 @@
 package app.receipts
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.net.Uri
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -10,6 +12,7 @@ import android.os.Looper
 import android.util.Base64
 import android.util.Log
 import androidx.annotation.NonNull
+import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -28,6 +31,7 @@ import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.InputStream
 import java.security.MessageDigest
 import java.text.Normalizer
@@ -42,6 +46,7 @@ import org.json.JSONObject
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "pdf_text_extractor"
+    private val RECEIPT_SOURCE_OPENER_CHANNEL = "receipt_source_opener"
     private val TAG = "ReceiptsPdfExtractor"
     private val mainHandler = Handler(Looper.getMainLooper())
     private val backgroundExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
@@ -121,6 +126,55 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, RECEIPT_SOURCE_OPENER_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "open" -> {
+                    val sourceUri = call.arguments as? String
+                    if (sourceUri.isNullOrBlank()) {
+                        result.error("OPEN_SOURCE_ERROR", "Unable to open source file.", null)
+                        return@setMethodCallHandler
+                    }
+                    try {
+                        openReceiptSource(sourceUri)
+                        result.success(null)
+                    } catch (_: Exception) {
+                        result.error("OPEN_SOURCE_ERROR", "Unable to open source file.", null)
+                    }
+                }
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    private fun openReceiptSource(source: String) {
+        val uri = toShareableUri(source)
+        val mimeType = contentResolver.getType(uri) ?: "application/pdf"
+        val intent = Intent(Intent.ACTION_VIEW)
+            .setDataAndType(uri, mimeType)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+        if (intent.resolveActivity(packageManager) == null) {
+            throw ActivityNotFoundException()
+        }
+        startActivity(Intent.createChooser(intent, null))
+    }
+
+    private fun toShareableUri(source: String): Uri {
+        val parsed = Uri.parse(source)
+        if (parsed.scheme == "content") {
+            return parsed
+        }
+
+        val file = when (parsed.scheme) {
+            "file" -> File(requireNotNull(parsed.path))
+            else -> File(source)
+        }
+        return FileProvider.getUriForFile(
+            this,
+            "$packageName.receipt-source-provider",
+            file,
+        )
     }
 
     private fun extractTextPages(safUri: String): List<String> {

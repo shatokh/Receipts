@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:receipts/l10n/app_localizations.dart';
+import 'package:receipts/l10n/app_localizations_extensions.dart';
 
 import 'package:receipts/features/receipt_details/receipt_details_view_model.dart';
 import 'package:receipts/theme.dart';
@@ -111,12 +112,25 @@ class _ItemRow extends StatelessWidget {
         children: [
           Expanded(
             flex: 3,
-            child: Text(
-              item.name,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color:
-                    item.isDiscount ? AppColors.success : AppColors.textPrimary,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.name,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: item.isDiscount
+                        ? AppColors.success
+                        : AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  AppLocalizations.of(context)!.categoryLabel(item.categoryId),
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(

@@ -14,10 +14,14 @@ class ReceiptDetailsContent extends StatelessWidget {
     super.key,
     required this.viewModel,
     required this.onDelete,
+    required this.onOpenPdf,
+    required this.onRecategorize,
   });
 
   final ReceiptDetailsViewModel viewModel;
   final Future<void> Function()? onDelete;
+  final Future<void> Function()? onOpenPdf;
+  final Future<void> Function()? onRecategorize;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +45,11 @@ class ReceiptDetailsContent extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             VatSummary(totalVatText: viewModel.totalVatText),
             const SizedBox(height: AppSpacing.lg),
-            ReceiptDetailsActionButtons(onDelete: onDelete),
+            ReceiptDetailsActionButtons(
+              onDelete: onDelete,
+              onOpenPdf: onOpenPdf,
+              onRecategorize: onRecategorize,
+            ),
           ],
         ),
       ),

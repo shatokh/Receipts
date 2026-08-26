@@ -51,6 +51,8 @@ class ReceiptDetailsViewModel {
 
 class ReceiptLineItemViewModel {
   const ReceiptLineItemViewModel({
+    required this.id,
+    required this.categoryId,
     required this.name,
     required this.quantityPriceText,
     required this.vatText,
@@ -58,6 +60,8 @@ class ReceiptLineItemViewModel {
     required this.isDiscount,
   });
 
+  final String id;
+  final String categoryId;
   final String name;
   final String quantityPriceText;
   final String vatText;
@@ -70,6 +74,8 @@ class ReceiptLineItemViewModel {
   }) {
     final isDiscount = item.discount > 0 || item.total < 0;
     return ReceiptLineItemViewModel(
+      id: item.id,
+      categoryId: item.categoryId,
       name: item.name,
       quantityPriceText: isDiscount
           ? '—'

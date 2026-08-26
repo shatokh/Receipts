@@ -4,9 +4,16 @@ import 'package:receipts/l10n/app_localizations.dart';
 import 'package:receipts/theme.dart';
 
 class ReceiptDetailsActionButtons extends StatelessWidget {
-  const ReceiptDetailsActionButtons({super.key, required this.onDelete});
+  const ReceiptDetailsActionButtons({
+    super.key,
+    required this.onDelete,
+    required this.onOpenPdf,
+    required this.onRecategorize,
+  });
 
   final Future<void> Function()? onDelete;
+  final Future<void> Function()? onOpenPdf;
+  final Future<void> Function()? onRecategorize;
 
   @override
   Widget build(BuildContext context) {
@@ -18,11 +25,8 @@ class ReceiptDetailsActionButtons extends StatelessWidget {
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(t.pdfOpenNotImplemented)),
-                  );
-                },
+                key: const Key('openPdfButton'),
+                onPressed: onOpenPdf,
                 icon: const Icon(Icons.picture_as_pdf),
                 label: Text(t.openPdf),
               ),
@@ -30,11 +34,7 @@ class ReceiptDetailsActionButtons extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: TextButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(t.recategorizationNotImplemented)),
-                  );
-                },
+                onPressed: onRecategorize,
                 icon: const Icon(Icons.category),
                 label: Text(t.recategorize),
               ),
