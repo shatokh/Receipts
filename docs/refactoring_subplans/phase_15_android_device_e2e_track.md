@@ -135,7 +135,7 @@ Before adding a native automation dependency, assess the gaps below:
 - Infrastructure decisions:
   - `tool/it_android.ps1` now hides the background emulator window and accepts an explicit `-SystemImage` value so local API availability does not change the API 34 CI default.
   - The local TLS truststore remains user-scoped and uncommitted.
-- Next checkpoint: prepare a small learning spike sub-plan comparing Patrol and Maestro on one or two native Android surfaces. This is explicitly authorized as learning work and is not gated on business scenario volume.
+- Next checkpoint: `docs/refactoring_subplans/phase_16_native_e2e_framework_learning_spike.md` compares Patrol and Maestro on one or two native Android surfaces. This is explicitly authorized as learning work and is not gated on business scenario volume.
 
 ## Start Criteria
 
