@@ -99,23 +99,32 @@ class ReceiptRepository {
 
   Future<void> deleteReceipt(String id) async {
     final db = await DatabaseHelper.database;
-    DateTime? deletedMonth;
+    var deleted = false;
     try {
       await db.transaction((txn) async {
-        deletedMonth = await _fetchReceiptMonth(txn, id);
+        final deletedMonth = await _fetchReceiptMonth(txn, id);
+        if (deletedMonth == null) {
+          return;
+        }
         await txn.delete(
           'line_items',
           where: 'receipt_id = ?',
           whereArgs: [id],
         );
-        await txn.delete('receipts', where: 'id = ?', whereArgs: [id]);
+        deleted =
+            await txn.delete('receipts', where: 'id = ?', whereArgs: [id]) > 0;
+        if (deleted) {
+          await _aggregatesUpdater.updateForMonthsInTransaction(txn, [
+            deletedMonth,
+          ]);
+        }
       });
     } catch (error) {
       rethrow;
     }
-    await _updateAggregatesForMonths(
-      deletedMonth != null ? [deletedMonth!] : const [],
-    );
+    if (deleted) {
+      _updateBus.notifyListeners();
+    }
   }
 
   Future<List<LineItem>> getLineItemsForReceipt(String receiptId) async {

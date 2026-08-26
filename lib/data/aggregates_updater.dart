@@ -32,6 +32,20 @@ class AggregatesUpdater {
     }
   }
 
+  /// Updates aggregates as part of the caller's transaction.
+  ///
+  /// Use this for multi-table repository writes that must not commit receipt
+  /// changes before the affected aggregate rows are consistent.
+  Future<void> updateForMonthsInTransaction(
+    Transaction txn,
+    Iterable<DateTime> months,
+  ) async {
+    final monthStarts = _normalizeMonths(months);
+    for (final monthStart in monthStarts) {
+      await _updateForMonthInTransaction(txn, monthStart);
+    }
+  }
+
   Future<void> _rebuildMonthlyTotals(Transaction txn) async {
     await txn.execute('DELETE FROM monthly_totals');
     await txn.execute('''
@@ -86,72 +100,79 @@ class AggregatesUpdater {
   }
 
   Future<void> _updateForMonth(Database db, DateTime monthStart) async {
+    await db.transaction(
+      (txn) => _updateForMonthInTransaction(txn, monthStart),
+    );
+  }
+
+  Future<void> _updateForMonthInTransaction(
+    DatabaseExecutor db,
+    DateTime monthStart,
+  ) async {
     final monthRange = MonthDateRange.forDate(monthStart);
     final month = monthRange.start;
     final start = monthRange.startMs;
     final end = monthRange.endMs;
 
-    await db.transaction((txn) async {
-      final totalResult = await txn.rawQuery(
+    final totalResult = await db.rawQuery(
         'SELECT SUM(total_gross) as total FROM receipts WHERE purchase_ts >= ? AND purchase_ts < ?',
         [start, end],
       );
-      final totalAmount =
-          (totalResult.isNotEmpty ? totalResult.first['total'] : null) as num?;
+    final totalAmount =
+        (totalResult.isNotEmpty ? totalResult.first['total'] : null) as num?;
 
-      final totalValue = (totalAmount ?? 0).toDouble();
+    final totalValue = (totalAmount ?? 0).toDouble();
 
-      await txn.rawInsert(
-        'INSERT INTO monthly_totals (year, month, total) VALUES (?, ?, ?) '
-        'ON CONFLICT(year, month) DO UPDATE SET total = excluded.total',
-        [month.year, month.month, totalValue],
+    await db.rawInsert(
+      'INSERT INTO monthly_totals (year, month, total) VALUES (?, ?, ?) '
+      'ON CONFLICT(year, month) DO UPDATE SET total = excluded.total',
+      [month.year, month.month, totalValue],
+    );
+
+    await db.delete(
+      'category_month_totals',
+      where: 'year = ? AND month = ?',
+      whereArgs: [month.year, month.month],
+    );
+
+    final categoryRows = await db.rawQuery(
+      'SELECT li.category_id as category_id, SUM(li.total) as total '
+      'FROM line_items li '
+      'JOIN receipts r ON r.id = li.receipt_id '
+      'WHERE r.purchase_ts >= ? AND r.purchase_ts < ? '
+      'GROUP BY li.category_id',
+      [start, end],
+    );
+
+    final totalsByCategory = <String, double>{};
+    for (final row in categoryRows) {
+      final rawCategoryId = row['category_id'] as String?;
+      final amount = (row['total'] as num?)?.toDouble() ?? 0.0;
+      final categoryId = normalizeCategoryId(rawCategoryId);
+      totalsByCategory.update(
+        categoryId,
+        (value) => value + amount,
+        ifAbsent: () => amount,
       );
+    }
 
-      await txn.delete(
+    for (final entry in totalsByCategory.entries) {
+      await db.rawInsert(
+        'INSERT INTO category_month_totals (category_id, year, month, total) '
+        'VALUES (?, ?, ?, ?) '
+        'ON CONFLICT(category_id, year, month) DO UPDATE SET total = excluded.total',
+        [entry.key, month.year, month.month, entry.value],
+      );
+    }
+
+    if (categoryRows.isEmpty) {
+      // ensure table does not hold stale zero rows for this month
+      await db.delete(
         'category_month_totals',
-        where: 'year = ? AND month = ?',
+        where: 'year = ? AND month = ? AND total = 0',
         whereArgs: [month.year, month.month],
       );
-
-      final categoryRows = await txn.rawQuery(
-        'SELECT li.category_id as category_id, SUM(li.total) as total '
-        'FROM line_items li '
-        'JOIN receipts r ON r.id = li.receipt_id '
-        'WHERE r.purchase_ts >= ? AND r.purchase_ts < ? '
-        'GROUP BY li.category_id',
-        [start, end],
-      );
-
-      final totalsByCategory = <String, double>{};
-      for (final row in categoryRows) {
-        final rawCategoryId = row['category_id'] as String?;
-        final amount = (row['total'] as num?)?.toDouble() ?? 0.0;
-        final categoryId = normalizeCategoryId(rawCategoryId);
-        totalsByCategory.update(
-          categoryId,
-          (value) => value + amount,
-          ifAbsent: () => amount,
-        );
-      }
-
-      for (final entry in totalsByCategory.entries) {
-        await txn.rawInsert(
-          'INSERT INTO category_month_totals (category_id, year, month, total) '
-          'VALUES (?, ?, ?, ?) '
-          'ON CONFLICT(category_id, year, month) DO UPDATE SET total = excluded.total',
-          [entry.key, month.year, month.month, entry.value],
-        );
-      }
-
-      if (categoryRows.isEmpty) {
-        // ensure table does not hold stale zero rows for this month
-        await txn.delete(
-          'category_month_totals',
-          where: 'year = ? AND month = ? AND total = 0',
-          whereArgs: [month.year, month.month],
-        );
-      }
-    });
+    }
   }
 
   List<DateTime> _normalizeMonths(Iterable<DateTime> months) {

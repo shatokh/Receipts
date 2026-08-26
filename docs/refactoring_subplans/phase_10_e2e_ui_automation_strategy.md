@@ -3,9 +3,9 @@
 ## Master Plan Link
 
 - Master phase: `docs/framework_refactoring_plan.md` section 7, `Этап 10. CI и quality gates`
-- Status: planned
+- Status: complete
 - Owner/agent: Codex
-- Last updated: 2026-06-23
+- Last updated: 2026-08-26
 
 ## Scope
 
@@ -342,10 +342,8 @@ Future implementation packages:
 
 ## Completion Notes
 
-- Completed on:
-- Tests run:
-- Decisions made:
+- Completed on: 2026-08-26
+- Tests run: three randomized fast coverage runs (93/93, 67.26% coverage) and Android `integration_test` on `emulator-5554` (6/6).
+- Decisions made: Flutter `integration_test` remains the deterministic, manual-only Android E2E harness; no Patrol dependency was added.
 - Follow-ups:
-  - Package 4 from `docs/refactoring_tests/testing_plan.md`: UI state and localization widget coverage.
-  - Focused `integration_test` flow split/expansion.
-  - Optional Patrol Android spike after widget/integration gaps are closed.
+  - Consider a separate Patrol spike only if real Android file picker, permission, or native PDF/OCR automation becomes a product requirement.

@@ -377,6 +377,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recategorize => 'Re-categorize';
 
   @override
+  String get deleteReceipt => 'Delete receipt';
+
+  @override
+  String get deleteReceiptDialogTitle => 'Delete receipt?';
+
+  @override
+  String get deleteReceiptDialogMessage =>
+      'This receipt and its items will be permanently deleted. This action cannot be undone.';
+
+  @override
+  String get deleteReceiptSuccess => 'Receipt deleted';
+
+  @override
+  String get deleteReceiptFailed => 'Could not delete receipt. Try again.';
+
+  @override
   String get dashboardTitle => 'Spending dashboard';
 
   @override

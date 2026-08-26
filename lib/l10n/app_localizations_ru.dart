@@ -386,6 +386,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get recategorize => 'Переклассифицировать';
 
   @override
+  String get deleteReceipt => 'Удалить чек';
+
+  @override
+  String get deleteReceiptDialogTitle => 'Удалить чек?';
+
+  @override
+  String get deleteReceiptDialogMessage =>
+      'Этот чек и его позиции будут удалены без возможности восстановления.';
+
+  @override
+  String get deleteReceiptSuccess => 'Чек удалён';
+
+  @override
+  String get deleteReceiptFailed =>
+      'Не удалось удалить чек. Попробуйте ещё раз.';
+
+  @override
   String get dashboardTitle => 'Панель расходов';
 
   @override

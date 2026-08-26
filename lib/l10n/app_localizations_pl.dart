@@ -388,6 +388,23 @@ class AppLocalizationsPl extends AppLocalizations {
   String get recategorize => 'Zmień kategorię';
 
   @override
+  String get deleteReceipt => 'Usuń paragon';
+
+  @override
+  String get deleteReceiptDialogTitle => 'Usunąć paragon?';
+
+  @override
+  String get deleteReceiptDialogMessage =>
+      'Ten paragon i jego pozycje zostaną trwale usunięte. Tej operacji nie można cofnąć.';
+
+  @override
+  String get deleteReceiptSuccess => 'Paragon usunięty';
+
+  @override
+  String get deleteReceiptFailed =>
+      'Nie udało się usunąć paragonu. Spróbuj ponownie.';
+
+  @override
   String get dashboardTitle => 'Panel wydatków';
 
   @override

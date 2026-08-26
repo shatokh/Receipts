@@ -2,9 +2,9 @@
 
 ## Статус
 
-- Status: in progress
+- Status: complete
 - Owner/agent: Codex
-- Last updated: 2026-06-23
+- Last updated: 2026-08-26
 - Related docs:
   - `README.md`
   - `README_TESTING.md`

@@ -724,6 +724,36 @@ abstract class AppLocalizations {
   /// **'Re-categorize'**
   String get recategorize;
 
+  /// No description provided for @deleteReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete receipt'**
+  String get deleteReceipt;
+
+  /// No description provided for @deleteReceiptDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete receipt?'**
+  String get deleteReceiptDialogTitle;
+
+  /// No description provided for @deleteReceiptDialogMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This receipt and its items will be permanently deleted. This action cannot be undone.'**
+  String get deleteReceiptDialogMessage;
+
+  /// No description provided for @deleteReceiptSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt deleted'**
+  String get deleteReceiptSuccess;
+
+  /// No description provided for @deleteReceiptFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete receipt. Try again.'**
+  String get deleteReceiptFailed;
+
   /// No description provided for @dashboardTitle.
   ///
   /// In en, this message translates to:

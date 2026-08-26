@@ -248,6 +248,50 @@ void main() {
     expect(await _monthlyTotal(2025, 8), closeTo(0, 0.01));
     expect(await _categoryTotal(CategoryIds.dairyEggsBakery, 2025, 8), isNull);
   });
+
+  test('deleteReceipt preserves aggregates for remaining receipts in the month',
+      () async {
+    await repository.insertReceiptWithItems(
+      receipt: buildReceipt(
+        id: 'receipt-to-delete',
+        date: DateTime(2025, 8, 14),
+        total: 10,
+      ),
+      items: [
+        buildLineItem(
+          id: 'item-to-delete',
+          receiptId: 'receipt-to-delete',
+          total: 10,
+          categoryId: CategoryIds.dairyEggsBakery,
+        ),
+      ],
+    );
+    await repository.insertReceiptWithItems(
+      receipt: buildReceipt(
+        id: 'receipt-to-keep',
+        date: DateTime(2025, 8, 15),
+        total: 15,
+      ),
+      items: [
+        buildLineItem(
+          id: 'item-to-keep',
+          receiptId: 'receipt-to-keep',
+          total: 15,
+          categoryId: CategoryIds.dairyEggsBakery,
+        ),
+      ],
+    );
+
+    await repository.deleteReceipt('receipt-to-delete');
+
+    expect(await repository.getReceipt('receipt-to-delete'), isNull);
+    expect(await repository.getReceipt('receipt-to-keep'), isNotNull);
+    expect(await _monthlyTotal(2025, 8), closeTo(15, 0.01));
+    expect(
+      await _categoryTotal(CategoryIds.dairyEggsBakery, 2025, 8),
+      closeTo(15, 0.01),
+    );
+  });
 }
 
 Future<double?> _monthlyTotal(int year, int month) async {

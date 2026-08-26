@@ -10,9 +10,14 @@ import 'package:receipts/features/receipt_details/widgets/vat_summary.dart';
 import 'package:receipts/theme.dart';
 
 class ReceiptDetailsContent extends StatelessWidget {
-  const ReceiptDetailsContent({super.key, required this.viewModel});
+  const ReceiptDetailsContent({
+    super.key,
+    required this.viewModel,
+    required this.onDelete,
+  });
 
   final ReceiptDetailsViewModel viewModel;
+  final Future<void> Function()? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +41,7 @@ class ReceiptDetailsContent extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             VatSummary(totalVatText: viewModel.totalVatText),
             const SizedBox(height: AppSpacing.lg),
-            const ReceiptDetailsActionButtons(),
+            ReceiptDetailsActionButtons(onDelete: onDelete),
           ],
         ),
       ),

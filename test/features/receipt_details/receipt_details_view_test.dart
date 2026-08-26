@@ -86,6 +86,74 @@ void main() {
     expect(find.text('Test Store'), findsOneWidget);
     expect(find.text('Test item'), findsOneWidget);
   });
+
+  testWidgets('ReceiptDetailsView confirms before deleting a receipt',
+      (tester) async {
+    final deletedIds = <String>[];
+    await tester.pumpWidget(
+      _testApp(
+        overrides: [
+          receiptDetailsProvider.overrideWith(
+            (ref, receiptId) => Future.value(_detailsFor(receiptId)),
+          ),
+        ],
+        child: ReceiptDetailsView(
+          receiptId: 'receipt-1',
+          onDelete: (receiptId) async => deletedIds.add(receiptId),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.text('Delete receipt'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Delete receipt?'), findsOneWidget);
+    expect(
+      find.text(
+        'This receipt and its items will be permanently deleted. This action cannot be undone.',
+      ),
+      findsOneWidget,
+    );
+    expect(deletedIds, isEmpty);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(deletedIds, isEmpty);
+
+    await tester.tap(find.text('Delete receipt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete receipt').last);
+    await tester.pump();
+
+    expect(deletedIds, ['receipt-1']);
+  });
+
+  testWidgets('ReceiptDetailsView shows a safe deletion failure message',
+      (tester) async {
+    await tester.pumpWidget(
+      _testApp(
+        overrides: [
+          receiptDetailsProvider.overrideWith(
+            (ref, receiptId) => Future.value(_detailsFor(receiptId)),
+          ),
+        ],
+        child: ReceiptDetailsView(
+          receiptId: 'receipt-1',
+          onDelete: (_) async => throw StateError('raw receipt contents'),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.text('Delete receipt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete receipt').last);
+    await tester.pump();
+
+    expect(find.text('Could not delete receipt. Try again.'), findsOneWidget);
+    expect(find.text('raw receipt contents'), findsNothing);
+  });
 }
 
 ReceiptDetails _detailsFor(String receiptId) {
