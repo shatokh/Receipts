@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:receipts/app/app_test_keys.dart';
 
 import '../l10n/app_localizations.dart';
 
@@ -26,23 +27,23 @@ class MainScaffold extends StatelessWidget {
 
     return [
       BottomNavigationBarItem(
-        icon: const Icon(Icons.home, key: ValueKey('nav_home')),
+        icon: const Icon(Icons.home, key: AppTestKeys.navHome),
         label: localizations.navHome,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.upload_file, key: ValueKey('nav_import')),
+        icon: const Icon(Icons.upload_file, key: AppTestKeys.navImport),
         label: localizations.navImport,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.bar_chart, key: ValueKey('nav_stats')),
+        icon: const Icon(Icons.bar_chart, key: AppTestKeys.navStats),
         label: localizations.navStats,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.receipt_long, key: ValueKey('nav_receipts')),
+        icon: const Icon(Icons.receipt_long, key: AppTestKeys.navReceipts),
         label: localizations.navReceipts,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.settings, key: ValueKey('nav_settings')),
+        icon: const Icon(Icons.settings, key: AppTestKeys.navSettings),
         label: localizations.navSettings,
       ),
     ];

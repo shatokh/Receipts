@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:receipts/app/app_test_keys.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 
 import 'package:receipts/theme.dart';
@@ -41,7 +42,7 @@ class OnboardingView extends StatelessWidget {
               _BulletPoint(text: t.onboardingBulletCrashReports),
               const Spacer(),
               ElevatedButton(
-                key: const ValueKey('onboarding_get_started'),
+                key: AppTestKeys.onboardingGetStarted,
                 onPressed: () => context.go('/dashboard'),
                 child: Text(t.onboardingGetStarted),
               ),

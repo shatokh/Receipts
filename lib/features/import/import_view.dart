@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:receipts/app/app_test_keys.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 
@@ -44,7 +45,7 @@ class ImportView extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ElevatedButton.icon(
-              key: const ValueKey('import_button'),
+              key: AppTestKeys.importButton,
               onPressed: () => _importReceipts(context, ref),
               icon: const Icon(Icons.upload_file),
               label: Text(t.importReceiptsButton),
@@ -297,11 +298,11 @@ class _ImportHistoryItem extends StatelessWidget {
   Key _statusBadgeKey(ImportStatus status) {
     switch (status) {
       case ImportStatus.success:
-        return const ValueKey('import_status_success');
+        return AppTestKeys.importStatusSuccess;
       case ImportStatus.duplicate:
-        return const ValueKey('import_status_duplicate');
+        return AppTestKeys.importStatusDuplicate;
       case ImportStatus.error:
-        return const ValueKey('import_status_error');
+        return AppTestKeys.importStatusError;
     }
   }
 }

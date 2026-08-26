@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:receipts/app/app_test_keys.dart';
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/domain/models/monthly_total.dart';
 import 'package:receipts/domain/models/receipt_row.dart';
@@ -77,7 +78,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
 
-    expect(find.byKey(const ValueKey('receipt_list')), findsOneWidget);
+    expect(find.byKey(AppTestKeys.receiptList), findsOneWidget);
     expect(find.text('Test Store'), findsOneWidget);
   });
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:receipts/app/app_test_keys.dart';
 import 'package:receipts/core/formatting/app_formatters.dart';
 
 import 'package:receipts/domain/models/receipt_row.dart';
@@ -16,7 +17,7 @@ class ReceiptsList extends StatelessWidget {
     final currencyFormat = AppFormatters.receiptCurrency();
 
     return ListView.separated(
-      key: const ValueKey('receipt_list'),
+      key: AppTestKeys.receiptList,
       itemCount: receipts.length,
       separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, index) {

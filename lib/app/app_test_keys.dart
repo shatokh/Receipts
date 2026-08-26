@@ -1,6 +1,12 @@
 import 'package:flutter/widgets.dart';
 
-class TestKeys {
+/// Stable widget keys used by device-level UI automation.
+///
+/// Keep this list limited to durable user actions and outcome states. Keys are
+/// a test contract, not selectors for visual layout.
+class AppTestKeys {
+  AppTestKeys._();
+
   static const navHome = ValueKey('nav_home');
   static const navImport = ValueKey('nav_import');
   static const navStats = ValueKey('nav_stats');
@@ -11,6 +17,5 @@ class TestKeys {
   static const importStatusDuplicate = ValueKey('import_status_duplicate');
   static const importStatusError = ValueKey('import_status_error');
   static const receiptList = ValueKey('receipt_list');
-  static const chartView = ValueKey('chart_view');
   static const onboardingGetStarted = ValueKey('onboarding_get_started');
 }

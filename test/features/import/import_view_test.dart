@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:receipts/app/app_test_keys.dart';
 import 'package:receipts/domain/models/import_result.dart';
 import 'package:receipts/features/import/import_controller.dart';
 import 'package:receipts/features/import/import_view.dart';
@@ -19,9 +20,9 @@ void main() {
     expect(find.text('No imports yet'), findsOneWidget);
     expect(
         find.text('Import your first receipt (PDF or JSON)'), findsOneWidget);
-    expect(find.byKey(const ValueKey('import_status_success')), findsNothing);
-    expect(find.byKey(const ValueKey('import_status_duplicate')), findsNothing);
-    expect(find.byKey(const ValueKey('import_status_error')), findsNothing);
+    expect(find.byKey(AppTestKeys.importStatusSuccess), findsNothing);
+    expect(find.byKey(AppTestKeys.importStatusDuplicate), findsNothing);
+    expect(find.byKey(AppTestKeys.importStatusError), findsNothing);
   });
 
   testWidgets('ImportView shows loading state without empty state underneath',
@@ -58,9 +59,9 @@ void main() {
     );
 
     expect(find.text('sample.pdf'), findsOneWidget);
-    expect(find.byKey(const ValueKey('import_status_success')), findsOneWidget);
-    expect(find.byKey(const ValueKey('import_status_duplicate')), findsNothing);
-    expect(find.byKey(const ValueKey('import_status_error')), findsNothing);
+    expect(find.byKey(AppTestKeys.importStatusSuccess), findsOneWidget);
+    expect(find.byKey(AppTestKeys.importStatusDuplicate), findsNothing);
+    expect(find.byKey(AppTestKeys.importStatusError), findsNothing);
     expect(find.text('Retry OCR'), findsNothing);
   });
 
@@ -84,7 +85,7 @@ void main() {
     expect(find.text('duplicate.pdf'), findsOneWidget);
     expect(find.textContaining('heuristic'), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('import_status_duplicate')),
+      find.byKey(AppTestKeys.importStatusDuplicate),
       findsOneWidget,
     );
     expect(find.text('Retry OCR'), findsNothing);
@@ -118,7 +119,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('content://provider/private'), findsNothing);
-    expect(find.byKey(const ValueKey('import_status_error')), findsOneWidget);
+    expect(find.byKey(AppTestKeys.importStatusError), findsOneWidget);
     expect(find.text('Retry OCR'), findsOneWidget);
 
     await tester.tap(find.text('Retry OCR'));
@@ -162,12 +163,12 @@ void main() {
     expect(find.text('imported.pdf'), findsOneWidget);
     expect(find.text('duplicate.pdf'), findsOneWidget);
     expect(find.text('failed.pdf'), findsOneWidget);
-    expect(find.byKey(const ValueKey('import_status_success')), findsOneWidget);
+    expect(find.byKey(AppTestKeys.importStatusSuccess), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('import_status_duplicate')),
+      find.byKey(AppTestKeys.importStatusDuplicate),
       findsOneWidget,
     );
-    expect(find.byKey(const ValueKey('import_status_error')), findsOneWidget);
+    expect(find.byKey(AppTestKeys.importStatusError), findsOneWidget);
     expect(find.text('Retry OCR'), findsOneWidget);
   });
 }

@@ -1,15 +1,15 @@
 Param(
     [string]$AvdName = "it_api34",
-    [string]$DeviceId = "emulator-5554"
+    [string]$DeviceId = "emulator-5554",
+    [string]$SystemImage = "system-images;android-34;google_apis;x86_64"
 )
 
 $ErrorActionPreference = "Stop"
-$systemImage = "system-images;android-34;google_apis;x86_64"
 
 function Ensure-Avd {
     if (-not (avdmanager list avd | Select-String "Name: $AvdName")) {
         Write-Host "Creating Android Virtual Device '$AvdName'"
-        $create = "no`n" | avdmanager create avd -n $AvdName -k $systemImage -d pixel_6
+        $create = "no`n" | avdmanager create avd -n $AvdName -k $SystemImage -d pixel_6
         if ($LASTEXITCODE -ne 0) {
             throw "Unable to create AVD $AvdName"
         }
@@ -24,7 +24,7 @@ function Start-Emulator {
 
     Write-Host "Starting emulator $AvdName"
     $args = "-avd $AvdName -no-window -no-snapshot -no-boot-anim -noaudio -gpu swiftshader_indirect"
-    $process = Start-Process emulator -ArgumentList $args -PassThru
+    $process = Start-Process emulator -ArgumentList $args -WindowStyle Hidden -PassThru
     Start-Sleep -Seconds 5
 
     Write-Host "Waiting for emulator to boot..."

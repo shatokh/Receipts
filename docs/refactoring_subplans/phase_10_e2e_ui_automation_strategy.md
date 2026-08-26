@@ -7,6 +7,10 @@
 - Owner/agent: Codex
 - Last updated: 2026-08-26
 
+## Lifecycle
+
+This document is the completed strategy decision record. Active Android emulator/connected-device E2E maintenance and suite refactoring are owned by `docs/refactoring_subplans/phase_15_android_device_e2e_track.md`; do not add implementation backlog here.
+
 ## Scope
 
 - Decide how Receipts should distribute UI and end-to-end checks across unit, repository/use-case, widget, Flutter `integration_test`, and possible Patrol-based tests.
@@ -260,25 +264,25 @@ Only after a separate setup PR:
    - run one real asset/file through Android extraction path
    - assert only high-level success/error state, not full parser details
 
-## Proposed Implementation Steps
+## Implemented Strategy Steps
 
-1. Update this sub-plan and master tracker with the chosen layered strategy.
-2. Add/extend widget tests first:
+1. [x] Update this sub-plan and master tracker with the chosen layered strategy.
+2. [x] Add/extend widget tests first:
    - `test/features/import/import_view_test.dart`
    - `test/features/dashboard/dashboard_view_test.dart`
    - `test/features/month/month_view_test.dart`
    - `test/features/receipts/receipts_view_test.dart`
    - `test/features/receipt_details/receipt_details_view_test.dart`
    - `test/features/settings/settings_view_test.dart`
-3. Split `integration_test/app_flow_test.dart` into focused flows or add focused tests beside it:
+3. [x] Cover focused integration journeys in `integration_test/app_flow_test.dart`:
    - `integration_test/import_happy_flow_test.dart`
    - `integration_test/import_duplicate_flow_test.dart`
    - `integration_test/import_json_fallback_flow_test.dart`
    - `integration_test/persistence_flow_test.dart`
-4. Keep `.github/workflows/integration_test.yml` manual-only.
-5. Add test keys only where stable UI automation needs them; avoid asserting brittle English text except when text itself is the behavior.
-6. After widget/integration gaps are closed, create a Patrol spike sub-plan if native coverage is still needed.
-7. Patrol spike setup, if approved:
+4. [x] Keep `.github/workflows/integration_test.yml` manual-only.
+5. [x] Add test keys only where stable UI automation needs them; avoid asserting brittle English text except when text itself is the behavior.
+6. [x] Move the remaining suite-structure, emulator, and connected-device work to Phase 15.
+7. Patrol spike setup, only if separately approved:
    - add `patrol` dev dependency;
    - install/use `patrol_cli`;
    - add `patrol` section to `pubspec.yaml` with `app_name: Receipts`, Android package `app.receipts`, and either `test_directory: patrol_test` or a deliberately separate directory;
@@ -317,11 +321,10 @@ Likely implementation files for follow-up packages:
 
 ## Tests And Checks
 
-Planning-only package:
+Completed planning package:
 
-- [ ] No code tests required.
-- [ ] Review links and decisions against current project state.
-- [ ] Master plan tracker updated.
+- [x] Review links and decisions against current project state.
+- [x] Master plan tracker updated.
 
 Future implementation packages:
 
@@ -333,12 +336,12 @@ Future implementation packages:
 
 ## Definition Of Done
 
-- [ ] Testing levels are explicitly mapped to user flows and risks.
-- [ ] Patrol decision is documented as "pilot only when native automation is needed", not default migration.
-- [ ] Current `integration_test` ownership remains clear.
-- [ ] Slow E2E checks remain outside fast PR gate.
-- [ ] Master plan tracker includes this work package.
-- [ ] Follow-up implementation packages are listed.
+- [x] Testing levels are explicitly mapped to user flows and risks.
+- [x] Patrol decision is documented as "pilot only when native automation is needed", not default migration.
+- [x] Current `integration_test` ownership remains clear.
+- [x] Slow E2E checks remain outside fast PR gate.
+- [x] Master plan tracker includes this work package.
+- [x] Follow-up implementation packages are listed.
 
 ## Completion Notes
 
@@ -346,4 +349,5 @@ Future implementation packages:
 - Tests run: three randomized fast coverage runs (93/93, 67.26% coverage) and Android `integration_test` on `emulator-5554` (6/6).
 - Decisions made: Flutter `integration_test` remains the deterministic, manual-only Android E2E harness; no Patrol dependency was added.
 - Follow-ups:
+  - Phase 15 owns the focused suite split, stable key contract, and emulator/connected-device execution contract.
   - Consider a separate Patrol spike only if real Android file picker, permission, or native PDF/OCR automation becomes a product requirement.
