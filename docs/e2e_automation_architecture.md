@@ -2,7 +2,7 @@
 
 ## Status and Purpose
 
-Status: proposed architecture and learning-spike decision record.  
+Status: proposed architecture and learning-spike decision record.
 Related implementation plan: `docs/refactoring_subplans/phase_16_native_e2e_framework_learning_spike.md`.
 
 Receipts already has a deterministic Flutter device suite. This document defines how that suite, native Android automation, and manual release smoke should coexist. It deliberately treats adoption of Patrol or Maestro as an educational, evidence-driven spike: one or two scenarios are sufficient to learn the tool and make a durable decision; business-flow volume is not a prerequisite.
@@ -63,7 +63,7 @@ Expected project impact:
 - ignore generated `test_bundle.dart` and any `.patrol.env` file;
 - run through `patrol test`, independently of `flutter test`.
 
-Strength: reuses Dart skills, Flutter finders, and app-level setup.  
+Strength: reuses Dart skills, Flutter finders, and app-level setup.
 Cost: adds a package, CLI, native test runner, generated output, and framework-specific maintenance.
 
 ### Maestro — external black-box device automation
@@ -77,7 +77,7 @@ Expected project impact:
 - build/install a normal debug APK and execute the flow against an emulator or connected device;
 - keep environment/device setup outside the app source tree.
 
-Strength: validates the user-visible product from outside Flutter and can exercise system UI with no Dart integration.  
+Strength: validates the user-visible product from outside Flutter and can exercise system UI with no Dart integration.
 Cost: a second language/runner, reduced access to Riverpod fakes, and an accessibility contract that needs deliberate maintenance.
 
 ## Framework-Neutral Pilot
