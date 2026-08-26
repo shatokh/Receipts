@@ -5,17 +5,26 @@ import 'package:receipts/l10n/app_localizations.dart';
 import 'package:receipts/features/settings/widgets/settings_section.dart';
 import 'package:receipts/theme.dart';
 
-class DebugSettingsSection extends StatelessWidget {
+class DebugSettingsSection extends StatefulWidget {
   const DebugSettingsSection({
     super.key,
     required this.devLoggingEnabled,
     required this.logPath,
+    required this.onClearReceiptData,
     required this.onDevLoggingChanged,
   });
 
   final bool devLoggingEnabled;
   final AsyncValue<String> logPath;
+  final Future<void> Function() onClearReceiptData;
   final ValueChanged<bool> onDevLoggingChanged;
+
+  @override
+  State<DebugSettingsSection> createState() => _DebugSettingsSectionState();
+}
+
+class _DebugSettingsSectionState extends State<DebugSettingsSection> {
+  var _isClearing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +49,7 @@ class DebugSettingsSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              logPath.when(
+              widget.logPath.when(
                 data: (path) => Text(
                   t.errorLogPath(path),
                   style: AppTextStyles.labelSmall.copyWith(
@@ -52,8 +61,8 @@ class DebugSettingsSection extends StatelessWidget {
               ),
             ],
           ),
-          value: devLoggingEnabled,
-          onChanged: onDevLoggingChanged,
+          value: widget.devLoggingEnabled,
+          onChanged: widget.onDevLoggingChanged,
           contentPadding: EdgeInsets.zero,
         ),
         ListTile(
@@ -69,37 +78,55 @@ class DebugSettingsSection extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
           ),
-          onTap: () => _showClearDataDialog(context),
+          onTap: _isClearing ? null : () => _showClearDataDialog(context),
           contentPadding: EdgeInsets.zero,
         ),
       ],
     );
   }
 
-  void _showClearDataDialog(BuildContext context) {
+  Future<void> _showClearDataDialog(BuildContext context) async {
     final t = AppLocalizations.of(context)!;
-    showDialog(
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(t.clearAllDataDialogTitle),
         content: Text(t.clearAllDataDialogMessage),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(AppLocalizations.of(context)!.cancel),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(t.cancel),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(t.clearDataNotImplemented)),
-              );
-            },
+            onPressed: () => Navigator.of(dialogContext).pop(true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: Text(t.clearAction),
           ),
         ],
       ),
     );
+    if (confirmed != true) {
+      return;
+    }
+    if (!context.mounted) {
+      return;
+    }
+
+    setState(() => _isClearing = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await widget.onClearReceiptData();
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isClearing = false);
+        messenger.showSnackBar(SnackBar(content: Text(t.clearDataFailed)));
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() => _isClearing = false);
+      messenger.showSnackBar(SnackBar(content: Text(t.clearDataSuccess)));
+    }
   }
 }

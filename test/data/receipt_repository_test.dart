@@ -292,6 +292,93 @@ void main() {
       closeTo(15, 0.01),
     );
   });
+
+  test('clearAllReceiptData removes receipt history and preserves seed metadata',
+      () async {
+    await repository.insertReceiptWithItems(
+      receipt: buildReceipt(
+        id: 'receipt-1',
+        date: DateTime(2025, 8, 14),
+        total: 10,
+      ),
+      items: [
+        buildLineItem(
+          id: 'item-1',
+          receiptId: 'receipt-1',
+          total: 10,
+          categoryId: CategoryIds.dairyEggsBakery,
+        ),
+      ],
+    );
+    await repository.insertReceiptWithItems(
+      receipt: buildReceipt(
+        id: 'receipt-2',
+        date: DateTime(2025, 9, 1),
+        total: 20,
+      ),
+      items: [
+        buildLineItem(
+          id: 'item-2',
+          receiptId: 'receipt-2',
+          total: 20,
+          categoryId: CategoryIds.packagedPantry,
+        ),
+      ],
+    );
+
+    final update = repository.updates.first.timeout(
+      const Duration(seconds: 2),
+    );
+
+    await repository.clearAllReceiptData();
+    await update;
+
+    final db = await DatabaseHelper.database;
+    expect(await db.query('receipts'), isEmpty);
+    expect(await db.query('line_items'), isEmpty);
+    expect(await db.query('monthly_totals'), isEmpty);
+    expect(await db.query('category_month_totals'), isEmpty);
+    expect(await db.query('categories'), isNotEmpty);
+    expect(await db.query('merchants'), isNotEmpty);
+  });
+
+  test('updateLineItemCategory updates category aggregates but not receipt total',
+      () async {
+    await repository.insertReceiptWithItems(
+      receipt: buildReceipt(
+        id: 'receipt-1',
+        date: DateTime(2025, 8, 14),
+        total: 10,
+      ),
+      items: [
+        buildLineItem(
+          id: 'item-1',
+          receiptId: 'receipt-1',
+          total: 10,
+          categoryId: CategoryIds.dairyEggsBakery,
+        ),
+      ],
+    );
+
+    final update = repository.updates.first.timeout(
+      const Duration(seconds: 2),
+    );
+
+    await repository.updateLineItemCategory(
+      lineItemId: 'item-1',
+      categoryId: CategoryIds.freshProduce,
+    );
+    await update;
+
+    final items = await repository.getLineItemsForReceipt('receipt-1');
+    expect(items.single.categoryId, CategoryIds.freshProduce);
+    expect(await _monthlyTotal(2025, 8), closeTo(10, 0.01));
+    expect(await _categoryTotal(CategoryIds.dairyEggsBakery, 2025, 8), isNull);
+    expect(
+      await _categoryTotal(CategoryIds.freshProduce, 2025, 8),
+      closeTo(10, 0.01),
+    );
+  });
 }
 
 Future<double?> _monthlyTotal(int year, int month) async {

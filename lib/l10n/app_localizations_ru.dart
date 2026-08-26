@@ -134,17 +134,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get clearAllDataDescription =>
-      'Удалить все чеки и сбросить приложение';
+      'Удалить все чеки и статистику расходов';
 
   @override
   String get clearAllDataDialogTitle => 'Удалить все данные?';
 
   @override
   String get clearAllDataDialogMessage =>
-      'Это действие навсегда удалит все чеки и данные. Его нельзя отменить.';
+      'Будут навсегда удалены все чеки и статистика расходов. Настройки приложения сохранятся. Это действие нельзя отменить.';
 
   @override
-  String get clearDataNotImplemented => 'Удаление данных пока не реализовано';
+  String get clearDataSuccess => 'Данные чеков удалены';
+
+  @override
+  String get clearDataFailed =>
+      'Не удалось удалить данные чеков. Попробуйте ещё раз.';
 
   @override
   String get clearAction => 'Удалить';
@@ -373,17 +377,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get vatTotalLabel => 'НДС всего:';
 
   @override
-  String get pdfOpenNotImplemented => 'Открытие PDF пока не реализовано';
-
-  @override
   String get openPdf => 'Открыть PDF';
 
   @override
-  String get recategorizationNotImplemented =>
-      'Повторная категоризация пока не реализована';
+  String get sourceOpenFailed =>
+      'Не удалось открыть исходный файл. Убедитесь, что он всё ещё доступен.';
 
   @override
   String get recategorize => 'Переклассифицировать';
+
+  @override
+  String get selectItemToRecategorize => 'Выберите позицию';
+
+  @override
+  String get selectCategory => 'Выберите категорию';
+
+  @override
+  String get categoryUpdated => 'Категория обновлена';
+
+  @override
+  String get categoryUpdateFailed =>
+      'Не удалось обновить категорию. Попробуйте ещё раз.';
 
   @override
   String get deleteReceipt => 'Удалить чек';

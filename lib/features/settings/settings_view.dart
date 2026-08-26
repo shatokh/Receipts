@@ -57,6 +57,7 @@ class SettingsView extends ConsumerWidget {
           DebugSettingsSection(
             devLoggingEnabled: devLoggingEnabled,
             logPath: logPathAsync,
+            onClearReceiptData: ref.read(receiptRepositoryProvider).clearAllReceiptData,
             onDevLoggingChanged: (value) async {
               await ref
                   .read(devLoggingEnabledProvider.notifier)

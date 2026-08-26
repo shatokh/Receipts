@@ -132,17 +132,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clearAllData => 'Clear all data';
 
   @override
-  String get clearAllDataDescription => 'Remove all receipts and reset the app';
+  String get clearAllDataDescription =>
+      'Remove all receipts and spending history';
 
   @override
   String get clearAllDataDialogTitle => 'Clear all data?';
 
   @override
   String get clearAllDataDialogMessage =>
-      'This will permanently delete all receipts and data. This action cannot be undone.';
+      'This will permanently delete all receipts and spending statistics. App settings will be kept. This action cannot be undone.';
 
   @override
-  String get clearDataNotImplemented => 'Data clearing not implemented yet';
+  String get clearDataSuccess => 'Receipt data cleared';
+
+  @override
+  String get clearDataFailed => 'Could not clear receipt data. Try again.';
 
   @override
   String get clearAction => 'Clear';
@@ -364,17 +368,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vatTotalLabel => 'VAT total:';
 
   @override
-  String get pdfOpenNotImplemented => 'PDF opening not implemented yet';
-
-  @override
   String get openPdf => 'Open PDF';
 
   @override
-  String get recategorizationNotImplemented =>
-      'Re-categorization not implemented yet';
+  String get sourceOpenFailed =>
+      'Could not open the source file. Make sure it is still available.';
 
   @override
   String get recategorize => 'Re-categorize';
+
+  @override
+  String get selectItemToRecategorize => 'Select an item';
+
+  @override
+  String get selectCategory => 'Select a category';
+
+  @override
+  String get categoryUpdated => 'Category updated';
+
+  @override
+  String get categoryUpdateFailed => 'Could not update category. Try again.';
 
   @override
   String get deleteReceipt => 'Delete receipt';

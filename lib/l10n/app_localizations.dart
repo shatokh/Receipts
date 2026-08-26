@@ -331,7 +331,7 @@ abstract class AppLocalizations {
   /// No description provided for @clearAllDataDescription.
   ///
   /// In en, this message translates to:
-  /// **'Remove all receipts and reset the app'**
+  /// **'Remove all receipts and spending history'**
   String get clearAllDataDescription;
 
   /// No description provided for @clearAllDataDialogTitle.
@@ -343,14 +343,20 @@ abstract class AppLocalizations {
   /// No description provided for @clearAllDataDialogMessage.
   ///
   /// In en, this message translates to:
-  /// **'This will permanently delete all receipts and data. This action cannot be undone.'**
+  /// **'This will permanently delete all receipts and spending statistics. App settings will be kept. This action cannot be undone.'**
   String get clearAllDataDialogMessage;
 
-  /// No description provided for @clearDataNotImplemented.
+  /// No description provided for @clearDataSuccess.
   ///
   /// In en, this message translates to:
-  /// **'Data clearing not implemented yet'**
-  String get clearDataNotImplemented;
+  /// **'Receipt data cleared'**
+  String get clearDataSuccess;
+
+  /// No description provided for @clearDataFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clear receipt data. Try again.'**
+  String get clearDataFailed;
 
   /// No description provided for @clearAction.
   ///
@@ -700,29 +706,47 @@ abstract class AppLocalizations {
   /// **'VAT total:'**
   String get vatTotalLabel;
 
-  /// No description provided for @pdfOpenNotImplemented.
-  ///
-  /// In en, this message translates to:
-  /// **'PDF opening not implemented yet'**
-  String get pdfOpenNotImplemented;
-
   /// No description provided for @openPdf.
   ///
   /// In en, this message translates to:
   /// **'Open PDF'**
   String get openPdf;
 
-  /// No description provided for @recategorizationNotImplemented.
+  /// No description provided for @sourceOpenFailed.
   ///
   /// In en, this message translates to:
-  /// **'Re-categorization not implemented yet'**
-  String get recategorizationNotImplemented;
+  /// **'Could not open the source file. Make sure it is still available.'**
+  String get sourceOpenFailed;
 
   /// No description provided for @recategorize.
   ///
   /// In en, this message translates to:
   /// **'Re-categorize'**
   String get recategorize;
+
+  /// No description provided for @selectItemToRecategorize.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an item'**
+  String get selectItemToRecategorize;
+
+  /// No description provided for @selectCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a category'**
+  String get selectCategory;
+
+  /// No description provided for @categoryUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Category updated'**
+  String get categoryUpdated;
+
+  /// No description provided for @categoryUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update category. Try again.'**
+  String get categoryUpdateFailed;
 
   /// No description provided for @deleteReceipt.
   ///

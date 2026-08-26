@@ -9,6 +9,7 @@ import 'package:receipts/data/database_update_bus.dart';
 import 'package:receipts/data/database_update_bus_provider.dart';
 import 'package:receipts/data/database_watch.dart';
 import 'package:receipts/data/month_date_range.dart';
+import 'package:receipts/domain/category_definitions.dart';
 import 'package:receipts/domain/models/line_item.dart';
 import 'package:receipts/domain/models/merchant.dart';
 import 'package:receipts/domain/models/receipt.dart';
@@ -123,6 +124,73 @@ class ReceiptRepository {
       rethrow;
     }
     if (deleted) {
+      _updateBus.notifyListeners();
+    }
+  }
+
+  /// Removes all user receipt history while preserving app configuration and
+  /// seeded metadata such as categories and bundled merchants.
+  Future<void> clearAllReceiptData() async {
+    final db = await DatabaseHelper.database;
+    try {
+      await db.transaction((txn) async {
+        await txn.delete('line_items');
+        await txn.delete('receipts');
+        await txn.delete('monthly_totals');
+        await txn.delete('category_month_totals');
+      });
+    } catch (error) {
+      rethrow;
+    }
+    _updateBus.notifyListeners();
+  }
+
+  /// Updates one line item's category and its month-level category aggregates.
+  Future<void> updateLineItemCategory({
+    required String lineItemId,
+    required String categoryId,
+  }) async {
+    final normalizedCategoryId = normalizeCategoryId(categoryId);
+    final db = await DatabaseHelper.database;
+    var updated = false;
+    try {
+      await db.transaction((txn) async {
+        final itemRows = await txn.rawQuery(
+          'SELECT li.category_id, r.purchase_ts '
+          'FROM line_items li '
+          'JOIN receipts r ON r.id = li.receipt_id '
+          'WHERE li.id = ? '
+          'LIMIT 1',
+          [lineItemId],
+        );
+        if (itemRows.isEmpty) {
+          return;
+        }
+
+        final currentCategoryId = itemRows.first['category_id'] as String?;
+        if (currentCategoryId == normalizedCategoryId) {
+          return;
+        }
+
+        updated =
+            await txn.update(
+              'line_items',
+              {'category_id': normalizedCategoryId},
+              where: 'id = ?',
+              whereArgs: [lineItemId],
+            ) >
+            0;
+        if (updated) {
+          final purchaseTimestamp = itemRows.first['purchase_ts'] as int;
+          await _aggregatesUpdater.updateForMonthsInTransaction(txn, [
+            DateTime.fromMillisecondsSinceEpoch(purchaseTimestamp),
+          ]);
+        }
+      });
+    } catch (error) {
+      rethrow;
+    }
+    if (updated) {
       _updateBus.notifyListeners();
     }
   }

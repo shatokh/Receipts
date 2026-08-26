@@ -133,18 +133,21 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get clearAllDataDescription =>
-      'Usuń wszystkie paragony i zresetuj aplikację';
+      'Usuń wszystkie paragony i historię wydatków';
 
   @override
   String get clearAllDataDialogTitle => 'Wyczyścić wszystkie dane?';
 
   @override
   String get clearAllDataDialogMessage =>
-      'Spowoduje to trwałe usunięcie wszystkich paragonów i danych. Tej akcji nie można cofnąć.';
+      'Spowoduje to trwałe usunięcie wszystkich paragonów i statystyk wydatków. Ustawienia aplikacji zostaną zachowane. Tej operacji nie można cofnąć.';
 
   @override
-  String get clearDataNotImplemented =>
-      'Czyszczenie danych nie jest jeszcze dostępne';
+  String get clearDataSuccess => 'Dane paragonów zostały usunięte';
+
+  @override
+  String get clearDataFailed =>
+      'Nie udało się usunąć danych paragonów. Spróbuj ponownie.';
 
   @override
   String get clearAction => 'Wyczyść';
@@ -374,18 +377,27 @@ class AppLocalizationsPl extends AppLocalizations {
   String get vatTotalLabel => 'Suma VAT:';
 
   @override
-  String get pdfOpenNotImplemented =>
-      'Otwieranie PDF nie jest jeszcze dostępne';
-
-  @override
   String get openPdf => 'Otwórz PDF';
 
   @override
-  String get recategorizationNotImplemented =>
-      'Ponowna kategoryzacja nie jest jeszcze dostępna';
+  String get sourceOpenFailed =>
+      'Nie udało się otworzyć pliku źródłowego. Upewnij się, że jest nadal dostępny.';
 
   @override
   String get recategorize => 'Zmień kategorię';
+
+  @override
+  String get selectItemToRecategorize => 'Wybierz pozycję';
+
+  @override
+  String get selectCategory => 'Wybierz kategorię';
+
+  @override
+  String get categoryUpdated => 'Kategoria została zaktualizowana';
+
+  @override
+  String get categoryUpdateFailed =>
+      'Nie udało się zaktualizować kategorii. Spróbuj ponownie.';
 
   @override
   String get deleteReceipt => 'Usuń paragon';
