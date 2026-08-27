@@ -26,6 +26,10 @@ Use this skill when adding or fixing tests under `test/` or `integration_test/`.
 - Use `integration_test/` for full app flows that need a device or emulator.
 - Prefer existing helpers such as `pumpAndSettleSafe` and `waitForFinder` over arbitrary delays.
 - See `README_TESTING.md` for Android emulator setup and helper scripts.
+- Before starting Flutter or Patrol, wait with a bounded timeout for both `adb -s <device> get-state` = `device` and `sys.boot_completed` = `1`; an emulator being listed by `adb devices` is not sufficient.
+- For the Phase 16 native-framework comparison, use only `it_api36` / `emulator-5554`. Launch it with `-no-snapshot`; a visible window is debugging-only, while headless runs provide comparison evidence.
+- Treat missing-snapshot, transient boot-time `device offline`, and emulator update-check TLS messages as host warnings if readiness succeeds. Do not add certificates or truststores to the repository.
+- If the host needs a local Gradle truststore for Android dependency downloads, pass its ignored path through `RECEIPTS_GRADLE_TRUST_STORE`. `patrol develop` must run in an interactive TTY; use `tool/run_patrol_android.ps1` for the manual deterministic Patrol result.
 
 ## Commands
 

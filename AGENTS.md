@@ -144,6 +144,14 @@ When editing this pipeline:
 - The current CI coverage gate is `dart run tool/test_with_coverage.dart --min-coverage=50` in `.github/workflows/sonar-scan.yml`. Do not raise it without measuring a fresh baseline and recording the decision in docs.
 - Android integration tests are manual-only and must not be added to the coverage gate.
 
+### Android E2E Launch Rules
+- Until the Phase 16 framework decision, use only the verified `it_api36` / `emulator-5554` AVD for Patrol and Maestro comparison evidence. A visible window is allowed for interactive debugging on that same AVD; use its headless mode for repeatable evidence.
+- Start a fresh emulator with `-no-snapshot`; never depend on the mutable `default_boot` snapshot and never use `-wipe-data` unless the user explicitly requests a data reset.
+- Do not start Flutter or Patrol merely because `adb devices` lists a serial. Wait, with a bounded timeout, for both `adb -s <device> get-state` to return `device` and `sys.boot_completed` to equal `1`.
+- A missing snapshot, a transient `device offline` message during boot, or an emulator `UpdateCheck` TLS warning is non-blocking when the bounded readiness check succeeds. Do not change application code, install certificates into the repository, or disable security tooling to hide those warnings.
+- If Android dependency resolution has a host TLS interception problem, use an ignored, local truststore only through `RECEIPTS_GRADLE_TRUST_STORE` (or an explicit helper argument). Never commit a truststore, certificate, proxy setting, or security-product exception.
+- `patrol develop` is for visual debugging and requires an interactive TTY; do not launch it through a redirected/non-interactive process. Use `tool/run_patrol_android.ps1` for the deterministic manual Patrol pilot result, because the host's `patrol test` UTP result listener is currently unreliable.
+
 ## Common Tasks
 
 ### Adding a Feature

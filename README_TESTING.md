@@ -43,6 +43,36 @@ flutter test integration_test -d <connected-device-id>
 
 The helper scripts below create or boot an emulator; use the direct command for an already connected device. Record the device model/API and result in the active Android E2E sub-plan when collecting release evidence.
 
+### Patrol native-system pilot (temporary local runner)
+
+Phase 16 uses Patrol only on the verified `it_api36` / `emulator-5554` image. Run one selected Patrol test through the project helper:
+
+```powershell
+.\tool\run_patrol_android.ps1 -DeviceId emulator-5554 -TestTarget patrol_test/document_picker_cancel_test.dart
+```
+
+The helper uses `patrol build android` and then invokes the same `PatrolJUnitRunner` through `adb`. This is a host-only workaround for an Android Gradle UTP local mTLS result-listener defect: it does not treat the Gradle HTML/protobuf report as green, and it fails unless the JUnit runner itself reports a successful test. It is manual-only and not part of the PR or coverage gate. Do not use another AVD or a physical device while the Patrol/Maestro comparison is in progress.
+
+### Android E2E launch rules
+
+- For the Phase 16 comparison, use only `it_api36` / `emulator-5554`. Use headless mode for recorded runs; for a visual Patrol demonstration, start the same AVD with a window and `-no-snapshot`:
+
+  ```powershell
+  & "$env:ANDROID_SDK_ROOT\emulator\emulator.exe" -avd it_api36 -no-snapshot -no-boot-anim
+  ```
+
+- Before starting a test, wait until both commands succeed: `adb -s emulator-5554 get-state` prints `device`, and `adb -s emulator-5554 shell getprop sys.boot_completed` prints `1`. Do not treat a serial listed by `adb devices` as ready by itself.
+- `default_boot` snapshot failures, early `device offline` messages, and `UpdateCheck` TLS failures are non-blocking emulator-host diagnostics if the readiness check succeeds. They do not justify app changes or committed TLS bypasses.
+- If Android dependencies cannot be downloaded because a locally installed TLS interceptor is not trusted, keep the truststore outside Git and pass its path only for the current shell:
+
+  ```powershell
+  $env:RECEIPTS_GRADLE_TRUST_STORE = 'C:\local-only\gradle-truststore'
+  .\tool\run_patrol_android.ps1
+  ```
+
+  The helper validates the path and passes it only to Gradle. Do not commit certificates, truststores, proxy settings, or antivirus exceptions.
+- Run `patrol develop` only from an interactive terminal; it needs a TTY for hot restart. It is for observing/repeating UI actions, while `run_patrol_android.ps1` is the deterministic manual result command.
+
 ### Helper scripts
 
 - **macOS/Linux**: `./tool/it_android.sh`

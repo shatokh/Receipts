@@ -201,6 +201,12 @@ Score each framework after running Pilot A (and Pilot B if attempted) on the sam
 | Privacy-safe evidence | 10% | Can logs/screenshots avoid receipt contents, paths, and URIs? |
 | Maintenance fit | 10% | New dependencies, generated files, Android/Flutter upgrade burden. |
 
+### Pilot A evidence (not a framework decision)
+
+| Framework | Verified environment | Outcome | Scorecard evidence |
+| --- | --- | --- | --- |
+| Patrol | Local headless `it_api36` / `emulator-5554`; Patrol CLI 4.7.0, package 4.9.0 | Two direct JUnit runs passed for picker cancel/return-to-Import. | Native `pressBack` and a durable `AppTestKeys.importButton` assertion passed; the AVD's `ACTION_OPEN_DOCUMENT` handler was confirmed separately without selecting a file. Warm build plus run was about 30 seconds. The official `patrol test` command still fails after a passed test because AGP/UTP cannot maintain its host-local mTLS result listener; `tool/run_patrol_android.ps1` preserves the same runner's JUnit pass/fail outcome. No real receipt, URI, path, picker text, or screenshot was used. CI feasibility and comparison scores remain unassessed until Maestro Pilot A runs on this same AVD. |
+
 For future Appium consideration, record whether WebDriver language/device-farm interoperability is worth the server and client stack. For future UI Automator consideration, record whether Android-only Kotlin ownership is acceptable. These are documented alternatives, not hidden pilot requirements.
 
 Decision rules:
@@ -213,7 +219,7 @@ Decision rules:
 
 ## Execution and CI Policy
 
-1. Until the framework decision, run every Phase 16 pilot only on the verified local headless AVD `it_api36` / `emulator-5554` (Android API 36, Google APIs Play Store image).
+1. Until the framework decision, run every Phase 16 pilot only on the verified local `it_api36` / `emulator-5554` AVD (Android API 36, Google APIs Play Store image). Record scorecard evidence from headless runs; a visible window on that same AVD is debugging-only.
 2. Do not use a connected physical device, a different AVD, cloud device farm, scheduled job, or CI run for the comparison; changing the device would invalidate like-for-like scorecard evidence.
 3. Keep `flutter test` as the fast PR and coverage gate.
 4. Keep the existing Flutter Android integration workflow manual-only while execution time is measured.

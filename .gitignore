@@ -28,6 +28,9 @@ migrate_working_dir/
 .packages
 .pub-cache/
 .pub/
+**/test_bundle.dart
+**/patrol_test_bundle.dart
+.patrol.env
 build/
 flutter_*.png
 linked_*.dylib
@@ -39,6 +42,7 @@ coverage/
 
 # Android related
 **/android/**/.gradle/
+**/android/**/.kotlin/
 **/android/**/captures/
 **/android/**/gradlew
 **/android/**/gradlew.bat

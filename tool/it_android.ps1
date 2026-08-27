@@ -17,22 +17,40 @@ function Ensure-Avd {
 }
 
 function Start-Emulator {
-    if (adb devices | Select-String $DeviceId) {
-        Write-Host "Emulator $DeviceId already running"
+    $existingState = (adb -s $DeviceId get-state 2>$null).Trim()
+    $existingDevice = adb devices | Select-String "^$DeviceId\s+"
+    if ($existingState -eq 'device' -and
+        (adb -s $DeviceId shell getprop sys.boot_completed 2>$null).Trim() -eq '1') {
+        Write-Host "Emulator $DeviceId already running and ready"
         return
     }
 
-    Write-Host "Starting emulator $AvdName"
-    $args = "-avd $AvdName -no-window -no-snapshot -no-boot-anim -noaudio -gpu swiftshader_indirect"
-    $process = Start-Process emulator -ArgumentList $args -WindowStyle Hidden -PassThru
-    Start-Sleep -Seconds 5
+    $process = $null
+    if ($existingDevice) {
+        Write-Host "Waiting for existing emulator $DeviceId to become ready"
+    }
+    else {
+        Write-Host "Starting emulator $AvdName"
+        $args = "-avd $AvdName -no-window -no-snapshot -no-boot-anim -noaudio -gpu swiftshader_indirect"
+        $process = Start-Process emulator -ArgumentList $args -WindowStyle Hidden -PassThru
+        Start-Sleep -Seconds 5
+    }
 
     Write-Host "Waiting for emulator to boot..."
-    adb wait-for-device | Out-Null
-    do {
+    $ready = $false
+    for ($attempt = 0; $attempt -lt 90; $attempt++) {
         Start-Sleep -Seconds 2
-        $boot = (adb shell getprop sys.boot_completed).Trim()
-    } until ($boot -eq "1")
+        $state = (adb -s $DeviceId get-state 2>$null).Trim()
+        $boot = (adb -s $DeviceId shell getprop sys.boot_completed 2>$null).Trim()
+        if ($state -eq 'device' -and $boot -eq '1') {
+            $ready = $true
+            break
+        }
+    }
+
+    if (-not $ready) {
+        throw "Emulator $DeviceId did not become ready before the timeout"
+    }
 
     return $process
 }
