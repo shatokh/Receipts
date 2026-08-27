@@ -1,0 +1,14 @@
+appId: app.receipts
+name: Document picker cancel
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: onboarding_get_started
+- tapOn:
+    id: nav_import
+- tapOn:
+    id: import_button
+- pressKey: back
+- assertVisible:
+    id: import_button

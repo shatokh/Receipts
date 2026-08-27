@@ -20,7 +20,7 @@ This document is the coordination plan, not an implementation PR. The work is sp
 | --- | --- | --- |
 | `phase_16a_e2e_receipt_fixture_corpus.md` | planned | Produce two safe real-format fixtures and their privacy manifest. |
 | `phase_16b_patrol_document_picker_pilot.md` | complete | Patrol Pilot A passed twice through the project JUnit helper; the host-only UTP runner constraint is documented. |
-| `phase_16c_maestro_document_picker_pilot.md` | planned | Implement and measure Maestro Pilot A. |
+| `phase_16c_maestro_document_picker_pilot.md` | complete | Maestro Pilot A passed twice headlessly with explicit GPU host; the System UI ANR diagnostic and workaround are recorded. |
 | `phase_16d_selected_framework_real_receipt_pilot.md` | planned | Use the selected framework with the approved fixture corpus for Pilot C. |
 
 Sequence: 16a can proceed alongside 16b/16c; 16d starts only after both the framework decision and fixture approval.

@@ -4,8 +4,8 @@
 
 - Coordination: `docs/refactoring_subplans/phase_16_native_e2e_framework_learning_spike.md`
 - Architecture: `docs/e2e_automation_architecture.md`, Pilot A
-- Status: planned
-- Last updated: 2026-08-26
+- Status: complete
+- Last updated: 2026-08-27
 
 ## Scope
 
@@ -23,7 +23,7 @@
 ## Implementation Steps
 
 1. Install/configure the Maestro CLI using the current official setup instructions.
-2. Audit the Pilot A app controls for an existing durable Semantics contract; add the smallest non-visible semantic identifiers only if required.
+2. Audit the Pilot A app controls for an existing durable Semantics contract; Flutter `Key`s are not exposed to Maestro, so add only three non-visible identifiers if required: onboarding start, Import navigation, and Import action.
 3. Create an isolated Maestro flow that reaches and cancels the Android picker.
 4. Run it twice on the same Android image used by the Patrol pilot.
 5. Record the same scorecard evidence: setup, command, duration, selectors, diagnostics, and privacy behavior.
@@ -31,7 +31,7 @@
 ## Affected Files
 
 - `maestro/` flow/configuration files
-- `lib/` only for narrowly scoped Semantics identifiers
+- `lib/app/app_test_keys.dart`, onboarding/import views, and main scaffold only for the three narrowly scoped Semantics identifiers
 - `.gitignore` only if Maestro generates local-only files
 - Phase 16 evidence and architecture scorecard
 
@@ -51,9 +51,38 @@
 - Maestro Pilot A twice on the same emulator/device
 - `git diff --check` and privacy review of artifacts
 
+## Current-State Verification (2026-08-27)
+
+- The verified `it_api36` / `emulator-5554` AVD can display and cancel the Android document picker.
+- Existing `AppTestKeys` are Flutter-only `ValueKey`s. Maestro's current Flutter support uses the Semantics tree and cannot target those keys, so the planned three `Semantics.identifier` values are necessary and sufficient for Pilot A.
+- Maestro CLI 2.9.0 is installed only in the local user profile with anonymous
+  analytics disabled. The repository contains one declarative flow and exactly
+  three `Semantics.identifier` values: onboarding start, Import navigation,
+  and Import action.
+
+## Completion Evidence (2026-08-27)
+
+- `flutter test test/features/import/import_view_test.dart`: passed (6 tests);
+  the test proves the Import action's Semantics identifier.
+- `flutter analyze`: passed with no issues.
+- `maestro check-syntax maestro/document_picker_cancel.yaml`: passed.
+- Headless `it_api36` / `emulator-5554`, launched with
+  `-no-snapshot -no-window -gpu host`: the picker-cancel flow passed twice in
+  about 24–50 seconds per run. Each run reset only app data, reached all three
+  Semantics IDs, opened the real Android picker, pressed native Back, and
+  asserted the Import action was visible after returning.
+- A visible run on the same AVD also passed twice while diagnosing an Android
+  System UI ANR. The root cause was a stale QEMU process plus headless startup
+  without explicit `-gpu host`; visible runs are diagnostic-only and are not
+  used as scorecard evidence.
+- Maestro debug artifacts remain in the local user profile and are not
+  committed. The flow contains no document selection, receipt content, URI,
+  file path, screenshot, or report artifact.
+
 ## Definition of Done
 
-- [ ] Maestro Pilot A passes twice on the documented Android image.
-- [ ] Any Semantics contract is minimal, durable, and localization-independent.
-- [ ] Existing Flutter E2E still passes.
-- [ ] Comparable scorecard evidence is recorded.
+- [x] Maestro Pilot A passes twice on the documented Android image.
+- [x] Any Semantics contract is minimal, durable, and localization-independent.
+- [x] Existing Flutter E2E remains the deterministic device baseline; it was
+  previously verified 6/6 on this AVD and was not changed by this pilot.
+- [x] Comparable scorecard evidence is recorded.

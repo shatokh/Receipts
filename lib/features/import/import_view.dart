@@ -44,13 +44,17 @@ class ImportView extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ElevatedButton.icon(
-              key: AppTestKeys.importButton,
-              onPressed: () => _importReceipts(context, ref),
-              icon: const Icon(Icons.upload_file),
-              label: Text(t.importReceiptsButton),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.all(AppSpacing.md),
+            Semantics(
+              container: true,
+              identifier: AppTestSemanticsIds.importButton,
+              child: ElevatedButton.icon(
+                key: AppTestKeys.importButton,
+                onPressed: () => _importReceipts(context, ref),
+                icon: const Icon(Icons.upload_file),
+                label: Text(t.importReceiptsButton),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),

@@ -31,7 +31,11 @@ class MainScaffold extends StatelessWidget {
         label: localizations.navHome,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.upload_file, key: AppTestKeys.navImport),
+        icon: Semantics(
+          container: true,
+          identifier: AppTestSemanticsIds.navImport,
+          child: const Icon(Icons.upload_file, key: AppTestKeys.navImport),
+        ),
         label: localizations.navImport,
       ),
       BottomNavigationBarItem(

@@ -23,6 +23,15 @@ void main() {
     expect(find.byKey(AppTestKeys.importStatusSuccess), findsNothing);
     expect(find.byKey(AppTestKeys.importStatusDuplicate), findsNothing);
     expect(find.byKey(AppTestKeys.importStatusError), findsNothing);
+    final importButtonSemantics = find.byWidgetPredicate(
+      (widget) =>
+          widget is Semantics &&
+          widget.properties.identifier == AppTestSemanticsIds.importButton,
+    );
+    expect(
+      tester.getSemantics(importButtonSemantics).identifier,
+      AppTestSemanticsIds.importButton,
+    );
   });
 
   testWidgets('ImportView shows loading state without empty state underneath',

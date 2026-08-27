@@ -41,10 +41,14 @@ class OnboardingView extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               _BulletPoint(text: t.onboardingBulletCrashReports),
               const Spacer(),
-              ElevatedButton(
-                key: AppTestKeys.onboardingGetStarted,
-                onPressed: () => context.go('/dashboard'),
-                child: Text(t.onboardingGetStarted),
+              Semantics(
+                container: true,
+                identifier: AppTestSemanticsIds.onboardingGetStarted,
+                child: ElevatedButton(
+                  key: AppTestKeys.onboardingGetStarted,
+                  onPressed: () => context.go('/dashboard'),
+                  child: Text(t.onboardingGetStarted),
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
             ],

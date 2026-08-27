@@ -19,3 +19,16 @@ class AppTestKeys {
   static const receiptList = ValueKey('receipt_list');
   static const onboardingGetStarted = ValueKey('onboarding_get_started');
 }
+
+/// Stable, non-visible Semantics identifiers for external device automation.
+///
+/// Unlike [AppTestKeys], these values are exposed through Android accessibility
+/// and can be selected by black-box tools such as Maestro. Keep this list to
+/// durable user actions that have an approved device-E2E scenario.
+class AppTestSemanticsIds {
+  AppTestSemanticsIds._();
+
+  static const onboardingGetStarted = 'onboarding_get_started';
+  static const navImport = 'nav_import';
+  static const importButton = 'import_button';
+}
