@@ -49,6 +49,30 @@ The lanes complement rather than replace one another. Rules and data integrity b
 
 `AppTestKeys` intentionally remain a Flutter contract. They are not an accessibility API. If Maestro is piloted, add explicit `Semantics` identifiers only for durable user actions and outcomes; do not scrape visible English/Russian/Polish text or mirror every widget key.
 
+## Candidate Landscape
+
+This is the full set of materially relevant choices for a Flutter application that needs Android emulator/physical-device E2E. It is not a catalog of every commercial recorder or BDD wrapper: products that only wrap one of the drivers below do not create a distinct automation capability and are evaluated through their underlying driver.
+
+| Family | Candidate | How it sees Receipts | Native/system UI | Position for this project |
+| --- | --- | --- | --- | --- |
+| Flutter SDK | `integration_test` | In-process Dart widget tree and providers | No | Retain as the deterministic device baseline. |
+| Flutter-native | Patrol | Dart/Flutter finders plus native platform automation | Yes | Tier-1 learning pilot. |
+| Black-box mobile | Maestro | Android display/accessibility and Flutter Semantics | Yes | Tier-1 learning pilot. |
+| Android native | UI Automator 2.4 | Android accessibility windows from Kotlin instrumented tests | Yes | Reviewed only; do not pilot in this learning package. |
+| WebDriver/mobile | Appium 3 + UiAutomator2 | External Android accessibility/UI hierarchy | Yes | Reviewed only; reconsider if cross-language, external QA, or device-farm interoperability becomes a project need. |
+| WebDriver/Flutter community | Appium Flutter Driver / Integration Driver | Dart VM/Flutter context, optionally Appium native context | Partial to yes depending on driver/context | Research-only until an Appium requirement exists; its setup and compatibility cost must beat Appium UiAutomator2. |
+| Android in-app | Espresso | Android View hierarchy from Kotlin | Limited; system UI needs UI Automator | Not a primary Flutter E2E choice because Receipts is Flutter, not a View-based UI. |
+| Legacy Flutter | `flutter_driver` | Dart VM extension | No | Do not adopt; Flutter directs projects to `integration_test`. |
+| BDD wrappers | Cucumber/Gherkin, Robot Framework/AppiumLibrary | Delegates to Flutter, Appium, or another driver | Inherits underlying driver | Add only if a human-readable business-spec workflow becomes a separate team need. |
+| Visual/no-code/cloud tools | recorders, image-coordinate tools, vendor test clouds | Pixels and/or the chosen underlying driver | Varies | Device providers or reporting layers, not the first in-repo automation framework. Evaluate after a driver is chosen. |
+
+Deliberate exclusions:
+
+- Detox is a React Native framework, not a Flutter Android E2E candidate.
+- Compose UI testing is for Compose UI, not the Flutter widget tree.
+- Robolectric is a JVM Android-test environment, not a real device/system-UI E2E framework.
+- Appium, Android Gradle Managed Devices, Firebase Test Lab, BrowserStack, and similar services overlap only in part: the first is a driver framework; the rest are execution/device infrastructure.
+
 ## Candidate Roles
 
 ### Patrol — in-process Flutter plus native automation
@@ -80,9 +104,41 @@ Expected project impact:
 Strength: validates the user-visible product from outside Flutter and can exercise system UI with no Dart integration.
 Cost: a second language/runner, reduced access to Riverpod fakes, and an accessibility contract that needs deliberate maintenance.
 
+### Android UI Automator — native Kotlin system-UI automation
+
+UI Automator is Android's instrumented test framework for interacting with both user and system apps through accessibility windows. Modern UI Automator provides predicate finders, built-in waits, explicit app state control, multi-window support, screenshots, and reporting.
+
+Expected project impact:
+
+- add an `androidTest` Kotlin source set and UI Automator dependency;
+- launch the Flutter APK as an external Android application and use stable Semantics/accessibility values for app assertions;
+- run through Gradle/Android instrumentation rather than Dart;
+- retain the test as Android-only and keep its scope to native surfaces.
+
+Strength: official Android path with no third-party cross-platform runner; an excellent control case for Android native behavior.
+Cost: Kotlin/Gradle test maintenance and no access to Riverpod test overrides or Flutter widget finders.
+
+### Appium — WebDriver mobile automation
+
+Appium 3 with the official UiAutomator2 driver is an external Android WebDriver stack. It is the strongest candidate when test authors need languages other than Dart/Kotlin, standard WebDriver tooling, or compatibility with an Appium-capable device farm. Flutter can expose Semantics identifiers as Android resource IDs for a release-style accessibility contract.
+
+Two Flutter-specific Appium community drivers also exist. The older Flutter Driver route depends on the Dart VM/`flutter_driver` extension and a debug/profile app. The integration-driver route is community-maintained and adds another protocol layer. Neither should be the default before ordinary UiAutomator2 is measured against the actual native scenario.
+
+Strength: broad language/tool/device-farm ecosystem and true outside-the-app automation.
+Cost: Appium server, Node, driver/client setup, capabilities, and usually a separate test language; Flutter-specific drivers add compatibility risk.
+
+### Espresso and wrappers — explicitly non-primary
+
+Espresso is valuable for View-based Android apps but does not make Flutter's Dart widget tree a better E2E surface. Pairing it with UI Automator is possible, yet UI Automator alone covers the system-level behavior being evaluated here. BDD layers, Robot Framework, and recorders are not rejected permanently; they are deferred because they add authoring syntax or a vendor layer without solving a capability gap first.
+
 ## Framework-Neutral Pilot
 
-The same Android scenario is implemented once with each candidate. It is small by design:
+The inventory is broad, but the hands-on spike deliberately compares only Patrol and Maestro. They represent the two architectural models the team wants to understand: Dart-integrated native automation and external black-box device automation. UI Automator and Appium are documented alternatives, not pilot implementations.
+
+1. Run Pilot A for Patrol and Maestro on the same Android image.
+2. Prepare the privacy-reviewed two-fixture corpus for Pilot C; use it to compare one realistic import journey after Pilot A establishes native picker control.
+3. Run Pilot C only with the stronger of Patrol and Maestro, unless both need a final tie-breaker.
+4. Reconsider UI Automator or Appium only through a new sub-plan if Android-only Kotlin ownership, WebDriver, external QA, or a device farm becomes a concrete need.
 
 ### Pilot A: cancel a real Android document-picker flow
 
@@ -102,6 +158,36 @@ Why this scenario:
 
 Only attempt this after Pilot A passes. It requires a deliberately generated synthetic PDF and a compatible Android viewer. The flow opens the stored source through the system chooser, cancels it, and verifies the Receipts app remains stable. Do not treat the external viewer's content or availability as a product assertion.
 
+### Pilot C: real-format receipt corpus through the native import path
+
+Pilot C is a realistic-device suite, not a replacement for parser unit tests. It exercises the real Android document picker, native PDF text extraction, parser, SQLite persistence, and month-based UI wiring with a small curated corpus.
+
+Minimum corpus before this pilot starts:
+
+| Fixture | Shape | Date relationship | Required observable outcome |
+| --- | --- | --- | --- |
+| Receipt A | Short receipt with a small number of lines | One month | Imports once; appears in Receipts and its month screen. |
+| Receipt B | Long receipt with many lines and page/length variation if available | A different month | Imports once; appears separately under its month and does not alter Receipt A's month view. |
+
+The user may add more varied examples after the two-fixture baseline: multi-page receipts, different merchants/layouts, discount/VAT variants, and more months. Each new fixture must declare the narrowly scoped UI behavior it is intended to prove; do not add a document merely to increase fixture count.
+
+Candidate E2E scenarios selected from the corpus:
+
+1. Import Receipt A through the real picker, then verify a receipt is visible in the list and the relevant month contains data.
+2. Import Receipt B in a different month, then switch between the two month views and verify the receipts remain separated by month.
+3. Import Receipt A again and verify the safe duplicate outcome without adding a second receipt.
+4. If the picker supports a deliberate multi-file selection on the target Android image, import A and B in one selection and verify a safe per-file result summary. This is optional until the platform behavior is proven stable.
+
+Fixture privacy contract:
+
+- Never commit an original user receipt. Commit only a deliberately redacted, licensed, or synthetic-realistic derivative after a manual privacy review.
+- Remove or replace personal names, loyalty identifiers, payment fragments, addresses, NIP/tax IDs, barcodes/QR codes, order numbers, and source paths.
+- Do not print raw PDF text, line items, merchant addresses, dates, totals, hashes, local paths, or content URIs in test names, assertions, failure output, screenshots, or reports.
+- Keep expectations structural and privacy-safe: successful/duplicate state, receipt count, isolated month presence, and safe error state. Detailed parser field assertions belong to sanitized unit fixtures, not this native E2E lane.
+- Record the provenance, redaction review, intended scenario, and month bucket under a fixture manifest that itself contains no sensitive data.
+
+Pilot C becomes a Tier-1-native candidate only after the corpus passes privacy review and the owner confirms the fixture files are safe to commit. It may be implemented with the selected native framework or used as a manual release smoke during framework comparison.
+
 ## Decision Scorecard
 
 Score each framework after running Pilot A (and Pilot B if attempted) on the same emulator. Use a 1–5 score and include short evidence, not impressions.
@@ -115,19 +201,24 @@ Score each framework after running Pilot A (and Pilot B if attempted) on the sam
 | Privacy-safe evidence | 10% | Can logs/screenshots avoid receipt contents, paths, and URIs? |
 | Maintenance fit | 10% | New dependencies, generated files, Android/Flutter upgrade burden. |
 
+For future Appium consideration, record whether WebDriver language/device-farm interoperability is worth the server and client stack. For future UI Automator consideration, record whether Android-only Kotlin ownership is acceptable. These are documented alternatives, not hidden pilot requirements.
+
 Decision rules:
 
-- Choose Patrol if native reachability is comparable and the Dart/native integration reduces pilot complexity enough to justify its runner setup.
+- Choose Patrol if native reachability is comparable and Dart/native integration reduces pilot complexity enough to justify its runner setup.
 - Choose Maestro if black-box system control and Semantics selectors are clearly more stable or easier to run in the intended device/CI environment.
-- Choose neither if the pilot is brittle, the manual smoke is sufficient, or the maintenance cost outweighs the learning and release value. Retain Flutter `integration_test` as the device baseline in every outcome.
+- Reopen UI Automator only if an Android-only, official Kotlin test becomes preferable after the Patrol/Maestro decision.
+- Reopen Appium UiAutomator2 only if external WebDriver, non-Dart/Kotlin test authors, or an Appium-compatible device farm becomes a deliberate project need.
+- Choose neither if every pilot is brittle, the manual smoke is sufficient, or maintenance cost outweighs learning/release value. Retain Flutter `integration_test` as the device baseline in every outcome.
 
 ## Execution and CI Policy
 
-1. Keep `flutter test` as the fast PR and coverage gate.
-2. Keep the existing Flutter Android integration workflow manual-only while execution time is measured.
-3. Keep the pilot workflow manual-only; no new secret, cloud device farm, or scheduled job is part of the first spike.
-4. Record framework version, Flutter version, Android API/device image, command, duration, outcome, and redacted artifacts in the Phase 16 sub-plan.
-5. Do not promote a native framework into routine CI until at least two stable local runs and one successful manual CI run are documented.
+1. Until the framework decision, run every Phase 16 pilot only on the verified local headless AVD `it_api36` / `emulator-5554` (Android API 36, Google APIs Play Store image).
+2. Do not use a connected physical device, a different AVD, cloud device farm, scheduled job, or CI run for the comparison; changing the device would invalidate like-for-like scorecard evidence.
+3. Keep `flutter test` as the fast PR and coverage gate.
+4. Keep the existing Flutter Android integration workflow manual-only while execution time is measured.
+5. Record framework version, Flutter version, AVD/image, command, duration, outcome, and redacted artifacts in the Phase 16 sub-plan.
+6. After selection, plan physical-device and manual-CI proof as a separate follow-up; do not promote a native framework into routine CI before that evidence exists.
 
 ## Sources
 
@@ -135,3 +226,5 @@ Decision rules:
 - [Flutter testing overview](https://docs.flutter.dev/testing/overview) — testing-layer guidance and Patrol as a native-UI option.
 - [Patrol native automation overview](https://patrol.leancode.co/documentation/native/overview) and [installation guide](https://patrol.leancode.co/documentation) — native controls, CLI, and generated-file handling.
 - [Maestro Flutter support](https://docs.maestro.dev/platform-support/flutter) and [Maestro Android setup](https://docs.maestro.dev/getting-started/build-and-install-your-app/android) — Semantics-based Flutter automation and device-level Android control.
+- [Android UI Automator](https://developer.android.com/training/testing/other-components/ui-automator) — Android accessibility-window and system-app automation.
+- [Appium UiAutomator2 quickstart](https://appium.io/docs/en/3.3/quickstart/uiauto2-driver/) and [Appium Flutter driver](https://github.com/appium/appium-flutter-driver) — external WebDriver automation and the trade-offs of Flutter-specific community drivers.

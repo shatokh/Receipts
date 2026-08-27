@@ -10,66 +10,46 @@
 
 ## Goal
 
-Learn and make an evidence-based choice between Patrol and Maestro by implementing the same small Android native-surface scenario with each candidate. This is explicitly a learning investment; it does not require a larger business E2E backlog.
+Learn and make an evidence-based choice between Patrol and Maestro. The broader Flutter/Android E2E landscape is recorded in the architecture document so that UI Automator and Appium are consciously deferred rather than forgotten. This is explicitly a learning investment; it does not require a larger business E2E backlog.
 
-## Scope
+This document is the coordination plan, not an implementation PR. The work is split into the small sub-plans listed below.
 
-- Implement Pilot A from the architecture document: open the real Android document picker from Import, cancel it, and assert a safe stable return to Receipts.
-- Run each implementation on the same local emulator; run on a connected device if available.
-- Record setup, commands, duration, selectors, failure diagnostics, privacy evidence, and scorecard results.
-- Choose Patrol, Maestro, or neither for the project's native E2E lane.
+## Work Package Map
+
+| Package | Status | Purpose |
+| --- | --- | --- |
+| `phase_16a_e2e_receipt_fixture_corpus.md` | planned | Produce two safe real-format fixtures and their privacy manifest. |
+| `phase_16b_patrol_document_picker_pilot.md` | planned | Implement and measure Patrol Pilot A. |
+| `phase_16c_maestro_document_picker_pilot.md` | planned | Implement and measure Maestro Pilot A. |
+| `phase_16d_selected_framework_real_receipt_pilot.md` | planned | Use the selected framework with the approved fixture corpus for Pilot C. |
+
+Sequence: 16a can proceed alongside 16b/16c; 16d starts only after both the framework decision and fixture approval.
 
 ## Non-goals
 
+- Do not treat this coordination plan as authorization to add both frameworks in one PR.
 - Do not migrate the six existing Flutter `integration_test` journeys.
 - Do not make either candidate a PR/coverage gate.
-- Do not automate a real receipt import, OCR, parsing, aggregate behavior, or external viewer content.
+- Do not use raw fixture content in logs, failure output, screenshots, or reports. Pilot C asserts safe structural outcomes only; detailed parser checks stay in sanitized unit tests.
 - Do not commit user documents, device paths/URIs, secrets, or framework-generated secrets.
 - Do not implement Pilot B unless Pilot A is stable and the user requests the follow-up.
 
 ## Preconditions
 
 - [x] Flutter Android E2E foundation is split and passes 6/6 on a local emulator.
+- [x] Comparison execution baseline is fixed: local headless `it_api36` / `emulator-5554` (Android API 36, Google APIs Play Store image).
 - [ ] Local emulator/device can display the Android system document picker.
+- [ ] Two safe-to-commit, redacted real-format fixtures from different months are available with a privacy-reviewed manifest.
 - [ ] Candidate CLIs are available only during their respective pilot setup.
 
-## Implementation Steps
+## Coordination Definition of Done
 
-1. Create a short Pilot A checklist and expected safe app state before choosing a tool.
-2. Run the Patrol setup and a one-test Pilot A implementation in an isolated `patrol_test/` package area.
-3. Run the Maestro setup and an equivalent one-flow Pilot A implementation in an isolated `maestro/` package area.
-4. Execute both on the same Android image, repeat each local run once, and record results in the scorecard.
-5. Trigger exactly one manual CI proof only for the stronger candidate if its local runs are stable.
-6. Update this sub-plan, the architecture document, and master tracker with the chosen direction; remove the losing pilot only after the decision is documented.
-
-## Affected Files
-
-- `docs/e2e_automation_architecture.md`
-- this sub-plan and `docs/framework_refactoring_plan.md`
-- Candidate-only directories such as `patrol_test/` and `maestro/`
-- `pubspec.yaml`, Android runner files, `.gitignore`, or GitHub workflow only when a candidate requires them
-- App Semantics only if Maestro needs a durable selector for Pilot A
-
-## Risks
-
-| Risk | Mitigation |
-| --- | --- |
-| System picker UI differs by Android image. | Assert only picker visibility and cancellation, use the same image for comparison, record API/device. |
-| Framework setup dominates the experiment. | Score setup explicitly; do not hide it as incidental cost. |
-| Privacy regression through native diagnostics. | Use cancellation only, synthetic state, and redact reports/screenshots. |
-| Both tools appear viable after one scenario. | Choose the smaller maintenance fit or keep both pilots until a second scenario is justified. |
-
-## Tests and Checks
-
-- Existing `flutter analyze` and `flutter test` remain green.
-- Existing `flutter test integration_test -d <device-id>` remains unchanged and passing.
-- Each candidate runs Pilot A twice on the same emulator/device.
-- A manual native test must not emit a personal path, URI, NIP, receipt text, totals, or document contents.
-
-## Definition of Done
-
-- [ ] Equivalent Pilot A exists and is executed for Patrol and Maestro.
-- [ ] Results are recorded with the architecture scorecard.
-- [ ] A framework (or neither) is selected with explicit reasons.
-- [ ] The selected tool has one manual CI proof, or the lack of CI proof is recorded as the decision blocker.
+- [x] Architecture, candidate boundary, scorecard, and privacy rules are documented.
+- [x] Each implementation package has scope, non-goals, steps, affected files, risks, checks, and its own Definition of Done.
+- [ ] Phase 16b and 16c have comparable evidence and a framework decision is recorded.
+- [ ] Phase 16d is completed or explicitly superseded with an evidence-backed reason.
 - [ ] Existing Flutter E2E remains the default deterministic device suite.
+
+## Execution Baseline
+
+All Phase 16a–16d work runs only on the verified local headless AVD `it_api36` / `emulator-5554` until Patrol versus Maestro is decided. Do not substitute a physical device, a different AVD, CI, or a device farm during this comparison. Device diversity is a post-selection follow-up, not comparison evidence.
