@@ -33,4 +33,8 @@ class AppTestSemanticsIds {
   static const importButton = 'import_button';
   static const importStatusSuccess = 'import_status_success';
   static const importStatusDuplicate = 'import_status_duplicate';
+  static const navMonth = 'nav_month';
+  static const navReceipts = 'nav_receipts';
+  static const receiptsList = 'receipts_list';
+  static const monthReceipts = 'month_receipts';
 }

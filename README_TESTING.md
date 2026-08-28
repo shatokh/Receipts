@@ -43,22 +43,33 @@ flutter test integration_test -d <connected-device-id>
 
 The helper scripts below create or boot an emulator; use the direct command for an already connected device. Record the device model/API and result in the active Android E2E sub-plan when collecting release evidence.
 
-### Patrol native-system pilot (temporary local runner)
+### Maestro native Android E2E (selected manual lane)
 
-Phase 16 uses Patrol only on the verified `it_api36` / `emulator-5554` image. Run one selected Patrol test through the project helper:
+Maestro is the selected framework for native Android system-boundary smoke
+scenarios. Use it only on the verified `it_api36` / `emulator-5554` AVD until
+a separately scoped physical-device or CI follow-up is complete. The complete
+Windows cookbook, including safe staging and the two approved flows, is in
+[`maestro/README.md`](maestro/README.md).
 
 ```powershell
-.\tool\run_patrol_android.ps1 -DeviceId emulator-5554 -TestTarget patrol_test/document_picker_cancel_test.dart
+$env:MAESTRO = "$env:LOCALAPPDATA\MaestroCLI\maestro\bin\maestro.bat"
+$env:MAESTRO_CLI_NO_ANALYTICS = '1'
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_import.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_duplicate.yaml
 ```
 
-The helper uses `patrol build android` and then invokes the same `PatrolJUnitRunner` through `adb`. This is a host-only workaround for an Android Gradle UTP local mTLS result-listener defect: it does not treat the Gradle HTML/protobuf report as green, and it fails unless the JUnit runner itself reports a successful test. It is manual-only and not part of the PR or coverage gate. Do not use another AVD or a physical device while the Patrol/Maestro comparison is in progress.
+These flows use the real document picker with an approved synthetic fixture and
+assert only safe success/duplicate outcomes. They are manual-only and not part
+of the PR or coverage gate. Patrol is retained solely as an archived learning
+pilot because selected `file_picker` results do not complete in Dart under its
+JUnit runner; do not add an app test hook for it.
 
 ### Android E2E launch rules
 
-- For the Phase 16 comparison, use only `it_api36` / `emulator-5554`. Use headless mode for recorded runs; for a visual Patrol demonstration, start the same AVD with a window and `-no-snapshot`:
+- For current Maestro evidence, use only `it_api36` / `emulator-5554`. Use headless mode for recorded runs; start the same AVD with `-no-snapshot -no-window -gpu host`:
 
   ```powershell
-  & "$env:ANDROID_SDK_ROOT\emulator\emulator.exe" -avd it_api36 -no-snapshot -no-boot-anim
+  & "$env:ANDROID_SDK_ROOT\emulator\emulator.exe" -avd it_api36 -no-snapshot -no-window -gpu host -no-boot-anim
   ```
 
 - Before starting a test, wait until both commands succeed: `adb -s emulator-5554 get-state` prints `device`, and `adb -s emulator-5554 shell getprop sys.boot_completed` prints `1`. Do not treat a serial listed by `adb devices` as ready by itself.
@@ -67,11 +78,11 @@ The helper uses `patrol build android` and then invokes the same `PatrolJUnitRun
 
   ```powershell
   $env:RECEIPTS_GRADLE_TRUST_STORE = 'C:\local-only\gradle-truststore'
-  .\tool\run_patrol_android.ps1
+  & C:\FlutterSDK\bin\flutter.bat build apk --debug
   ```
 
-  The helper validates the path and passes it only to Gradle. Do not commit certificates, truststores, proxy settings, or antivirus exceptions.
-- Run `patrol develop` only from an interactive terminal; it needs a TTY for hot restart. It is for observing/repeating UI actions, while `run_patrol_android.ps1` is the deterministic manual result command.
+  The local build receives the truststore only through Gradle. Do not commit certificates, truststores, proxy settings, or antivirus exceptions.
+- A visible AVD is diagnostic-only. It does not replace the documented headless Maestro result.
 
 ### Helper scripts
 

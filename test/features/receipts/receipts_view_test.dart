@@ -79,6 +79,19 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.byKey(AppTestKeys.receiptList), findsOneWidget);
+    expect(
+      tester
+          .getSemantics(
+            find.byWidgetPredicate(
+              (widget) =>
+                  widget is Semantics &&
+                  widget.properties.identifier ==
+                      AppTestSemanticsIds.receiptsList,
+            ),
+          )
+          .identifier,
+      AppTestSemanticsIds.receiptsList,
+    );
     expect(find.text('Test Store'), findsOneWidget);
   });
 }

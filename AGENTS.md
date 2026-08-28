@@ -145,13 +145,13 @@ When editing this pipeline:
 - Android integration tests are manual-only and must not be added to the coverage gate.
 
 ### Android E2E Launch Rules
-- Until the Phase 16 framework decision, use only the verified `it_api36` / `emulator-5554` AVD for Patrol and Maestro comparison evidence. A visible window is allowed for interactive debugging on that same AVD; use its headless mode for repeatable evidence.
+- Maestro is the selected native Android E2E framework. Until a separately scoped physical-device or CI follow-up is complete, use only the verified `it_api36` / `emulator-5554` AVD for its manual native-smoke evidence. A visible window is allowed for interactive debugging on that same AVD; use headless mode for repeatable evidence.
 - Start a fresh emulator with `-no-snapshot`; never depend on the mutable `default_boot` snapshot and never use `-wipe-data` unless the user explicitly requests a data reset.
 - For repeatable headless Maestro evidence on `it_api36`, start the AVD with `-no-window -gpu host`. Omitting the explicit GPU mode can leave Android System UI in an ANR state on this host; a visible launch is diagnostic-only.
-- Do not start Flutter or Patrol merely because `adb devices` lists a serial. Wait, with a bounded timeout, for both `adb -s <device> get-state` to return `device` and `sys.boot_completed` to equal `1`.
+- Do not start Flutter or Maestro merely because `adb devices` lists a serial. Wait, with a bounded timeout, for both `adb -s <device> get-state` to return `device` and `sys.boot_completed` to equal `1`.
 - A missing snapshot, a transient `device offline` message during boot, or an emulator `UpdateCheck` TLS warning is non-blocking when the bounded readiness check succeeds. Do not change application code, install certificates into the repository, or disable security tooling to hide those warnings.
 - If Android dependency resolution has a host TLS interception problem, use an ignored, local truststore only through `RECEIPTS_GRADLE_TRUST_STORE` (or an explicit helper argument). Never commit a truststore, certificate, proxy setting, or security-product exception.
-- `patrol develop` is for visual debugging and requires an interactive TTY; do not launch it through a redirected/non-interactive process. Use `tool/run_patrol_android.ps1` for the deterministic manual Patrol pilot result, because the host's `patrol test` UTP result listener is currently unreliable.
+- Patrol is not a supported native E2E suite. Its archived pilot may be reproduced only for diagnosing the documented runner/plugin limitation; `patrol develop` requires an interactive TTY, and the host's `patrol test` UTP result listener remains unreliable. Do not add a Patrol-specific app seam without a new approved sub-plan.
 
 ## Common Tasks
 

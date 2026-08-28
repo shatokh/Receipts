@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:receipts/app/app_test_keys.dart';
 import 'package:receipts/core/formatting/app_formatters.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 
@@ -37,14 +38,18 @@ class ReceiptList extends StatelessWidget {
           );
         }
 
-        return Column(
-          children: receipts
-              .take(5)
-              .map((receipt) => _ReceiptTile(
-                    receipt: receipt,
-                    currencyFormat: currencyFormat,
-                  ))
-              .toList(),
+        return Semantics(
+          container: true,
+          identifier: AppTestSemanticsIds.monthReceipts,
+          child: Column(
+            children: receipts
+                .take(5)
+                .map((receipt) => _ReceiptTile(
+                      receipt: receipt,
+                      currencyFormat: currencyFormat,
+                    ))
+                .toList(),
+          ),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),

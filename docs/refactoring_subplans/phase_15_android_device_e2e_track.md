@@ -12,7 +12,10 @@
 
 Maintain a dedicated, device-level test track for the Receipts UI on both Android emulators and an optionally connected physical Android device. This track owns only app-flow wiring and Android-runtime behavior; deterministic parsing, aggregates, privacy rules, and view-state rendering remain covered below the device layer.
 
-This track is also the preparation checkpoint for an educational native-E2E spike. Once work package 15.1 is complete and the refactored Flutter suite passes, select Patrol, Maestro, or another candidate by implementing one or two deliberately native Android scenarios. The goal of that later spike is learning and an evidence-based framework decision, not a business-coverage threshold.
+This track prepared the educational native-E2E spike. Phase 16 subsequently
+compared Patrol and Maestro on deliberately native Android scenarios and
+selected Maestro. The goal was learning and an evidence-based framework
+decision, not a business-coverage threshold.
 
 ## Current State Check
 
@@ -90,10 +93,10 @@ Before adding a native automation dependency, assess the gaps below:
 
 | Surface | Default evidence | Automation decision |
 | --- | --- | --- |
-| Open PDF/source external chooser | Manual smoke on an emulator/device with a compatible viewer | Patrol spike only if release risk warrants repeatable automation |
-| Storage Access Framework/file picker | Manual smoke with synthetic files | Patrol spike only if file-picker regressions recur |
+| Open PDF/source external chooser | Manual smoke on an emulator/device with a compatible viewer | Maestro follow-up only if release risk warrants repeatable automation |
+| Storage Access Framework/file picker | Manual smoke with synthetic files | Maestro native smoke is available for approved synthetic-file flows |
 | Runtime permissions/system settings | Manual smoke when such a feature is introduced | No work until a product feature depends on it |
-| Native PDF extraction | Existing fake-backed E2E plus manual synthetic-PDF smoke | Spike only if platform regressions cannot be diagnosed below E2E |
+| Native PDF extraction | Existing fake-backed E2E plus manual synthetic-PDF smoke | Maestro follow-up only if platform regressions cannot be diagnosed below E2E |
 
 ## Risks
 
@@ -120,8 +123,8 @@ Before adding a native automation dependency, assess the gaps below:
 - [x] Emulator commands are documented and reproducible.
 - [ ] Connected-device evidence is recorded when a physical device is available.
 - [ ] The manual-only Android workflow stays outside the fast PR/coverage gate.
-- [ ] Native-only gaps have an explicit evidence path or an approved separate spike.
-- [ ] Master tracker and this sub-plan contain current run evidence and follow-up status.
+- [x] Native-only gaps have an explicit evidence path: Phase 16 selected Maestro for the document-picker boundary.
+- [x] Master tracker and this sub-plan contain current run evidence and follow-up status.
 
 ## Checkpoint Evidence: Flutter E2E Foundation
 
@@ -135,10 +138,10 @@ Before adding a native automation dependency, assess the gaps below:
 - Infrastructure decisions:
   - `tool/it_android.ps1` now hides the background emulator window and accepts an explicit `-SystemImage` value so local API availability does not change the API 34 CI default.
   - The local TLS truststore remains user-scoped and uncommitted.
-- Next checkpoint: `docs/refactoring_subplans/phase_16_native_e2e_framework_learning_spike.md` compares Patrol and Maestro on one or two native Android surfaces. This is explicitly authorized as learning work and is not gated on business scenario volume.
+- Phase 16 outcome (2026-08-28): `docs/refactoring_subplans/phase_16_native_e2e_framework_learning_spike.md` selected Maestro after two headless passes each for approved first-import and exact-duplicate flows. Physical-device evidence remains a separately scoped follow-up.
 
 ## Start Criteria
 
 - Start with work package 15.1; it is behavior-preserving and does not need a physical device.
 - Run work package 15.2 after the suite refactor on the available emulator/device.
-- The user explicitly requested a learning spike after this checkpoint. Create its small sub-plan after 15.1, compare candidate frameworks against one or two native scenarios, and do not make the choice depend on a business-volume threshold.
+- The learning spike is complete. A future physical-device or CI expansion must use a new small sub-plan; it must not make the choice depend on a business-volume threshold.

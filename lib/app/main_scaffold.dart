@@ -39,11 +39,19 @@ class MainScaffold extends StatelessWidget {
         label: localizations.navImport,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.bar_chart, key: AppTestKeys.navStats),
+        icon: Semantics(
+          container: true,
+          identifier: AppTestSemanticsIds.navMonth,
+          child: const Icon(Icons.bar_chart, key: AppTestKeys.navStats),
+        ),
         label: localizations.navStats,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.receipt_long, key: AppTestKeys.navReceipts),
+        icon: Semantics(
+          container: true,
+          identifier: AppTestSemanticsIds.navReceipts,
+          child: const Icon(Icons.receipt_long, key: AppTestKeys.navReceipts),
+        ),
         label: localizations.navReceipts,
       ),
       BottomNavigationBarItem(

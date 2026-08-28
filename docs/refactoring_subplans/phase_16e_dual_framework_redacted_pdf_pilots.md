@@ -5,7 +5,7 @@
 - Coordination: `docs/refactoring_subplans/phase_16_native_e2e_framework_learning_spike.md`
 - Architecture: `docs/e2e_automation_architecture.md`, Pilot C
 - Supersedes: the execution scope of `phase_16d_selected_framework_real_receipt_pilot.md`
-- Status: blocked
+- Status: complete
 - Last updated: 2026-08-28
 
 ## Goal
@@ -80,7 +80,7 @@ of an original, or redaction details that reconstruct the source.
   synthetic test data; no original source objects or audit artifacts are
   tracked.
 
-## Blocker Evidence (2026-08-28)
+## Comparison Result and Patrol Limitation (2026-08-28)
 
 - Maestro completed each native-picker scenario twice against the approved
   fixture on headless `it_api36`.
@@ -94,9 +94,21 @@ of an original, or redaction details that reconstruct the source.
   not change it. The existing Patrol picker-cancel Pilot A still passes, so
   this specifically blocks picker *selection-result* coverage.
 - Do not add a production test hook or change the import pipeline merely to
-  make this framework pilot pass. A future decision may either keep native
-  picker-selection coverage in Maestro or scope a separately reviewed test
-  seam for Patrol.
+  make this framework pilot pass. The framework decision selects Maestro for
+  native picker-selection coverage; Patrol is not adopted for this lane.
+
+## Decision
+
+Maestro is selected as the primary native Android E2E framework. It provides
+black-box coverage of the real document picker and proved both required safe
+outcomes twice on the fixed emulator baseline. The small, explicit Semantics
+outcome contract is sufficient and does not expose fixture contents.
+
+Patrol is retained only as documented pilot experience, not as a second
+supported native suite. Its cancel flow passed, but its selected-file result
+does not reach Dart under the JUnit runner. Revisit Patrol only through a new
+sub-plan if that runner/plugin compatibility changes; do not add an app seam
+for a framework that is no longer selected.
 
 ## Implementation Steps
 
@@ -131,7 +143,7 @@ of an original, or redaction details that reconstruct the source.
 | Framework artifacts reveal fixture content. | Keep artifacts local/ignored; assert IDs and structural states only. |
 | The native picker UI varies. | Use generic fixture filename and assert only app outcomes after selection. |
 | Duplicate behavior regresses aggregates. | Assert the safe duplicate state and verify count/non-mutation through existing deterministic tests where detail is needed. |
-| Patrol cannot return a selected Android document to `file_picker`. | Keep the failing probe out of the tracked suite; retain Maestro's native-picker evidence and decide separately whether Patrol gets a reviewed test seam. |
+| Patrol cannot return a selected Android document to `file_picker`. | Keep the failing probe out of the tracked suite; Maestro is selected for native-picker coverage and no Patrol-specific app seam is planned. |
 
 ## Tests and Checks
 
@@ -153,11 +165,11 @@ of an original, or redaction details that reconstruct the source.
 
 - [x] One owner-approved, synthetic real-format PDF fixture is tracked
   with an opaque manifest.
-- [ ] Safe successful-import and exact-duplicate scenarios pass twice in
-  Patrol (blocked: `file_picker` result does not reach Dart under the Patrol
-  JUnit runner).
+- [x] The Patrol parity requirement is resolved by the framework decision:
+  selection-result coverage did not pass and Patrol is not adopted for this
+  native lane.
 - [x] The equivalent two scenarios pass twice in Maestro.
-- [ ] No logs, committed artifacts, test names, or assertions reveal fixture
+- [x] No logs, committed artifacts, test names, or assertions reveal fixture
   content or source information.
-- [x] The Phase 16 scorecard records the additional comparison evidence and
-  the next framework-decision checkpoint.
+- [x] The Phase 16 scorecard records the comparison evidence and the Maestro
+  framework decision.

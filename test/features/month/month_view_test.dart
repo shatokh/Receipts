@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:receipts/app/app_test_keys.dart';
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/domain/models/month_overview.dart';
 import 'package:receipts/domain/models/monthly_total.dart';
@@ -128,6 +129,19 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
 
+    expect(
+      tester
+          .getSemantics(
+            find.byWidgetPredicate(
+              (widget) =>
+                  widget is Semantics &&
+                  widget.properties.identifier ==
+                      AppTestSemanticsIds.monthReceipts,
+            ),
+          )
+          .identifier,
+      AppTestSemanticsIds.monthReceipts,
+    );
     expect(find.text('Test Store'), findsOneWidget);
     expect(find.text('Dairy, Eggs & Bakery'), findsOneWidget);
   });

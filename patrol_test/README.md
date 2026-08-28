@@ -1,6 +1,6 @@
-# Patrol cookbook
+# Archived Patrol pilot cookbook
 
-Эта папка содержит Android-native E2E-пилоты Patrol. До решения между Patrol и Maestro запускайте их только на проверенном AVD `it_api36` (`emulator-5554`). Не используйте личные чеки, пути, URI или содержимое PDF в тестах, выводе консоли и скриншотах.
+Эта папка сохраняет результат учебного Android-native E2E-пилота Patrol. Maestro выбран основной нативной E2E-системой; не используйте этот cookbook для регулярных прогонов. Он нужен только для воспроизведения задокументированной проблемы Patrol при явной диагностической необходимости. Не используйте личные чеки, пути, URI или содержимое PDF в тестах, выводе консоли и скриншотах.
 
 ## 1. Подготовить консоль
 
@@ -45,9 +45,9 @@ for ($attempt = 0; $attempt -lt 30; $attempt++) {
 if ($state -ne 'device' -or $boot -ne '1') { throw 'Emulator is not ready.' }
 ```
 
-## 3. Детерминированно выполнить один пилот
+## 3. Воспроизвести архивный cancel-пилот
 
-Это основной ручной запуск. Он собирает Patrol APK и запускает тот же `PatrolJUnitRunner` напрямую через ADB. Такой путь нужен, потому что на этом хосте официальный `patrol test` получает ложный код 1 из-за локального UTP mTLS result-listener после успешного JUnit-теста.
+Это диагностический ручной запуск, а не поддерживаемая E2E-команда. Он собирает Patrol APK и запускает тот же `PatrolJUnitRunner` напрямую через ADB. Такой путь нужен, потому что на этом хосте официальный `patrol test` получает ложный код 1 из-за локального UTP mTLS result-listener после успешного JUnit-теста.
 
 ```powershell
 .\tool\run_patrol_android.ps1 `
@@ -60,12 +60,13 @@ if ($state -ne 'device' -or $boot -ne '1') { throw 'Emulator is not ready.' }
 ## Статус native-import пилота
 
 `-StageReceiptA` в helper-е подготавливает одобренный синтетический PDF для
-будущего сценария, но пока не является поддерживаемым доказательным прогоном.
+диагностики, но не является поддерживаемым доказательным прогоном.
 В Patrol JUnit runner Android picker выбирает этот файл, однако `file_picker`
 не получает результат в Dart; следовательно, import pipeline не запускается.
 Не добавляйте app test hook и не меняйте production import code только ради
-этого пилота. Полное зафиксированное воспроизведение и варианты дальнейшего
-решения находятся в `docs/refactoring_subplans/phase_16e_dual_framework_redacted_pdf_pilots.md`.
+этого пилота. Maestro покрывает этот сценарий как выбранная система. Полное
+зафиксированное воспроизведение и решение находятся в
+`docs/refactoring_subplans/phase_16e_dual_framework_redacted_pdf_pilots.md`.
 
 ## 4. Наблюдать реальные UI-действия
 

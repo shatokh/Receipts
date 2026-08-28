@@ -1,22 +1,22 @@
-# Maestro Pilot A
+# Maestro Native Android E2E Cookbook
 
-This folder contains the Maestro comparison pilot only. It exercises the
-same safe system boundary as the Patrol pilot: start from a clean app state,
-navigate to Import, open the real Android document picker, cancel it with the
-native Back action, and confirm a stable return to Import.
+This folder contains the selected Maestro native Android E2E lane. It covers
+the safe document-picker cancel flow plus the approved synthetic-PDF first
+import and exact-duplicate flows.
 
-The flow selects the three durable Flutter `Semantics.identifier` values in
-`AppTestSemanticsIds`; it never relies on translated visible text or Flutter
-`ValueKey` values. It does not select a document or expose receipt content,
-file paths, or URIs.
+The flows select durable Flutter `Semantics.identifier` values in
+`AppTestSemanticsIds`; they never rely on translated visible text or Flutter
+`ValueKey` values. Assertions never expose receipt content, file paths, or
+URIs.
 
 ## Required baseline
 
-- Use only the existing `it_api36` AVD at `emulator-5554` for this comparison.
+- Use only the existing `it_api36` AVD at `emulator-5554` for the current
+  manual native-smoke lane.
 - Start it fresh with `-no-snapshot`; wait for both `adb get-state` = `device`
   and `sys.boot_completed` = `1` before building or testing.
-- Do not run this pilot on a physical device, another AVD, CI, or a device
-  farm while the Patrol/Maestro comparison is open.
+- Do not run these flows on a physical device, another AVD, CI, or a device
+  farm without a separately scoped follow-up and fresh evidence.
 
 ## Windows console cookbook
 
@@ -50,13 +50,14 @@ variable below; never commit a certificate, truststore, proxy setting, or
 security-product exception:
 
 ```powershell
-$env:RECEIPTS_GRADLE_TRUST_STORE = 'C:\Users\User\.gradle\receipts\jbr-cacerts-with-avast'
+  $env:RECEIPTS_GRADLE_TRUST_STORE = 'C:\local-only\gradle-truststore'
 $env:GRADLE_OPTS = "-Djavax.net.ssl.trustStore=$env:RECEIPTS_GRADLE_TRUST_STORE -Djavax.net.ssl.trustStorePassword=changeit"
 & C:\FlutterSDK\bin\flutter.bat build apk --debug
 & $adb -s emulator-5554 install -r build\app\outputs\flutter-apk\app-debug.apk
 ```
 
-Validate the picker-cancel flow, then run it twice for scorecard evidence:
+The picker-cancel flow is a retained regression smoke. Run it when changing
+the navigation-to-picker boundary:
 
 ```powershell
 & $env:MAESTRO check-syntax maestro\document_picker_cancel.yaml
@@ -93,6 +94,19 @@ this fixed comparison baseline: `it_api36` at its verified display geometry.
 It opens Documents UI's root chooser, which has no stable resource ID in this
 system image. Treat a changed picker layout as a scenario-maintenance event,
 not as an app regression.
+
+## Post-import navigation flow
+
+`receipt_a_post_import_navigation.yaml` extends the approved first-import
+journey. After the safe success state, it opens Receipts and Month and checks
+only durable non-empty Semantics outcomes. It never reads receipt fields or
+fixture content. It passed twice on the verified headless baseline.
+
+```powershell
+& $env:MAESTRO check-syntax maestro\receipt_a_post_import_navigation.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_post_import_navigation.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_post_import_navigation.yaml
+```
 
 If a prior interrupted emulator launcher left a QEMU process alive, stop that
 specific stale process before starting another AVD instance. Do not run two

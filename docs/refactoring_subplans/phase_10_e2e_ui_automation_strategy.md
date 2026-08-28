@@ -5,11 +5,17 @@
 - Master phase: `docs/framework_refactoring_plan.md` section 7, `Этап 10. CI и quality gates`
 - Status: complete
 - Owner/agent: Codex
-- Last updated: 2026-08-26
+- Last updated: 2026-08-28
 
 ## Lifecycle
 
 This document is the completed strategy decision record. Active Android emulator/connected-device E2E maintenance and suite refactoring are owned by `docs/refactoring_subplans/phase_15_android_device_e2e_track.md`; do not add implementation backlog here.
+
+Post-completion update (2026-08-28): Phase 16 compared Patrol and Maestro and
+selected Maestro for manual Android system-boundary E2E. The historical Patrol
+options below describe the decision context at the time; the current ownership
+and execution policy are in the Phase 15 track and
+`docs/e2e_automation_architecture.md`.
 
 ## Scope
 
@@ -66,7 +72,7 @@ Adopt a layered hybrid strategy:
 1. Keep `flutter test` as the fast PR gate for unit, repository/use-case, parser, privacy, and widget tests.
 2. Keep Flutter `integration_test` as the default E2E app-flow harness for deterministic, provider-overridden, offline flows.
 3. Do not migrate existing integration tests to Patrol now.
-4. Add a separate Patrol spike only if we need to automate real native surfaces that `integration_test` cannot cover well:
+4. Historical Phase 10 recommendation: add a separate Patrol spike only if we need to automate real native surfaces that `integration_test` cannot cover well. Phase 16 subsequently evaluated this need and selected Maestro:
    - Android permission dialogs.
    - Real Storage Access Framework/file picker interactions.
    - Real PDF/OCR/native extraction path.
@@ -350,4 +356,4 @@ Future implementation packages:
 - Decisions made: Flutter `integration_test` remains the deterministic, manual-only Android E2E harness; no Patrol dependency was added.
 - Follow-ups:
   - Phase 15 owns the focused suite split, stable key contract, and emulator/connected-device execution contract.
-  - Consider a separate Patrol spike only if real Android file picker, permission, or native PDF/OCR automation becomes a product requirement.
+  - Completed follow-up: Phase 16 evaluated native picker automation and selected Maestro. Physical-device and CI promotion remain separately scoped work.
