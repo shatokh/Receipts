@@ -226,11 +226,15 @@ class _ImportHistoryItem extends StatelessWidget {
             if (retryButton != null) retryButton,
           ],
         ),
-        trailing: _StatusBadge(
-          key: badgeKey,
-          label: badgeStyle.label,
-          color: badgeStyle.color,
-          outlined: badgeStyle.outlined,
+        trailing: Semantics(
+          container: true,
+          identifier: _statusBadgeSemanticsId(result.status),
+          child: _StatusBadge(
+            key: badgeKey,
+            label: badgeStyle.label,
+            color: badgeStyle.color,
+            outlined: badgeStyle.outlined,
+          ),
         ),
       ),
     );
@@ -307,6 +311,17 @@ class _ImportHistoryItem extends StatelessWidget {
         return AppTestKeys.importStatusDuplicate;
       case ImportStatus.error:
         return AppTestKeys.importStatusError;
+    }
+  }
+
+  String? _statusBadgeSemanticsId(ImportStatus status) {
+    switch (status) {
+      case ImportStatus.success:
+        return AppTestSemanticsIds.importStatusSuccess;
+      case ImportStatus.duplicate:
+        return AppTestSemanticsIds.importStatusDuplicate;
+      case ImportStatus.error:
+        return null;
     }
   }
 }

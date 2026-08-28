@@ -22,11 +22,15 @@ patrol --version
 
 ## 2. Запустить и проверить эмулятор
 
-Для обычного доказательного прогона используйте уже запущенный headless AVD. Для визуальной отладки запустите **тот же** AVD с окном. Не используйте mutable snapshot:
+Для обычного доказательного прогона используйте headless AVD. Для визуальной
+отладки запустите **тот же** AVD с окном. Не используйте mutable snapshot:
 
 ```powershell
-& "$env:ANDROID_SDK_ROOT\emulator\emulator.exe" -avd it_api36 -no-snapshot -no-boot-anim
+& "$env:ANDROID_SDK_ROOT\emulator\emulator.exe" -avd it_api36 -no-snapshot -no-window -gpu host
 ```
+
+Для видимой диагностики уберите только `-no-window`; такой запуск не является
+доказательством для scorecard.
 
 Перед любым тестом дождитесь полной готовности, а не только строки в `adb devices`:
 
@@ -52,6 +56,16 @@ if ($state -ne 'device' -or $boot -ne '1') { throw 'Emulator is not ready.' }
 ```
 
 Успех — только `OK (1 test)` и код процесса 0. Не считайте Android Gradle HTML/protobuf-отчёт источником успеха и не игнорируйте код возврата helper-а.
+
+## Статус native-import пилота
+
+`-StageReceiptA` в helper-е подготавливает одобренный синтетический PDF для
+будущего сценария, но пока не является поддерживаемым доказательным прогоном.
+В Patrol JUnit runner Android picker выбирает этот файл, однако `file_picker`
+не получает результат в Dart; следовательно, import pipeline не запускается.
+Не добавляйте app test hook и не меняйте production import code только ради
+этого пилота. Полное зафиксированное воспроизведение и варианты дальнейшего
+решения находятся в `docs/refactoring_subplans/phase_16e_dual_framework_redacted_pdf_pilots.md`.
 
 ## 4. Наблюдать реальные UI-действия
 

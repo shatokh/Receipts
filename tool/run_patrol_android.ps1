@@ -1,6 +1,7 @@
 param(
     [string]$DeviceId = 'emulator-5554',
     [string]$TestTarget = 'patrol_test/document_picker_cancel_test.dart',
+    [switch]$StageReceiptA,
     [string]$GradleTrustStorePath = $env:RECEIPTS_GRADLE_TRUST_STORE
 )
 
@@ -66,6 +67,18 @@ for ($attempt = 0; $attempt -lt 30; $attempt++) {
 
 if (-not $ready) {
     throw "Android device '$DeviceId' did not become ready before the timeout."
+}
+
+if ($StageReceiptA) {
+    $fixture = Join-Path $projectRoot 'assets\test\receipts\e2e\receipt_a.pdf'
+    if (-not (Test-Path -LiteralPath $fixture -PathType Leaf)) {
+        throw 'Approved redacted fixture was not found.'
+    }
+    & $adb -s $DeviceId push $fixture '/sdcard/Download/receipt_a.pdf' | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Staging the approved redacted fixture failed.'
+    }
+    & $adb -s $DeviceId shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/receipt_a.pdf | Out-Null
 }
 
 Push-Location $projectRoot

@@ -126,6 +126,44 @@ void main() {
     expect(find.text('All data is processed on device'), findsOneWidget);
     expect(find.text('Dairy, Eggs & Bakery'), findsOneWidget);
   });
+
+  testWidgets('DashboardView defers a missing selected-month correction', (
+    tester,
+  ) async {
+    late WidgetRef widgetRef;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          selectedMonthProvider.overrideWith((ref) => DateTime(2025, 7)),
+          monthlyTotalsProvider.overrideWith(
+            (ref) => Stream.value(
+              const [MonthlyTotal(year: 2025, month: 8, total: 125.50)],
+            ),
+          ),
+          dashboardKpisProvider.overrideWith((ref) async => _emptyKpis),
+          monthOverviewProvider.overrideWith((ref, month) async {
+            return _emptyOverview(month);
+          }),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Consumer(
+            builder: (context, ref, child) {
+              widgetRef = ref;
+              return const DashboardView();
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(widgetRef.read(selectedMonthProvider), DateTime(2025, 8));
+    expect(tester.takeException(), isNull);
+  });
 }
 
 const _emptyKpis = DashboardKpis(

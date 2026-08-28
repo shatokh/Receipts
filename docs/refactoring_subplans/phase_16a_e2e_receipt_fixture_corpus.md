@@ -5,8 +5,12 @@
 - Coordination: `docs/refactoring_subplans/phase_16_native_e2e_framework_learning_spike.md`
 - Architecture: `docs/e2e_automation_architecture.md`, Pilot C
 - Fixture manifest: `docs/e2e_receipt_fixture_manifest_template.md`
-- Status: planned
-- Last updated: 2026-08-26
+- Status: superseded
+- Last updated: 2026-08-27
+- Replaced by: `phase_16e_dual_framework_redacted_pdf_pilots.md`
+- Reason: its privacy gate and one-fixture scope are now executed together
+  with the two comparable Patrol/Maestro scenarios, rather than as a separate
+  prerequisite package.
 
 ## Scope
 

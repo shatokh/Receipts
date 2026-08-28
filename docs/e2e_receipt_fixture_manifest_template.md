@@ -22,29 +22,27 @@ Use this template only after a receipt fixture has been redacted and approved fo
 Copy one entry per approved fixture. Keep only opaque metadata.
 
 ```markdown
-### Fixture: e2e_short_month_a
+### Fixture: receipt_a
 
-- Repository file: `assets/test/receipts/e2e/e2e_short_month_a.pdf`
+- Repository file: `assets/test/receipts/e2e/receipt_a.pdf`
 - Shape: short | long | multi-page
-- Month bucket: month_a | month_b
 - Redaction reviewed on: YYYY-MM-DD
 - Reviewer: role or initials only
 - Intended flows:
   - native picker import
-  - month isolation
   - duplicate detection
 - Expected safe outcomes:
   - imports once
-  - appears in its assigned month bucket
   - duplicate import does not create a second receipt
 - Notes: no personal data or receipt content recorded here
 ```
 
 ## Baseline Corpus
 
-Before Pilot C, provide at least:
+For Phase 16e, provide exactly one approved fixture:
 
-1. `e2e_short_month_a.pdf` — a short redacted real-format receipt.
-2. `e2e_long_month_b.pdf` — a longer redacted real-format receipt from a different month bucket.
+1. `receipt_a.pdf` — an irreversible, redacted real-format derivative used for
+   native picker import and exact-duplicate detection in both frameworks.
 
-Additional files require a stated purpose, such as multi-page layout, an alternate receipt format, or a different month boundary. Fixture quantity by itself is not coverage.
+Additional files require a new approved scenario; fixture quantity by itself
+is not coverage.

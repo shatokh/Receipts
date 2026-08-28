@@ -23,7 +23,7 @@ file paths, or URIs.
 Set the local CLI and privacy opt-out for the current PowerShell session:
 
 ```powershell
-$env:MAESTRO = 'C:\Users\User\.maestro\cli-2.9.0\maestro\bin\maestro.bat'
+$env:MAESTRO = "$env:LOCALAPPDATA\MaestroCLI\maestro\bin\maestro.bat"
 $env:MAESTRO_CLI_NO_ANALYTICS = '1'
 ```
 
@@ -56,7 +56,7 @@ $env:GRADLE_OPTS = "-Djavax.net.ssl.trustStore=$env:RECEIPTS_GRADLE_TRUST_STORE 
 & $adb -s emulator-5554 install -r build\app\outputs\flutter-apk\app-debug.apk
 ```
 
-Validate the flow, then run it twice for scorecard evidence:
+Validate the picker-cancel flow, then run it twice for scorecard evidence:
 
 ```powershell
 & $env:MAESTRO check-syntax maestro\document_picker_cancel.yaml
@@ -67,6 +67,32 @@ Validate the flow, then run it twice for scorecard evidence:
 `clearState: true` deliberately resets only the app data on the selected
 emulator before each run. It does not wipe the AVD. Keep generated reports,
 screenshots, videos, documents, and device data out of Git.
+
+## Approved synthetic PDF flows
+
+Stage the reviewed synthetic fixture under its generic device filename, then
+run each real-picker flow twice. The first flow asserts a safe successful
+outcome; the second asserts an exact duplicate outcome. Neither flow asserts
+fixture contents, receipt fields, paths, or URIs.
+
+```powershell
+& $adb -s emulator-5554 push assets\test\receipts\e2e\receipt_a.pdf /sdcard/Download/receipt_a.pdf
+& $adb -s emulator-5554 shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/receipt_a.pdf
+
+& $env:MAESTRO check-syntax maestro\receipt_a_import.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_import.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_import.yaml
+
+& $env:MAESTRO check-syntax maestro\receipt_a_duplicate.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_duplicate.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_duplicate.yaml
+```
+
+The root-switch coordinate in these two flows is intentionally restricted to
+this fixed comparison baseline: `it_api36` at its verified display geometry.
+It opens Documents UI's root chooser, which has no stable resource ID in this
+system image. Treat a changed picker layout as a scenario-maintenance event,
+not as an app regression.
 
 If a prior interrupted emulator launcher left a QEMU process alive, stop that
 specific stale process before starting another AVD instance. Do not run two

@@ -36,8 +36,17 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
       );
       final replacementSelectedMonth = viewModel.replacementSelectedMonth;
       if (replacementSelectedMonth != null) {
-        ref.read(selectedMonthProvider.notifier).state =
-            replacementSelectedMonth;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+
+          final currentSelectedMonth = ref.read(selectedMonthProvider);
+          if (currentSelectedMonth != replacementSelectedMonth) {
+            ref.read(selectedMonthProvider.notifier).state =
+                replacementSelectedMonth;
+          }
+        });
       }
     });
 

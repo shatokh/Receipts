@@ -136,8 +136,8 @@ Espresso is valuable for View-based Android apps but does not make Flutter's Dar
 The inventory is broad, but the hands-on spike deliberately compares only Patrol and Maestro. They represent the two architectural models the team wants to understand: Dart-integrated native automation and external black-box device automation. UI Automator and Appium are documented alternatives, not pilot implementations.
 
 1. Run Pilot A for Patrol and Maestro on the same Android image.
-2. Prepare the privacy-reviewed two-fixture corpus for Pilot C; use it to compare one realistic import journey after Pilot A establishes native picker control.
-3. Run Pilot C only with the stronger of Patrol and Maestro, unless both need a final tie-breaker.
+2. Prepare one privacy-reviewed synthetic fixture for Pilot C; use it to compare one realistic import journey after Pilot A establishes native picker control.
+3. Run Pilot C in both candidates only when the team explicitly wants a final tie-breaker.
 4. Reconsider UI Automator or Appium only through a new sub-plan if Android-only Kotlin ownership, WebDriver, external QA, or a device farm becomes a concrete need.
 
 ### Pilot A: cancel a real Android document-picker flow
@@ -207,6 +207,13 @@ Score each framework after running Pilot A (and Pilot B if attempted) on the sam
 | --- | --- | --- | --- |
 | Patrol | Local headless `it_api36` / `emulator-5554`; Patrol CLI 4.7.0, package 4.9.0 | Two direct JUnit runs passed for picker cancel/return-to-Import. | Native `pressBack` and a durable `AppTestKeys.importButton` assertion passed; the AVD's `ACTION_OPEN_DOCUMENT` handler was confirmed separately without selecting a file. Warm build plus run was about 30 seconds. The official `patrol test` command still fails after a passed test because AGP/UTP cannot maintain its host-local mTLS result listener; `tool/run_patrol_android.ps1` preserves the same runner's JUnit pass/fail outcome. No real receipt, URI, path, picker text, or screenshot was used. The framework decision remains deferred until the planned Pilot C has approved fixtures. |
 | Maestro | Local headless `it_api36` / `emulator-5554`; Maestro CLI 2.9.0 | Two direct CLI runs passed for picker cancel/return-to-Import. | Three explicit Flutter `Semantics.identifier` selectors reached onboarding start, Import navigation, and Import action; native Back returned safely from the real picker. Each run took about 24–50 seconds and reset only app data. On this host, headless launch requires `-no-window -gpu host`: without explicit GPU mode, a stale QEMU process and Android System UI ANR obscured the Flutter hierarchy. Anonymous CLI analytics were disabled, and no receipt, URI, path, picker text, screenshot, or report was committed. |
+
+### Pilot C evidence (not a framework decision)
+
+| Framework | Verified environment | Outcome | Scorecard evidence |
+| --- | --- | --- | --- |
+| Patrol | Fresh headless `it_api36` / `emulator-5554`; Patrol package 4.9.0 | Blocked | Native selectors opened Documents UI and selected the approved synthetic fixture, but the Android `file_picker` plugin's Dart future never completed under the Patrol JUnit runner. The behavior reproduced after a fresh headless launch and with a bounded real-async handoff. The existing cancel flow still passes, isolating the limitation to selection-result delivery. Do not add a production test hook solely to score this pilot. |
+| Maestro | Headless `it_api36` / `emulator-5554`; Maestro CLI 2.9.0 | Passed twice | Both safe outcomes — first import and exact duplicate — completed twice through the real Android picker using durable Semantics outcome identifiers. The fixture contains only reviewed synthetic data; no device report or screenshot was committed. |
 
 For future Appium consideration, record whether WebDriver language/device-farm interoperability is worth the server and client stack. For future UI Automator consideration, record whether Android-only Kotlin ownership is acceptable. These are documented alternatives, not hidden pilot requirements.
 

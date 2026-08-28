@@ -5,8 +5,11 @@
 - Coordination: `docs/refactoring_subplans/phase_16_native_e2e_framework_learning_spike.md`
 - Architecture: `docs/e2e_automation_architecture.md`, Pilot C
 - Fixture package: `docs/refactoring_subplans/phase_16a_e2e_receipt_fixture_corpus.md`
-- Status: planned
-- Start only after: Phase 16b and Phase 16c scorecard selects Patrol or Maestro, and Phase 16a is complete.
+- Status: superseded
+- Superseded on: 2026-08-27
+- Replaced by: `phase_16e_dual_framework_redacted_pdf_pilots.md`
+- Reason: the team explicitly chose two comparable real-PDF scenarios in both
+  Patrol and Maestro before making a framework decision.
 
 ## Scope
 

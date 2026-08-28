@@ -69,6 +69,19 @@ void main() {
 
     expect(find.text('sample.pdf'), findsOneWidget);
     expect(find.byKey(AppTestKeys.importStatusSuccess), findsOneWidget);
+    expect(
+      tester
+          .getSemantics(
+            find.byWidgetPredicate(
+              (widget) =>
+                  widget is Semantics &&
+                  widget.properties.identifier ==
+                      AppTestSemanticsIds.importStatusSuccess,
+            ),
+          )
+          .identifier,
+      AppTestSemanticsIds.importStatusSuccess,
+    );
     expect(find.byKey(AppTestKeys.importStatusDuplicate), findsNothing);
     expect(find.byKey(AppTestKeys.importStatusError), findsNothing);
     expect(find.text('Retry OCR'), findsNothing);
@@ -96,6 +109,19 @@ void main() {
     expect(
       find.byKey(AppTestKeys.importStatusDuplicate),
       findsOneWidget,
+    );
+    expect(
+      tester
+          .getSemantics(
+            find.byWidgetPredicate(
+              (widget) =>
+                  widget is Semantics &&
+                  widget.properties.identifier ==
+                      AppTestSemanticsIds.importStatusDuplicate,
+            ),
+          )
+          .identifier,
+      AppTestSemanticsIds.importStatusDuplicate,
     );
     expect(find.text('Retry OCR'), findsNothing);
   });

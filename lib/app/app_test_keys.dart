@@ -31,4 +31,6 @@ class AppTestSemanticsIds {
   static const onboardingGetStarted = 'onboarding_get_started';
   static const navImport = 'nav_import';
   static const importButton = 'import_button';
+  static const importStatusSuccess = 'import_status_success';
+  static const importStatusDuplicate = 'import_status_duplicate';
 }
