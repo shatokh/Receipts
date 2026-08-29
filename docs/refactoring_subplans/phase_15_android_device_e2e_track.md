@@ -6,7 +6,7 @@
 - Strategy decision: `docs/refactoring_subplans/phase_10_e2e_ui_automation_strategy.md`
 - Status: in progress
 - Owner/agent: Codex
-- Last updated: 2026-08-29
+- Last updated: 2026-08-30
 
 ## Purpose
 
@@ -32,6 +32,9 @@ decision, not a business-coverage threshold.
   Phase 17 and Phase 18 subsequently passed the synthetic-PDF navigation and
   two-month isolation scenarios twice on headless `it_api36` / `emulator-5554`.
   Patrol is an archived diagnostic pilot, not a supported E2E suite.
+- Phase 19 passed twice on the same baseline: it opened an approved synthetic
+  source through Android's external handler and returned safely to Receipt
+  Details without inspecting viewer content.
 
 ## Scope
 
@@ -110,7 +113,7 @@ Before adding a native automation dependency, assess the gaps below:
 
 | Surface | Default evidence | Automation decision |
 | --- | --- | --- |
-| Open PDF/source external chooser | Manual smoke on an emulator/device with a compatible viewer | Consider a separately scoped Maestro follow-up only if release risk warrants repeatable automation. |
+| Open PDF/source external chooser | Manual smoke on an emulator/device with a compatible viewer | Phase 19 supplies repeatable Maestro evidence on the verified AVD; physical-device evidence remains separate. |
 | Storage Access Framework/file picker | Manual smoke with synthetic files | Maestro native smoke is available for approved synthetic-file flows and has recorded first-import, duplicate, navigation, and month-isolation evidence. |
 | Runtime permissions/system settings | Manual smoke when such a feature is introduced | No work until a product feature depends on it |
 | Native PDF extraction | Existing fake-backed E2E plus manual synthetic-PDF smoke | Current Maestro import evidence exercises the native path; add another scenario only when a concrete regression risk is identified. |

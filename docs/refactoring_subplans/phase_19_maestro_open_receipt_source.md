@@ -6,8 +6,8 @@
 - Feature contract: `docs/refactoring_subplans/phase_14_open_receipt_source.md`
 - Framework decision: `docs/refactoring_subplans/phase_16_native_e2e_framework_learning_spike.md`
 - Previous native package: `docs/refactoring_subplans/phase_18_maestro_month_isolation.md`
-- Status: planned
-- Last updated: 2026-08-29
+- Status: complete
+- Last updated: 2026-08-30
 
 ## Goal
 
@@ -94,10 +94,29 @@ the intact Receipt Details screen after cancellation/back navigation.
 
 ## Definition of Done
 
-- [ ] The flow imports the existing approved synthetic fixture and reaches
+- [x] The flow imports the existing approved synthetic fixture and reaches
   Receipt Details without content-bearing selectors.
-- [ ] One Android Back action after Open PDF returns to the intact Receipt
+- [x] One Android Back action after Open PDF returns to the intact Receipt
   Details screen in two headless runs.
-- [ ] New Semantics identifiers are minimal and covered by focused tests.
-- [ ] Cookbook, architecture, sub-plan, and master tracker contain only safe
+- [x] New Semantics identifiers are minimal and covered by focused tests.
+- [x] Cookbook, architecture, sub-plan, and master tracker contain only safe
   evidence and accurately record remaining follow-up work.
+
+## Completion Evidence
+
+- A read-only Android intent-resolution preflight confirmed a generic PDF
+  handler on the verified AVD; no viewer name, source URI, or document content
+  was recorded as test evidence.
+- Focused Receipt List and Receipt Details widget tests passed for the three
+  added Semantics contracts.
+- `maestro check-syntax maestro/receipt_a_open_source.yaml` passed.
+- The scenario passed twice headlessly on `it_api36` / `emulator-5554`. Each
+  run imported only the approved synthetic fixture, pressed Back once after
+  the external open action, and asserted the non-content Receipt Details ID.
+- `flutter analyze`, `flutter test`, and `git diff --check` passed.
+
+## Follow-up Work
+
+This closes the emulator-level external-source smoke. A physical-device run,
+CI execution, a different viewer implementation, or any viewer-content
+assertion needs a separate sub-plan and fresh privacy review.

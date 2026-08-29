@@ -25,49 +25,54 @@ class ReceiptsList extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
         itemBuilder: (context, index) {
           final receipt = receipts[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-            ),
-            child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: AppColors.primary,
-                child: Icon(
-                  Icons.receipt,
-                  color: Colors.white,
-                  size: 20,
-                ),
+          return Semantics(
+            container: true,
+            identifier:
+                index == 0 ? AppTestSemanticsIds.receiptsFirstItem : null,
+            child: Card(
+              margin: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
               ),
-              title: Text(
-                receipt.merchantName,
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              subtitle: Text(
-                dateFormat.format(receipt.purchaseTimestamp),
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    currencyFormat.format(receipt.totalGross),
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
+              child: ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: AppColors.primary,
+                  child: Icon(
+                    Icons.receipt,
+                    color: Colors.white,
+                    size: 20,
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  const Icon(
-                    Icons.chevron_right,
+                ),
+                title: Text(
+                  receipt.merchantName,
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  dateFormat.format(receipt.purchaseTimestamp),
+                  style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),
-                ],
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      currencyFormat.format(receipt.totalGross),
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.textSecondary,
+                    ),
+                  ],
+                ),
+                onTap: () => context.go('/receipt/${receipt.id}'),
               ),
-              onTap: () => context.go('/receipt/${receipt.id}'),
             ),
           );
         },

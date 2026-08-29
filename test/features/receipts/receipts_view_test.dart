@@ -92,6 +92,19 @@ void main() {
           .identifier,
       AppTestSemanticsIds.receiptsList,
     );
+    expect(
+      tester
+          .getSemantics(
+            find.byWidgetPredicate(
+              (widget) =>
+                  widget is Semantics &&
+                  widget.properties.identifier ==
+                      AppTestSemanticsIds.receiptsFirstItem,
+            ),
+          )
+          .identifier,
+      AppTestSemanticsIds.receiptsFirstItem,
+    );
     expect(find.text('Test Store'), findsOneWidget);
   });
 }

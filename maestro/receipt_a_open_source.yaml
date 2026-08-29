@@ -1,0 +1,40 @@
+appId: app.receipts
+name: Synthetic PDF source opener
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: onboarding_get_started
+- tapOn:
+    id: nav_import
+- tapOn:
+    id: import_button
+- tapOn:
+    point: 7%,8%
+- tapOn: Downloads
+- tapOn: receipt_a.pdf
+- extendedWaitUntil:
+    visible:
+      id: import_status_success
+    timeout: 30000
+- tapOn:
+    id: nav_receipts
+- extendedWaitUntil:
+    visible:
+      id: receipts_first_item
+    timeout: 15000
+- tapOn:
+    id: receipts_first_item
+- extendedWaitUntil:
+    visible:
+      id: receipt_details
+    timeout: 15000
+- tapOn:
+    id: receipt_open_pdf
+- waitForAnimationToEnd:
+    timeout: 10000
+- pressKey: back
+- extendedWaitUntil:
+    visible:
+      id: receipt_details
+    timeout: 15000

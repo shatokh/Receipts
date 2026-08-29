@@ -6,7 +6,7 @@
 - Framework decision: `docs/refactoring_subplans/phase_16_native_e2e_framework_learning_spike.md`
 - Current native evidence: `docs/refactoring_subplans/phase_18_maestro_month_isolation.md`
 - Status: complete
-- Last updated: 2026-08-29
+- Last updated: 2026-08-30
 
 ## Goal
 
@@ -91,6 +91,6 @@ remaining physical-device boundary clear without changing test behavior.
 
 - A physical-device result needs a new small sub-plan and a specific connected
   debug-capable device; it is not implied by emulator evidence.
-- The next native scenario candidate is Open receipt source / external chooser
-  cancellation. Start it only as a separate Phase 19 sub-plan after deciding
-  that its release risk warrants repeatable automation.
+- Phase 19 subsequently completed the Open receipt source / external-handler
+  return smoke. Further native coverage requires a new small sub-plan and a
+  concrete regression or release-risk rationale.

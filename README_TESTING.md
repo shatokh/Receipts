@@ -57,14 +57,15 @@ $env:MAESTRO_CLI_NO_ANALYTICS = '1'
 & $env:MAESTRO --device emulator-5554 test maestro\receipt_a_import.yaml
 & $env:MAESTRO --device emulator-5554 test maestro\receipt_a_duplicate.yaml
 & $env:MAESTRO --device emulator-5554 test maestro\receipt_a_b_month_isolation.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_open_source.yaml
 ```
 
 These flows use the real document picker with approved synthetic fixtures and
-assert only safe success, duplicate, navigation, and month-isolation outcomes.
-They are manual-only and not part of the PR or coverage gate. Patrol is
-retained solely as an archived learning pilot because selected `file_picker`
-results do not complete in Dart under its JUnit runner; do not add an app test
-hook for it.
+assert only safe success, duplicate, navigation, month-isolation, and
+external-source-return outcomes. They are manual-only and not part of the PR
+or coverage gate. Patrol is retained solely as an archived learning pilot
+because selected `file_picker` results do not complete in Dart under its JUnit
+runner; do not add an app test hook for it.
 
 ### Android E2E launch rules
 

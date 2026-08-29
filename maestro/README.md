@@ -131,6 +131,20 @@ files and media-scanner output out of Git:
 & $env:MAESTRO --device emulator-5554 test maestro\receipt_a_b_month_isolation.yaml
 ```
 
+## Open receipt source flow
+
+`receipt_a_open_source.yaml` reuses `receipt_a.pdf`: it imports the approved
+synthetic fixture, opens its first receipt, invokes Open PDF, presses Android
+Back once, and confirms only that Receipt Details is intact again. It neither
+reads nor asserts the external viewer or PDF content. The flow passed twice on
+the verified headless baseline after the AVD's generic PDF-handler preflight.
+
+```powershell
+& $env:MAESTRO check-syntax maestro\receipt_a_open_source.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_open_source.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_open_source.yaml
+```
+
 If a prior interrupted emulator launcher left a QEMU process alive, stop that
 specific stale process before starting another AVD instance. Do not run two
 instances of `it_api36` concurrently. On this host, an omitted `-gpu host`

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:receipts/app/app_test_keys.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 
 import 'package:receipts/theme.dart';
@@ -24,11 +25,15 @@ class ReceiptDetailsActionButtons extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: ElevatedButton.icon(
-                key: const Key('openPdfButton'),
-                onPressed: onOpenPdf,
-                icon: const Icon(Icons.picture_as_pdf),
-                label: Text(t.openPdf),
+              child: Semantics(
+                container: true,
+                identifier: AppTestSemanticsIds.receiptOpenPdf,
+                child: ElevatedButton.icon(
+                  key: const Key('openPdfButton'),
+                  onPressed: onOpenPdf,
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: Text(t.openPdf),
+                ),
               ),
             ),
             const SizedBox(width: AppSpacing.md),

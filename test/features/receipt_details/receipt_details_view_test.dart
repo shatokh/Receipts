@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:receipts/app/app_test_keys.dart';
 import 'package:receipts/app/providers.dart';
 import 'package:receipts/domain/models/line_item.dart';
 import 'package:receipts/domain/models/merchant.dart';
@@ -83,10 +84,25 @@ void main() {
     await tester.pump();
 
     expect(find.text('Receipt'), findsOneWidget);
+    expect(
+      tester
+          .getSemantics(
+            find.byWidgetPredicate(
+              (widget) =>
+                  widget is Semantics &&
+                  widget.properties.identifier ==
+                      AppTestSemanticsIds.receiptDetails,
+            ),
+          )
+          .identifier,
+      AppTestSemanticsIds.receiptDetails,
+    );
     expect(find.text('Test Store'), findsOneWidget);
     expect(find.text('Test item'), findsOneWidget);
     expect(
-      tester.widget<ElevatedButton>(find.byKey(const Key('openPdfButton'))).onPressed,
+      tester
+          .widget<ElevatedButton>(find.byKey(const Key('openPdfButton')))
+          .onPressed,
       isNull,
     );
   });
@@ -248,6 +264,25 @@ void main() {
     );
     await tester.pump();
 
+    expect(
+      tester
+          .getSemantics(
+            find.byWidgetPredicate(
+              (widget) =>
+                  widget is Semantics &&
+                  widget.properties.identifier ==
+                      AppTestSemanticsIds.receiptOpenPdf,
+            ),
+          )
+          .identifier,
+      AppTestSemanticsIds.receiptOpenPdf,
+    );
+    expect(
+      tester
+          .widget<ElevatedButton>(find.byKey(const Key('openPdfButton')))
+          .onPressed,
+      isNotNull,
+    );
     await tester.tap(find.text('Open PDF'));
     await tester.pump();
 

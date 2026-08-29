@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:receipts/app/app_test_keys.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 
 import 'package:receipts/features/receipt_details/receipt_details_view_model.dart';
@@ -34,23 +35,27 @@ class ReceiptDetailsContent extends StatelessWidget {
           onPressed: () => context.pop(),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ReceiptHeader(viewModel: viewModel),
-            const SizedBox(height: AppSpacing.lg),
-            ItemsTable(items: viewModel.items),
-            const SizedBox(height: AppSpacing.lg),
-            VatSummary(totalVatText: viewModel.totalVatText),
-            const SizedBox(height: AppSpacing.lg),
-            ReceiptDetailsActionButtons(
-              onDelete: onDelete,
-              onOpenPdf: onOpenPdf,
-              onRecategorize: onRecategorize,
-            ),
-          ],
+      body: Semantics(
+        container: true,
+        identifier: AppTestSemanticsIds.receiptDetails,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ReceiptHeader(viewModel: viewModel),
+              const SizedBox(height: AppSpacing.lg),
+              ItemsTable(items: viewModel.items),
+              const SizedBox(height: AppSpacing.lg),
+              VatSummary(totalVatText: viewModel.totalVatText),
+              const SizedBox(height: AppSpacing.lg),
+              ReceiptDetailsActionButtons(
+                onDelete: onDelete,
+                onOpenPdf: onOpenPdf,
+                onRecategorize: onRecategorize,
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -41,4 +41,7 @@ class AppTestSemanticsIds {
   static const monthOption0 = 'month_option_0';
   static const monthOption1 = 'month_option_1';
   static const monthSingleReceipt = 'month_single_receipt';
+  static const receiptsFirstItem = 'receipts_first_item';
+  static const receiptDetails = 'receipt_details';
+  static const receiptOpenPdf = 'receipt_open_pdf';
 }
