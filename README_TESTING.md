@@ -48,7 +48,7 @@ The helper scripts below create or boot an emulator; use the direct command for 
 Maestro is the selected framework for native Android system-boundary smoke
 scenarios. Use it only on the verified `it_api36` / `emulator-5554` AVD until
 a separately scoped physical-device or CI follow-up is complete. The complete
-Windows cookbook, including safe staging and the two approved flows, is in
+Windows cookbook, including safe staging and the approved flows, is in
 [`maestro/README.md`](maestro/README.md).
 
 ```powershell
@@ -56,13 +56,15 @@ $env:MAESTRO = "$env:LOCALAPPDATA\MaestroCLI\maestro\bin\maestro.bat"
 $env:MAESTRO_CLI_NO_ANALYTICS = '1'
 & $env:MAESTRO --device emulator-5554 test maestro\receipt_a_import.yaml
 & $env:MAESTRO --device emulator-5554 test maestro\receipt_a_duplicate.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_b_month_isolation.yaml
 ```
 
-These flows use the real document picker with an approved synthetic fixture and
-assert only safe success/duplicate outcomes. They are manual-only and not part
-of the PR or coverage gate. Patrol is retained solely as an archived learning
-pilot because selected `file_picker` results do not complete in Dart under its
-JUnit runner; do not add an app test hook for it.
+These flows use the real document picker with approved synthetic fixtures and
+assert only safe success, duplicate, navigation, and month-isolation outcomes.
+They are manual-only and not part of the PR or coverage gate. Patrol is
+retained solely as an archived learning pilot because selected `file_picker`
+results do not complete in Dart under its JUnit runner; do not add an app test
+hook for it.
 
 ### Android E2E launch rules
 

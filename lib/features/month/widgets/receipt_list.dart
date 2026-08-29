@@ -40,7 +40,9 @@ class ReceiptList extends StatelessWidget {
 
         return Semantics(
           container: true,
-          identifier: AppTestSemanticsIds.monthReceipts,
+          identifier: receipts.length == 1
+              ? AppTestSemanticsIds.monthSingleReceipt
+              : AppTestSemanticsIds.monthReceipts,
           child: Column(
             children: receipts
                 .take(5)

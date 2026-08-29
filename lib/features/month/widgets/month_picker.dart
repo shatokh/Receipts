@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:receipts/app/app_test_keys.dart';
 import 'package:receipts/l10n/app_localizations.dart';
 import 'package:receipts/l10n/app_localizations_extensions.dart';
 
@@ -33,23 +34,37 @@ class MonthPicker extends ConsumerWidget {
         border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: DropdownButton<DateTime>(
-        value: value,
-        isExpanded: true,
-        underline: const SizedBox.shrink(),
-        items: months
-            .map(
-              (month) => DropdownMenuItem(
-                value: month,
-                child: Text(t.formatMonthYear(month)),
-              ),
-            )
-            .toList(),
-        onChanged: (month) {
-          if (month != null) {
-            ref.read(selectedMonthProvider.notifier).state = month;
-          }
-        },
+      child: Semantics(
+        container: true,
+        identifier: AppTestSemanticsIds.monthPicker,
+        child: DropdownButton<DateTime>(
+          value: value,
+          isExpanded: true,
+          underline: const SizedBox.shrink(),
+          items: months
+              .asMap()
+              .entries
+              .map(
+                (entry) => DropdownMenuItem(
+                  value: entry.value,
+                  child: Semantics(
+                    container: true,
+                    identifier: switch (entry.key) {
+                      0 => AppTestSemanticsIds.monthOption0,
+                      1 => AppTestSemanticsIds.monthOption1,
+                      _ => null,
+                    },
+                    child: Text(t.formatMonthYear(entry.value)),
+                  ),
+                ),
+              )
+              .toList(),
+          onChanged: (month) {
+            if (month != null) {
+              ref.read(selectedMonthProvider.notifier).state = month;
+            }
+          },
+        ),
       ),
     );
   }

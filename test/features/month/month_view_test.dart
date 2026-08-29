@@ -136,15 +136,58 @@ void main() {
               (widget) =>
                   widget is Semantics &&
                   widget.properties.identifier ==
-                      AppTestSemanticsIds.monthReceipts,
+                      AppTestSemanticsIds.monthSingleReceipt,
             ),
           )
           .identifier,
-      AppTestSemanticsIds.monthReceipts,
+      AppTestSemanticsIds.monthSingleReceipt,
     );
     expect(find.text('Test Store'), findsOneWidget);
     expect(find.text('Dairy, Eggs & Bakery'), findsOneWidget);
   });
+
+  testWidgets('MonthView exposes stable selectors for two month options', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        overrides: [
+          selectedMonthProvider.overrideWith((ref) => DateTime(2025, 8)),
+          monthlyTotalsProvider.overrideWith(
+            (ref) => Stream.value(
+              const [
+                MonthlyTotal(year: 2025, month: 8, total: 125.50),
+                MonthlyTotal(year: 2025, month: 7, total: 45.00),
+              ],
+            ),
+          ),
+          monthOverviewProvider.overrideWith(
+            (ref, month) => Future.value(_emptyOverview(month)),
+          ),
+          receiptsByMonthProvider.overrideWith((ref, month) {
+            return Stream.value(const []);
+          }),
+        ],
+        child: const MonthView(),
+      ),
+    );
+    await tester.pump();
+
+    expect(_semanticsIdFinder(AppTestSemanticsIds.monthPicker), findsOneWidget);
+
+    await tester.tap(find.byType(DropdownButton<DateTime>));
+    await tester.pumpAndSettle();
+
+    expect(_semanticsIdFinder(AppTestSemanticsIds.monthOption0), findsOneWidget);
+    expect(_semanticsIdFinder(AppTestSemanticsIds.monthOption1), findsOneWidget);
+  });
+}
+
+Finder _semanticsIdFinder(String identifier) {
+  return find.byWidgetPredicate(
+    (widget) =>
+        widget is Semantics && widget.properties.identifier == identifier,
+  );
 }
 
 MonthOverview _emptyOverview(DateTime month) {

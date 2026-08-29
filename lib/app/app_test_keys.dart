@@ -37,4 +37,8 @@ class AppTestSemanticsIds {
   static const navReceipts = 'nav_receipts';
   static const receiptsList = 'receipts_list';
   static const monthReceipts = 'month_receipts';
+  static const monthPicker = 'month_picker';
+  static const monthOption0 = 'month_option_0';
+  static const monthOption1 = 'month_option_1';
+  static const monthSingleReceipt = 'month_single_receipt';
 }

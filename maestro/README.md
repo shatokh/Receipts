@@ -1,8 +1,8 @@
 # Maestro Native Android E2E Cookbook
 
 This folder contains the selected Maestro native Android E2E lane. It covers
-the safe document-picker cancel flow plus the approved synthetic-PDF first
-import and exact-duplicate flows.
+the safe document-picker cancel flow plus approved synthetic-PDF import,
+duplicate, post-import-navigation, and month-isolation flows.
 
 The flows select durable Flutter `Semantics.identifier` values in
 `AppTestSemanticsIds`; they never rely on translated visible text or Flutter
@@ -106,6 +106,29 @@ fixture content. It passed twice on the verified headless baseline.
 & $env:MAESTRO check-syntax maestro\receipt_a_post_import_navigation.yaml
 & $env:MAESTRO --device emulator-5554 test maestro\receipt_a_post_import_navigation.yaml
 & $env:MAESTRO --device emulator-5554 test maestro\receipt_a_post_import_navigation.yaml
+```
+
+## Two-fixture month-isolation flow
+
+`receipt_a_b_month_isolation.yaml` imports the two approved synthetic fixtures
+through the real picker. It then selects the first two rendered Month options
+through ordinal Semantics identifiers and asserts only the safe one-receipt
+structural state. It deliberately does not select dates by visible localized
+text or inspect any receipt fields.
+It passed twice on the verified headless baseline.
+
+Stage both generic device filenames before running it. Keep the device-side
+files and media-scanner output out of Git:
+
+```powershell
+& $adb -s emulator-5554 push assets\test\receipts\e2e\receipt_a.pdf /sdcard/Download/receipt_a.pdf
+& $adb -s emulator-5554 shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/receipt_a.pdf
+& $adb -s emulator-5554 push assets\test\receipts\e2e\receipt_b.pdf /sdcard/Download/receipt_b.pdf
+& $adb -s emulator-5554 shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/receipt_b.pdf
+
+& $env:MAESTRO check-syntax maestro\receipt_a_b_month_isolation.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_b_month_isolation.yaml
+& $env:MAESTRO --device emulator-5554 test maestro\receipt_a_b_month_isolation.yaml
 ```
 
 If a prior interrupted emulator launcher left a QEMU process alive, stop that

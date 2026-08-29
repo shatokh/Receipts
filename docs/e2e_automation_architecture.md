@@ -229,6 +229,7 @@ Score each framework after running Pilot A (and Pilot B if attempted) on the sam
 | Framework | Verified environment | Outcome | Evidence |
 | --- | --- | --- | --- |
 | Maestro | Headless `it_api36` / `emulator-5554`; Maestro CLI 2.9.0 | Passed twice | The approved first-import journey continued from the safe success outcome to non-empty Receipts and Month destinations. It uses only durable navigation and non-empty-state Semantics identifiers; no receipt fields, paths, URIs, screenshots, or reports were recorded. |
+| Maestro | Headless `it_api36` / `emulator-5554`; Maestro CLI 2.9.0 | Passed twice | Two approved synthetic fixtures were imported through the real picker. The journey selected two ordinal Month options and reached the safe exactly-one-receipt outcome for each. It used only Semantics identifiers; no month labels, receipt fields, dates, totals, paths, URIs, screenshots, or reports were recorded. |
 
 For future Appium consideration, record whether WebDriver language/device-farm interoperability is worth the server and client stack. For future UI Automator consideration, record whether Android-only Kotlin ownership is acceptable. These are documented alternatives, not hidden pilot requirements.
 
