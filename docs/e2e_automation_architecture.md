@@ -41,13 +41,16 @@ The lanes complement rather than replace one another. Rules and data integrity b
 
 | Concern | Flutter device lane | Native-framework lane | Rule |
 | --- | --- | --- | --- |
-| App selection | `AppTestKeys` | Semantics identifiers/labels for Maestro; Flutter/native selectors for Patrol | Do not reuse decorative layout selectors. |
+| App selection | `AppTestKeys` | Semantics identifiers for Maestro | Do not reuse decorative layout selectors. Patrol is retained only as historical diagnostic evidence. |
 | Test data | Riverpod fakes and synthetic assets | Synthetic file placed intentionally on the emulator/device | Never use a personal receipt, NIP, URI, or path in fixtures or logs. |
 | Persistence | Isolated `integration_test.db`, reset per journey | Dedicated test app data/reset procedure | Tests must not depend on execution order. |
 | Assertions | Widget state plus bounded waiters | Visible app/system outcome only | Do not encode parser or aggregate rules twice. |
 | Evidence | Flutter test output | Framework report, device/API, redacted failure screenshot if enabled | Keep artifacts free of receipt data. |
 
-`AppTestKeys` intentionally remain a Flutter contract. They are not an accessibility API. If Maestro is piloted, add explicit `Semantics` identifiers only for durable user actions and outcomes; do not scrape visible English/Russian/Polish text or mirror every widget key.
+`AppTestKeys` intentionally remain a Flutter contract. They are not an
+accessibility API. For Maestro, add explicit `Semantics` identifiers only for
+durable user actions and outcomes; do not scrape visible English/Russian/Polish
+text or mirror every widget key.
 
 ## Candidate Landscape
 

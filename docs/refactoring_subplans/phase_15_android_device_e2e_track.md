@@ -6,11 +6,15 @@
 - Strategy decision: `docs/refactoring_subplans/phase_10_e2e_ui_automation_strategy.md`
 - Status: in progress
 - Owner/agent: Codex
-- Last updated: 2026-08-26
+- Last updated: 2026-08-29
 
 ## Purpose
 
-Maintain a dedicated, device-level test track for the Receipts UI on both Android emulators and an optionally connected physical Android device. This track owns only app-flow wiring and Android-runtime behavior; deterministic parsing, aggregates, privacy rules, and view-state rendering remain covered below the device layer.
+Maintain a dedicated, device-level test track for the Receipts UI on the
+verified Android emulator and, only when separately evidenced, a connected
+physical Android device. This track owns only app-flow wiring and
+Android-runtime behavior; deterministic parsing, aggregates, privacy rules,
+and view-state rendering remain covered below the device layer.
 
 This track prepared the educational native-E2E spike. Phase 16 subsequently
 compared Patrol and Maestro on deliberately native Android scenarios and
@@ -24,6 +28,10 @@ decision, not a business-coverage threshold.
 - The local Android API 36 emulator run passed all six journeys on 2026-08-26. The manual GitHub Actions workflow provisions API 34.
 - The existing PowerShell and shell helpers boot an emulator. A connected device is supported by the direct Flutter command and must be selected explicitly with its `flutter devices` identifier.
 - A system viewer smoke for Open PDF is still manual because Flutter `integration_test` cannot reliably assert the external Android chooser/viewer.
+- Phase 16 selected Maestro as the native Android system-boundary framework.
+  Phase 17 and Phase 18 subsequently passed the synthetic-PDF navigation and
+  two-month isolation scenarios twice on headless `it_api36` / `emulator-5554`.
+  Patrol is an archived diagnostic pilot, not a supported E2E suite.
 
 ## Scope
 
@@ -31,14 +39,18 @@ decision, not a business-coverage threshold.
 2. Refactor the current monolithic integration test into focused flow files plus shared device-test support without changing coverage.
 3. Establish a stable key contract for device tests; keys are behavior contracts, not styling selectors.
 4. Record and automate only device-level checks that can be deterministic with synthetic fixtures.
-5. Preserve a separate manual/native lane for system chooser, SAF, permission, and real PDF-extraction smoke checks.
+5. Preserve a separate manual Maestro native lane for system chooser, SAF,
+   permission, and real PDF-extraction smoke checks that have an approved
+   small sub-plan.
 
 ## Non-goals
 
 - Do not put emulator/device E2E into the fast PR or coverage gate.
 - Do not use real receipts, NIP values, user paths, or network-dependent fixtures.
 - Do not duplicate parser, aggregate, duplicate-detection, or privacy rules already asserted in unit/repository/use-case tests.
-- Do not add Patrol, Maestro, an external device farm, or native picker automation in this package; the learning spike is a separately scoped follow-up after work package 15.1.
+- Do not re-evaluate the selected framework, reactivate Patrol, add an
+  external device farm, or expand native coverage without a separately scoped
+  sub-plan.
 - Do not guarantee automation of the external document viewer.
 
 ## Target Layout
@@ -75,7 +87,8 @@ Definition of Done:
 
 ### 15.2 Device Execution Contract
 
-Status: in progress. The emulator path is validated; connected-device evidence remains optional and pending a device.
+Status: in progress. The emulator path and manual-only workflow are validated;
+connected-device evidence remains optional and pending a device.
 
 1. Keep the current headless API 34 GitHub Actions workflow manual-only.
 2. Document the same suite for a booted local emulator and a connected device, including explicit `-d <device-id>` selection.
@@ -89,14 +102,18 @@ Definition of Done:
 
 ### 15.3 Native-Surface Decision Point
 
+Status: complete. Phase 16 selected Maestro, and Phases 17--18 supplied the
+first post-selection evidence. Any further scenario remains a new small
+sub-plan, not an implicit expansion of this track.
+
 Before adding a native automation dependency, assess the gaps below:
 
 | Surface | Default evidence | Automation decision |
 | --- | --- | --- |
-| Open PDF/source external chooser | Manual smoke on an emulator/device with a compatible viewer | Maestro follow-up only if release risk warrants repeatable automation |
-| Storage Access Framework/file picker | Manual smoke with synthetic files | Maestro native smoke is available for approved synthetic-file flows |
+| Open PDF/source external chooser | Manual smoke on an emulator/device with a compatible viewer | Consider a separately scoped Maestro follow-up only if release risk warrants repeatable automation. |
+| Storage Access Framework/file picker | Manual smoke with synthetic files | Maestro native smoke is available for approved synthetic-file flows and has recorded first-import, duplicate, navigation, and month-isolation evidence. |
 | Runtime permissions/system settings | Manual smoke when such a feature is introduced | No work until a product feature depends on it |
-| Native PDF extraction | Existing fake-backed E2E plus manual synthetic-PDF smoke | Maestro follow-up only if platform regressions cannot be diagnosed below E2E |
+| Native PDF extraction | Existing fake-backed E2E plus manual synthetic-PDF smoke | Current Maestro import evidence exercises the native path; add another scenario only when a concrete regression risk is identified. |
 
 ## Risks
 
@@ -122,8 +139,8 @@ Before adding a native automation dependency, assess the gaps below:
 - [x] The stable key contract is documented and used by the device suite.
 - [x] Emulator commands are documented and reproducible.
 - [ ] Connected-device evidence is recorded when a physical device is available.
-- [ ] The manual-only Android workflow stays outside the fast PR/coverage gate.
-- [x] Native-only gaps have an explicit evidence path: Phase 16 selected Maestro for the document-picker boundary.
+- [x] The manual-only Android workflow stays outside the fast PR/coverage gate.
+- [x] Native-only gaps have an explicit evidence path: Maestro is selected for the document-picker boundary and Phases 17--18 add post-selection evidence.
 - [x] Master tracker and this sub-plan contain current run evidence and follow-up status.
 
 ## Checkpoint Evidence: Flutter E2E Foundation
@@ -139,9 +156,16 @@ Before adding a native automation dependency, assess the gaps below:
   - `tool/it_android.ps1` now hides the background emulator window and accepts an explicit `-SystemImage` value so local API availability does not change the API 34 CI default.
   - The local TLS truststore remains user-scoped and uncommitted.
 - Phase 16 outcome (2026-08-28): `docs/refactoring_subplans/phase_16_native_e2e_framework_learning_spike.md` selected Maestro after two headless passes each for approved first-import and exact-duplicate flows. Physical-device evidence remains a separately scoped follow-up.
+- Phase 18 outcome (2026-08-29): the two-fixture month-isolation Maestro flow
+  passed twice headlessly on the same verified AVD. The separate
+  `docs/refactoring_subplans/phase_15_e2e_track_reconciliation.md` keeps this
+  parent track aligned with the current policy.
 
 ## Start Criteria
 
 - Start with work package 15.1; it is behavior-preserving and does not need a physical device.
 - Run work package 15.2 after the suite refactor on the available emulator/device.
-- The learning spike is complete. A future physical-device or CI expansion must use a new small sub-plan; it must not make the choice depend on a business-volume threshold.
+- The learning spike and the initial selected-framework coverage are complete.
+  A future physical-device, CI, or new native-scenario expansion must use a
+  new small sub-plan; it must not make the choice depend on a business-volume
+  threshold.
